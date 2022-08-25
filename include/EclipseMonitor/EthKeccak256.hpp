@@ -236,7 +236,7 @@ inline void Hash(
 
 } // namespace Internal
 
-std::array<uint8_t, 32> EthKeccak256(const std::vector<uint8_t>& _input)
+inline std::array<uint8_t, 32> EthKeccak256(const std::vector<uint8_t>& _input)
 {
 	std::array<uint8_t, 32> output;
 	// Parameters used:
