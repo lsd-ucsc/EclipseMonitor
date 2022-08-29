@@ -5,6 +5,10 @@
 
 #pragma once
 
+#include <vector>
+
+#include "Internal/SimpleObj.hpp"
+
 #include "SyncMsgMgr.hpp"
 #include "EthHeaderMgr.hpp"
 
@@ -41,11 +45,50 @@ public:
 
 	virtual ~EthSyncMsgMgr() = default;
 
-	bool ValidateBlock(const EthHeaderMgr& header) const
+	bool ValidateBlock(
+		const EthHeaderMgr& header,
+		const std::vector<std::vector<uint8_t> >& txBinList) const
 	{
 		Base::NonceType nonce;
-		// TODO : validate the transaction and retrieve the nonce from the transaction
-		return Base::ValidateMsg(nonce, header.GetTrustedTime());
+
+		for (const auto& txBin : txBinList)
+		{
+			const Internal::Obj::BaseObj& tx = Internal::Rlp::ParseRlp(txBin);
+
+			// TODO : validate the transaction and retrieve the nonce from the transaction
+			if (tx.GetCategory() == Internal::Obj::ObjCategory::List)
+			{
+				// Legacy transaction
+				// Skip or validate
+				return Base::ValidateMsg(nonce, header.GetTrustedTime());
+			}
+			else if (tx.GetCategory() == Internal::Obj::ObjCategory::Bytes)
+			{
+				// EIP-2718 transaction
+				const auto& outerRlp = tx.AsBytes();
+
+				uint8_t firstByte = outerRlp[0];
+
+				std::vector<uint8_t> innerRlp(
+					outerRlp.data() + 1,
+					outerRlp.data() + outerRlp.size());
+				auto innerTx = Internal::Rlp::ParseRlp(innerRlp);
+
+				if (firstByte == 0x01)
+				{
+					// EIP-2930 transaction
+					// Skip or validate
+					return Base::ValidateMsg(nonce, header.GetTrustedTime());
+				}
+				else if (firstByte == 0x02)
+				{
+					// EIP-1559 transaction
+					return Base::ValidateMsg(nonce, header.GetTrustedTime());
+				}
+			}
+		}
+
+		return false;
 	}
 
 private:
