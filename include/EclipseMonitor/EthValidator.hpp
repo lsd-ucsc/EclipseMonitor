@@ -51,6 +51,9 @@ public:
 			return false;
 		}
 
+		// 2. check local time (0 means history block)
+		// TODO
+
 		// 2. check parent_hash == parent.hash
 		const auto& parentHash = current.GetRawHeader().get_ParentHash();
 		if ((parentHash.size() != parent.GetHash().size()) ||

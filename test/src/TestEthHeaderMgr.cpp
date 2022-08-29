@@ -28,7 +28,8 @@ GTEST_TEST(TestEthHeaderMgr, Header_0)
 	std::vector<uint8_t> input(
 		GetEthHeaderBin_0().begin(),
 		GetEthHeaderBin_0().end());
-	EthHeaderMgr header(input);
+	uint64_t trustedTime = 1234567890;
+	EthHeaderMgr header(input, trustedTime);
 
 	// Some data in raw header
 	auto expUncleHash = SimpleObjects::Bytes({
@@ -40,6 +41,9 @@ GTEST_TEST(TestEthHeaderMgr, Header_0)
 	EXPECT_EQ(
 		header.GetRawHeader().get_Sha3Uncles(),
 		expUncleHash);
+
+	// trusted timestamp
+	EXPECT_EQ(header.GetTrustedTime(), trustedTime);
 
 	// Hash of the header itself
 	auto expHash = std::array<uint8_t, 32>({

@@ -40,8 +40,9 @@ public: // static member
 
 public:
 
-	EthHeaderMgr(const std::vector<uint8_t>& rawBinary) :
+	EthHeaderMgr(const std::vector<uint8_t>& rawBinary, uint64_t trustedTime) :
 		m_rawHeader(RawHeaderParser().Parse(rawBinary)),
+		m_trustedTime(trustedTime),
 		m_hash(EthKeccak256(rawBinary)),
 		m_blkNum(EthBlkNumTypeTrait::FromBytes(m_rawHeader.get_Number())),
 		m_time(EthTimeTypeTrait::FromBytes(m_rawHeader.get_Timestamp())),
@@ -54,6 +55,11 @@ public:
 	const RawHeaderType& GetRawHeader() const
 	{
 		return m_rawHeader;
+	}
+
+	uint64_t GetTrustedTime() const
+	{
+		return m_trustedTime;
 	}
 
 	const std::array<uint8_t, 32>& GetHash() const
@@ -84,6 +90,7 @@ public:
 private:
 
 	RawHeaderType m_rawHeader;
+	uint64_t m_trustedTime;
 	std::array<uint8_t, 32> m_hash;
 	BlkNumType m_blkNum;
 	TimeType m_time;
