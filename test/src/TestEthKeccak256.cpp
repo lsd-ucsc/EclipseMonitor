@@ -7,7 +7,7 @@
 
 #include <EclipseMonitor/EthKeccak256.hpp>
 
-#include "EthHeaders.hpp"
+#include "EthHistHdr_0_100.hpp"
 
 namespace EclipseMonitor_Test
 {
@@ -39,9 +39,7 @@ GTEST_TEST(TestEthKeccak256, EmptyCalculation)
 
 GTEST_TEST(TestEthKeccak256, GenesisBlkCalculation)
 {
-	std::vector<uint8_t> input(
-		GetEthHeaderBin_0().begin(),
-		GetEthHeaderBin_0().end());
+	std::vector<uint8_t> input = GetEthHistHdr_0_100()[0];
 
 	std::array<uint8_t, 32> expOut = {
 		0xd4, 0xe5, 0x67, 0x40, 0xf8, 0x76, 0xae, 0xf8, 0xc0, 0x10,

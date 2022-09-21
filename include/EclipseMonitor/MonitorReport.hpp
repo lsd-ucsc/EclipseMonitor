@@ -206,12 +206,12 @@ public:
 }; // class MonitorConfig
 
 
-class MonitorSecurityState :
+class MonitorSecState :
 	public Internal::Obj::StaticDict<Internal::MonitorSecStateTupleCore>
 {
 public: // static members:
 
-	using Self = MonitorSecurityState;
+	using Self = MonitorSecState;
 	using Base = Internal::Obj::StaticDict<Internal::MonitorSecStateTupleCore>;
 
 	template<typename _StrSeq>
@@ -285,7 +285,7 @@ public:
 	{
 		return Base::template get<_StrKey<SIMOBJ_KSTR("checkpointHash")> >();
 	}
-}; // class MonitorSecurityState
+}; // class MonitorSecState
 
 
 inline MonitorConfig BuildDefaultMonitorConfig()

@@ -7,7 +7,7 @@
 
 #include <EclipseMonitor/EthHeaderMgr.hpp>
 
-#include "EthHeaders.hpp"
+#include "EthHistHdr_0_100.hpp"
 
 namespace EclipseMonitor_Test
 {
@@ -25,9 +25,7 @@ GTEST_TEST(TestEthHeaderMgr, CountTestFile)
 
 GTEST_TEST(TestEthHeaderMgr, Header_0)
 {
-	std::vector<uint8_t> input(
-		GetEthHeaderBin_0().begin(),
-		GetEthHeaderBin_0().end());
+	std::vector<uint8_t> input = GetEthHistHdr_0_100()[0];
 	uint64_t trustedTime = 1234567890;
 	EthHeaderMgr header(input, trustedTime);
 
@@ -55,6 +53,10 @@ GTEST_TEST(TestEthHeaderMgr, Header_0)
 	EXPECT_EQ(
 		header.GetHash(),
 		expHash);
+	auto expHashObj = SimpleObjects::Bytes(expHash.begin(), expHash.end());
+	EXPECT_EQ(
+		header.GetHashObj(),
+		expHashObj);
 
 	// Block number
 	EXPECT_EQ(

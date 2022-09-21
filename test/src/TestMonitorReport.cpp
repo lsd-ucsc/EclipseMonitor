@@ -10,7 +10,7 @@
 #include <EclipseMonitor/MonitorReport.hpp>
 #include <EclipseMonitor/EthHeaderMgr.hpp>
 
-#include "EthHeaders.hpp"
+#include "EthHistHdr_0_100.hpp"
 
 namespace EclipseMonitor_Test
 {
@@ -54,17 +54,15 @@ GTEST_TEST(TestMonitorReport, MonitorConfig)
 	}
 }
 
-GTEST_TEST(TestMonitorReport, MonitorSecurityState)
+GTEST_TEST(TestMonitorReport, MonitorSecState)
 {
 	{
-		auto header00Bin = std::vector<uint8_t>(
-			GetEthHeaderBin_0().begin(), GetEthHeaderBin_0().end());
+		auto header00Bin = GetEthHistHdr_0_100()[0];
 		EthHeaderMgr header00 = EthHeaderMgr(header00Bin, 0);
-		auto header01Bin = std::vector<uint8_t>(
-			GetEthHeaderBin_1().begin(), GetEthHeaderBin_1().end());
+		auto header01Bin = GetEthHistHdr_0_100()[1];
 		EthHeaderMgr header01 = EthHeaderMgr(header01Bin, 0);
 
-		MonitorSecurityState mSecState;
+		MonitorSecState mSecState;
 		mSecState.get_chainName()      = "ethereum";
 		mSecState.get_genesisHash()    =
 			header00.GetRawHeader().get_ParentHash();
