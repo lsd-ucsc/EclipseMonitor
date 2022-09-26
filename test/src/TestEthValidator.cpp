@@ -34,7 +34,7 @@ GTEST_TEST(TestEthValidator, Block0_1)
 
 	std::unique_ptr<EthMainnetDAA> daa(new EthMainnetDAA);
 	EthValidator validator(std::move(daa));
-	EXPECT_TRUE(validator.CommonValidate(header0, header1, false));
+	EXPECT_TRUE(validator.CommonValidate(header0, false, header1, false));
 }
 
 GTEST_TEST(TestEthValidator, Block0_1_ErrNum)
@@ -47,7 +47,7 @@ GTEST_TEST(TestEthValidator, Block0_1_ErrNum)
 
 	std::unique_ptr<EthMainnetDAA> daa(new EthMainnetDAA);
 	EthValidator validator(std::move(daa));
-	EXPECT_FALSE(validator.CommonValidate(header0, header1, false));
+	EXPECT_FALSE(validator.CommonValidate(header0, false, header1, false));
 }
 
 GTEST_TEST(TestEthValidator, Block0_1_ErrParentHash)
@@ -60,7 +60,7 @@ GTEST_TEST(TestEthValidator, Block0_1_ErrParentHash)
 
 	std::unique_ptr<EthMainnetDAA> daa(new EthMainnetDAA);
 	EthValidator validator(std::move(daa));
-	EXPECT_FALSE(validator.CommonValidate(header0, header1, false));
+	EXPECT_FALSE(validator.CommonValidate(header0, false, header1, false));
 }
 
 GTEST_TEST(TestEthValidator, Block0_1_ErrDiffVal)
@@ -73,5 +73,5 @@ GTEST_TEST(TestEthValidator, Block0_1_ErrDiffVal)
 
 	std::unique_ptr<EthMainnetDAA> daa(new EthMainnetDAA);
 	EthValidator validator(std::move(daa));
-	EXPECT_FALSE(validator.CommonValidate(header0, header1, false));
+	EXPECT_FALSE(validator.CommonValidate(header0, false, header1, false));
 }

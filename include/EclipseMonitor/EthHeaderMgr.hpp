@@ -28,7 +28,7 @@ public: // static member
 
 	using BytesObjType = Internal::Rlp::BytesObjType;
 
-	const BytesObjType& GetEmptyUncleHash()
+	static const BytesObjType& GetEmptyUncleHash()
 	{
 		static const BytesObjType inst({
 			0X1DU, 0XCCU, 0X4DU, 0XE8U, 0XDEU, 0XC7U, 0X5DU, 0X7AU, 0XABU, 0X85U,
