@@ -23,7 +23,9 @@ public:
 
 	virtual bool CommonValidate(
 		const EthHeaderMgr& parent,
-		const EthHeaderMgr& current
+		bool isParentLive,
+		const EthHeaderMgr& current,
+		bool isCurrLive
 	) const = 0;
 };
 
@@ -42,7 +44,9 @@ public:
 
 	virtual bool CommonValidate(
 		const EthHeaderMgr& parent,
-		const EthHeaderMgr& current
+		bool isParentLive,
+		const EthHeaderMgr& current,
+		bool isCurrLive
 	) const override
 	{
 		// 1. check block number
@@ -53,6 +57,8 @@ public:
 
 		// 2. check local time (0 means history block)
 		// TODO
+		(void)isParentLive;
+		(void)isCurrLive;
 
 		// 2. check parent_hash == parent.hash
 		const auto& parentHash = current.GetRawHeader().get_ParentHash();

@@ -31,6 +31,17 @@ struct EthPrimitiveTypeTrait
 			);
 		return res;
 	}
+
+	static Internal::Rlp::BytesObjType ToBytes(const value_type& v)
+	{
+		auto res = Internal::Rlp::BytesObjType();
+		Internal::Rlp::Internal::EncodePrimitiveIntValue<
+			value_type,
+			Internal::Rlp::Endian::native,
+			false>::
+				Encode(res, v);
+		return res;
+	}
 }; // struct EthPrimitiveTypeTrait
 
 struct EthBlkNumTypeTrait : EthPrimitiveTypeTrait<uint64_t>

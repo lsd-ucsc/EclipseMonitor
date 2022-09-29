@@ -7,6 +7,7 @@
 
 #include <algorithm>
 
+#include "Internal/SimpleObj.hpp"
 #include "Internal/SimpleRlp.hpp"
 
 #include "EthDataTypes.hpp"
@@ -27,7 +28,7 @@ public: // static member
 
 	using BytesObjType = Internal::Rlp::BytesObjType;
 
-	const BytesObjType& GetEmptyUncleHash()
+	static const BytesObjType& GetEmptyUncleHash()
 	{
 		static const BytesObjType inst({
 			0X1DU, 0XCCU, 0X4DU, 0XE8U, 0XDEU, 0XC7U, 0X5DU, 0X7AU, 0XABU, 0X85U,
@@ -44,6 +45,7 @@ public:
 		m_rawHeader(RawHeaderParser().Parse(rawBinary)),
 		m_trustedTime(trustedTime),
 		m_hash(EthKeccak256(rawBinary)),
+		m_hashObj(m_hash.begin(), m_hash.end()),
 		m_blkNum(EthBlkNumTypeTrait::FromBytes(m_rawHeader.get_Number())),
 		m_time(EthTimeTypeTrait::FromBytes(m_rawHeader.get_Timestamp())),
 		m_diff(EthDiffTypeTrait::FromBytes(m_rawHeader.get_Difficulty())),
@@ -65,6 +67,11 @@ public:
 	const std::array<uint8_t, 32>& GetHash() const
 	{
 		return m_hash;
+	}
+
+	const Internal::Obj::Bytes& GetHashObj() const
+	{
+		return m_hashObj;
 	}
 
 	const BlkNumType& GetNumber() const
@@ -92,6 +99,7 @@ private:
 	RawHeaderType m_rawHeader;
 	uint64_t m_trustedTime;
 	std::array<uint8_t, 32> m_hash;
+	Internal::Obj::Bytes m_hashObj;
 	BlkNumType m_blkNum;
 	TimeType m_time;
 	DiffType m_diff;

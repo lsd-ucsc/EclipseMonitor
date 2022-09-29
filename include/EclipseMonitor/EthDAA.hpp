@@ -8,6 +8,8 @@
 #include "EthDataTypes.hpp"
 #include "EthParams.hpp"
 
+#include "Exceptions.hpp"
+
 namespace EclipseMonitor
 {
 
@@ -78,6 +80,17 @@ public: // static members:
 			/* considerUncle */     true,
 			/* deltaDivisor */      DiffType(9),
 			/* hasMaxCheck */       true,
+			/* hasBombDelay */      true,
+			/* bombDelay */         BlkNumType(11400000U) );
+		return inst;
+	}
+
+	static const EthDAACalculator& GetEip5133Estimated()
+	{
+		static const EthDAACalculator inst(
+			/* considerUncle */     true,
+			/* deltaDivisor */      DiffType(9),
+			/* hasMaxCheck */       false,
 			/* hasBombDelay */      true,
 			/* bombDelay */         BlkNumType(11400000U) );
 		return inst;
@@ -253,7 +266,11 @@ public:
 
 		// parent_diff +
 		//     (parent_diff / 2048 * max((2 if len(parent.uncles) else 1) - ((timestamp - parent.timestamp) // 9), -99))
-		if (isReducing)
+		if (!m_hasMaxCheck && isReducing && (x > parentDiff))
+		{
+			x = sk_minDiff;
+		}
+		else if (isReducing)
 		{
 			x = parentDiff - x;
 		}
@@ -381,56 +398,6 @@ public:
 }; // class EthDAACalculatorFrontier
 
 
-struct EthMainnetConfig
-{
-public: // static members:
-
-	using BlkNumType = typename EthBlkNumTypeTrait::value_type;
-
-	static const BlkNumType& GetGrayGlacierBlkNum()
-	{
-		static const BlkNumType blkNum(15050000UL);
-		return blkNum;
-	}
-
-	static const BlkNumType& GetArrowGlacierBlkNum()
-	{
-		static const BlkNumType blkNum(13773000UL);
-		return blkNum;
-	}
-
-	static const BlkNumType& GetLondonBlkNum()
-	{
-		static const BlkNumType blkNum(12965000UL);
-		return blkNum;
-	}
-
-	static const BlkNumType& GetMuirGlacierBlkNum()
-	{
-		static const BlkNumType blkNum(9200000UL);
-		return blkNum;
-	}
-
-	static const BlkNumType& GetConstantinopleBlkNum()
-	{
-		static const BlkNumType blkNum(7280000UL);
-		return blkNum;
-	}
-
-	static const BlkNumType& GetByzantiumBlkNum()
-	{
-		static const BlkNumType blkNum(4370000UL);
-		return blkNum;
-	}
-
-	static const BlkNumType& GetHomesteadBlkNum()
-	{
-		static const BlkNumType blkNum(1150000UL);
-		return blkNum;
-	}
-}; // struct EthMainnetConfig
-
-
 template<typename _ChainConfig>
 class EthGenericDAAImpl : public EthDAABase
 {
@@ -502,6 +469,57 @@ public:
 
 }; // class EthGenericDAAImpl
 
+
+template<typename _ChainConfig>
+class EthGenericDAAEstImpl : public EthDAABase
+{
+public: // static members:
+	using Self = EthGenericDAAEstImpl<_ChainConfig>;
+	using Base = EthDAABase;
+
+	using ChainConfig = _ChainConfig;
+
+	using BlkNumType = typename Base::BlkNumType;
+	using TimeType   = typename Base::TimeType;
+	using DiffType   = typename Base::DiffType;
+
+	static const Base& GetCalculator(const BlkNumType& blkNum)
+	{
+		if (blkNum >= ChainConfig::GetGrayGlacierBlkNum())
+		{
+			return EthDAACalculator::GetEip5133Estimated();
+		}
+		else
+		{
+			throw Exception("Estimating the difficulty value before EIP-5133 "
+				"is not allowed.");
+		}
+	}
+
+public:
+
+	EthGenericDAAEstImpl() = default;
+
+	virtual ~EthGenericDAAEstImpl() = default;
+
+	virtual DiffType operator()(
+		const BlkNumType& parentBlkNum,
+		const TimeType& parentTime,
+		const DiffType& parentDiff,
+		bool parentHasUncle,
+		const BlkNumType& currBlkNum,
+		const TimeType& currTime) const override
+	{
+		const EthDAABase& calculator = GetCalculator(currBlkNum);
+		return calculator(
+			parentBlkNum, parentTime, parentDiff, parentHasUncle,
+			currBlkNum, currTime);
+	}
+
+}; // class EthGenericDAAEstImpl
+
+
 using EthMainnetDAA = EthGenericDAAImpl<EthMainnetConfig>;
+using EthMainnetDAAEstimator = EthGenericDAAEstImpl<EthMainnetConfig>;
 
 } // namespace EclipseMonitor
