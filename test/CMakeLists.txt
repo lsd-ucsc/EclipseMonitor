@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.14)
 
 OPTION(ECLIPSEMONITOR_TEST_CXX_STANDARD
 	"C++ standard version used to build EclipseMonitor test executable." 11)
-OPTION(ECLIPSEMONITOR_TEST_LCOV "Option to turn on test code coverage." OFF)
+OPTION(ECLIPSEMONITOR_TEST_LCOV "Option to turn on test code coverage." ON)
 
 include(TestCoverage.cmake)
 

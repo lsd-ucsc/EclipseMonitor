@@ -5,81 +5,86 @@
 
 #pragma once
 
-#include "EclipseMonitor/EthKeccak256.hpp"
-#include "EclipseMonitor/Trie/Nibbles.hpp"
-#include "EclipseMonitor/Trie/TrieNode.hpp"
+#include "../EthKeccak256.hpp"
+#include "Nibbles.hpp"
+#include "TrieNode.hpp"
 
-using namespace SimpleObjects;
 
 namespace EclipseMonitor
 {
 
-namespace Extension
+namespace Trie
 {
 
-class ExtensionNode : public TrieNode::NodeBase
+class ExtensionNode : public NodeBase
 {
 public:
 
-    ExtensionNode(std::vector<Nibble>&& otherPath,
-                  std::unique_ptr<TrieNode::NodeBase> next)
-    {
-        Path = std::move(otherPath);
-        Next = std::move(next);
-    }
+	ExtensionNode(std::vector<Nibble>&& otherPath,
+				  std::unique_ptr<Node> next)
+	{
+		Path = std::move(otherPath);
+		Next = std::move(next);
+	}
 
-    std::vector<uint8_t> Serialize()
-    {
-        TrieNode::NodeBase* BasePtr = static_cast<TrieNode::NodeBase*>(this);
+	std::vector<uint8_t> Serialize()
+	{
+		NodeBase* BasePtr = static_cast<NodeBase*>(this);
 
-        return TrieNode::Node::Serialize(BasePtr);
-    }
+		return NodeHelper::Serialize(BasePtr);
+	}
 
-    virtual SimpleObjects::Bytes Hash() override
-    {
-        std::vector<uint8_t> serialized = Serialize();
-        std::array<uint8_t, 32> hashed = EthKeccak256(serialized);
+	virtual NodeType GetNodeType() const override
+	{
+		return NodeType::Extension;
+	}
 
-        return SimpleObjects::Bytes(hashed.begin(), hashed.end());
-    }
+	virtual SimpleObjects::Bytes Hash() override
+	{
+		std::vector<uint8_t> serialized = Serialize();
+		std::array<uint8_t, 32> hashed = EthKeccak256(serialized);
 
-    virtual SimpleObjects::List Raw() override
-    {
-        SimpleObjects::List hashes;
-        hashes.resize(2);
+		return SimpleObjects::Bytes(hashed.begin(), hashed.end());
+	}
 
-        std::vector<Nibble> prefixedPath = NibbleHelper::ToPrefixed(Path, false);
-        std::vector<uint8_t> pathBytes = NibbleHelper::ToBytes(prefixedPath);
-        SimpleObjects::Bytes pathBytesObject(std::move(pathBytes));
-        hashes[0] = pathBytesObject;
+	virtual SimpleObjects::List Raw() override
+	{
+		SimpleObjects::List hashes;
+		hashes.resize(2);
 
-        std::vector<uint8_t> serialized = TrieNode::Node::Serialize(Next.get());
-        if (serialized.size() >= 32)
-        {
-            hashes[1] = Next->Hash();
-        }
-        else
-        {
-            hashes[1] = Next->Raw();
-        }
+		std::vector<Nibble> prefixedPath = NibbleHelper::ToPrefixed(Path, false);
+		std::vector<uint8_t> pathBytes = NibbleHelper::ToBytes(prefixedPath);
+		SimpleObjects::Bytes pathBytesObject(std::move(pathBytes));
+		hashes[0] = pathBytesObject;
 
-        return hashes;
-    }
+		std::unique_ptr<NodeBase>& nextBasePtr = Next->GetNodeBase();
+		std::vector<uint8_t> serialized = NodeHelper::Serialize(nextBasePtr.get());
+		if (serialized.size() >= 32)
+		{
+			hashes[1] = nextBasePtr->Hash();
+		}
+		else
+		{
+			hashes[1] = nextBasePtr->Raw();
+		}
 
-    std::vector<Nibble>& GetPath()
-    {
-        return Path;
-    }
+		return hashes;
+	}
 
-    std::unique_ptr<TrieNode::NodeBase>& GetNext()
-    {
-        return Next;
-    }
+	std::vector<Nibble>& GetPath()
+	{
+		return Path;
+	}
+
+	std::unique_ptr<Node>& GetNext()
+	{
+		return Next;
+	}
 
 private:
 
-    std::vector<Nibble> Path;
-    std::unique_ptr<TrieNode::NodeBase> Next;
+	std::vector<Nibble> Path;
+	std::unique_ptr<Node> Next;
 }; // class ExtensionNode
 
 } // namespace Extension

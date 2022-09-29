@@ -13,9 +13,13 @@ using namespace SimpleObjects;
 
 namespace EclipseMonitor_Test
 {
-    const std::vector<SimpleObjects::Bytes>& GetEthTransactions_15415840();
-    const SimpleObjects::Bytes& GetTransactionsRoot_15415840();
 
-    const std::vector<SimpleObjects::Bytes>& GetEthTransactions_15209997();
-    const SimpleObjects::Bytes& GetTransactionsRoot_15209997();
+const std::vector <SimpleObjects::Bytes>& GetEthTransactions_15415840();
+
+const SimpleObjects::Bytes& GetTransactionsRoot_15415840();
+
+const std::vector <SimpleObjects::Bytes>& GetEthTransactions_15209997();
+
+const SimpleObjects::Bytes& GetTransactionsRoot_15209997();
+
 }
