@@ -16,7 +16,7 @@ using namespace SimpleRlp;
 using namespace Trie;
 
 
-GTEST_TEST(TestExtensionNode, SingleExtensionTest)
+GTEST_TEST(TestEthExtensionNode, SingleExtensionTest)
 {
 	std::vector<Nibble> nibbles = {5, 0, 6};
 	SimpleObjects::Bytes val = {'c', 'o', 'i', 'n'};
@@ -52,7 +52,7 @@ GTEST_TEST(TestExtensionNode, SingleExtensionTest)
 	EXPECT_EQ(hashed, expectedHashed);
 }
 
-GTEST_TEST(TestExtensionNode, NestedExtensionTest)
+GTEST_TEST(TestEthExtensionNode, NestedExtensionTest)
 {
 	std::vector<Nibble> nibbles1 = {1, 1, 1};
 	SimpleObjects::Bytes val1 = {'a'};

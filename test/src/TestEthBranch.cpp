@@ -14,7 +14,7 @@ using namespace SimpleRlp;
 using namespace Trie;
 
 
-GTEST_TEST(TestBranch, TestOneLeaf)
+GTEST_TEST(TestEthBranch, TestOneLeaf)
 {
 	std::vector<Nibble> nibbles = {5, 0, 6};
 	SimpleObjects::Bytes val = {'c', 'o', 'i', 'n'};
@@ -45,7 +45,7 @@ GTEST_TEST(TestBranch, TestOneLeaf)
 }
 
 
-GTEST_TEST(TestBranch, TestTwoLeaves)
+GTEST_TEST(TestEthBranch, TestTwoLeaves)
 {
 	std::vector<Nibble> nibbles1 = {5, 0, 6};
 	SimpleObjects::Bytes val1 = {'c', 'o', 'i', 'n'};
@@ -83,7 +83,7 @@ GTEST_TEST(TestBranch, TestTwoLeaves)
 	EXPECT_EQ(hashed, expectedHashed);
 }
 
-GTEST_TEST(TestBranch, TestNestedBranch)
+GTEST_TEST(TestEthBranch, TestNestedBranch)
 {
 	std::vector<Nibble> nibbles = {5, 0, 6};
 	SimpleObjects::Bytes val = {'c', 'o', 'i', 'n'};

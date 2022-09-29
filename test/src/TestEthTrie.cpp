@@ -13,7 +13,7 @@ using namespace SimpleObjects;
 using namespace SimpleRlp;
 using namespace Trie;
 
-GTEST_TEST(TestTrie, TestPutSingleKey)
+GTEST_TEST(TestEthTrie, TestPutSingleKey)
 {
 	Trie::PatriciaTrie trie;
 
@@ -29,7 +29,7 @@ GTEST_TEST(TestTrie, TestPutSingleKey)
 	EXPECT_EQ(leafNode.Hash(), trie.Hash());
 }
 
-GTEST_TEST(TestTrie, TestPutLeafShorter)
+GTEST_TEST(TestEthTrie, TestPutLeafShorter)
 {
 	Trie::PatriciaTrie trie;
 
@@ -65,7 +65,7 @@ GTEST_TEST(TestTrie, TestPutLeafShorter)
 	EXPECT_EQ(expected, hash.GetVal());
 }
 
-GTEST_TEST(TestTrie, PutLeafAllMatched)
+GTEST_TEST(TestEthTrie, PutLeafAllMatched)
 {
 	Trie::PatriciaTrie trie;
 
@@ -81,7 +81,7 @@ GTEST_TEST(TestTrie, PutLeafAllMatched)
 	EXPECT_EQ(leaf->Hash(), trie.Hash());
 }
 
-GTEST_TEST(TestTrie, PutLeafMore)
+GTEST_TEST(TestEthTrie, PutLeafMore)
 {
 	Trie::PatriciaTrie trie;
 
@@ -108,7 +108,7 @@ GTEST_TEST(TestTrie, PutLeafMore)
 	EXPECT_EQ(extension->Hash(), trie.Hash());
 }
 
-GTEST_TEST(TestTrie, TestPutMultipleKeys)
+GTEST_TEST(TestEthTrie, TestPutMultipleKeys)
 {
 	Trie::PatriciaTrie trie;
 

@@ -10,7 +10,7 @@
 using namespace EclipseMonitor;
 using namespace Trie;
 
-GTEST_TEST(TestNibble, IsNibble)
+GTEST_TEST(TestEthNibble, IsNibble)
 {
 	for(uint i = 0; i < 20; i++)
 	{
@@ -19,7 +19,7 @@ GTEST_TEST(TestNibble, IsNibble)
 	}
 }
 
-GTEST_TEST(TestNibble, FromNibbleByte)
+GTEST_TEST(TestEthNibble, FromNibbleByte)
 {
 	for(uint i = 0; i < 20; i++)
 	{
@@ -35,7 +35,7 @@ GTEST_TEST(TestNibble, FromNibbleByte)
 	}
 }
 
-GTEST_TEST(TestNibble, FromNibbleBytes)
+GTEST_TEST(TestEthNibble, FromNibbleBytes)
 {
 	{
 		std::vector<uint8_t> nibbleBytes = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -49,7 +49,7 @@ GTEST_TEST(TestNibble, FromNibbleBytes)
 	}
 }
 
-GTEST_TEST(TestNibble, FromByte)
+GTEST_TEST(TestEthNibble, FromByte)
 {
 	EXPECT_EQ(std::vector<Nibble>({0, 0}), NibbleHelper::FromByte(0));
 	EXPECT_EQ(std::vector<Nibble>({0, 10}), NibbleHelper::FromByte(10));
@@ -57,7 +57,7 @@ GTEST_TEST(TestNibble, FromByte)
 	EXPECT_EQ(std::vector<Nibble>({15, 15}), NibbleHelper::FromByte(255));
 }
 
-GTEST_TEST(TestNibble, FromBytes)
+GTEST_TEST(TestEthNibble, FromBytes)
 {
 	{
 		std::vector<Nibble> nibbles = {0, 0, 0, 1};
@@ -81,7 +81,7 @@ GTEST_TEST(TestNibble, FromBytes)
 	}
 }
 
-GTEST_TEST(TestNibble, ToBytes)
+GTEST_TEST(TestEthNibble, ToBytes)
 {
 	{
 		std::vector<uint8_t> bytes = {0};
@@ -100,7 +100,7 @@ GTEST_TEST(TestNibble, ToBytes)
 	}
 }
 
-GTEST_TEST(TestNibble, ToPrefixed)
+GTEST_TEST(TestEthNibble, ToPrefixed)
 {
 	{
 		std::vector<Nibble> nibbles = {1};
@@ -158,7 +158,7 @@ GTEST_TEST(TestNibble, ToPrefixed)
 	}
 }
 
-GTEST_TEST(TestNibble, PrefixMatchedLen)
+GTEST_TEST(TestEthNibble, PrefixMatchedLen)
 {
 	{
 		std::vector<Nibble> nibbles1 = {1, 2, 3, 4};

@@ -18,7 +18,7 @@ using namespace Trie;
 // converts a uint64_t to byte vector
 using IntWriter = SimpleRlp::Internal::EncodeSizeValue<Endian::little, false>;
 
-GTEST_TEST(TestTransactionsRoot, TestTransactionsRootBlock15415840)
+GTEST_TEST(TestEthTransactionsRoot, TestTransactionsRootBlock15415840)
 {
 	std::vector<uint8_t> key;
 	SimpleObjects::Bytes keyBytes;
@@ -54,7 +54,7 @@ GTEST_TEST(TestTransactionsRoot, TestTransactionsRootBlock15415840)
 }
 
 
-GTEST_TEST(TestTransactionsRoot, TestTransactionsRootBlock15209997)
+GTEST_TEST(TestEthTransactionsRoot, TestTransactionsRootBlock15209997)
 {
 	std::vector<uint8_t> key;
 	SimpleObjects::Bytes keyBytes;
