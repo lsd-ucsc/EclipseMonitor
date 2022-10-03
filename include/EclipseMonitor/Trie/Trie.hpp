@@ -5,8 +5,6 @@
 
 #pragma once
 
-#include <typeinfo>
-
 #include "BranchNode.hpp"
 #include "ExtensionNode.hpp"
 #include "LeafNode.hpp"
