@@ -18,7 +18,7 @@ class SyncMsgMgr
 {
 public: // static members:
 	using NonceType = std::array<uint8_t, 32>;
-	using sesIdType = typename MonitorId::SessionIdType;
+	using sesIdType = typename Internal::Obj::Bytes;
 
 public:
 	/**
@@ -40,7 +40,7 @@ public:
 
 	const sesIdType& GetSessionId() const
 	{
-		return m_mId.m_sid;
+		return m_mId.get_sessionID();
 	}
 
 	const NonceType& GetNonce() const
@@ -68,7 +68,7 @@ protected:
 		return (
 			(inNonce == m_nonce) && // Nonces are match
 			(recvTime >= m_time) && // recv time is after generate time
-			((recvTime - m_time) <= m_mConf.m_syncMaxWaitTime) // time elapsed within limit
+			((recvTime - m_time) <= m_mConf.get_syncMaxWaitTime().GetVal()) // time elapsed within limit
 		);
 	}
 
