@@ -62,7 +62,7 @@ struct NibbleHelper
 				Nibble nibble = FromNibbleByte(nibbleByte);
 				nibbles.push_back(nibble);
 			}
-			catch (const NibblesConversionException& e)
+			catch (const NibblesConversionException&)
 			{
 				throw NibblesConversionException(
 					"contains non-nibble byte " +
