@@ -18,7 +18,7 @@ class SyncMsgMgr
 {
 public: // static members:
 	using NonceType = std::array<uint8_t, 32>;
-	using sesIdType = typename Internal::Obj::Bytes;
+	using sesIdType = Internal::Obj::Bytes;
 
 public:
 	/**

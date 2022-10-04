@@ -24,7 +24,7 @@ GTEST_TEST(TestEthTrieNibble, CountTestFile)
 
 GTEST_TEST(TestEthTrieNibble, IsNibble)
 {
-	for(uint i = 0; i < 20; i++)
+	for(uint8_t i = 0; i < 20; ++i)
 	{
 		bool isNibbleExpected = (i <= 15);
 		EXPECT_EQ(isNibbleExpected, NibbleHelper::IsNibble(i));
@@ -33,7 +33,7 @@ GTEST_TEST(TestEthTrieNibble, IsNibble)
 
 GTEST_TEST(TestEthTrieNibble, FromNibbleByte)
 {
-	for(uint i = 0; i < 20; i++)
+	for(uint8_t i = 0; i < 20; ++i)
 	{
 		bool isNibbleExpected = (i <= 15);
 		if(isNibbleExpected)
