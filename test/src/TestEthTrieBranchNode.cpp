@@ -8,18 +8,32 @@
 #include <EclipseMonitor/Trie/BranchNode.hpp>
 #include <EclipseMonitor/Trie/LeafNode.hpp>
 
+namespace EclipseMonitor_Test
+{
+	extern size_t g_numOfTestFile;
+}
+
+using namespace EclipseMonitor_Test;
+
 using namespace EclipseMonitor;
+using namespace EclipseMonitor::Trie;
 using namespace SimpleObjects;
 using namespace SimpleRlp;
-using namespace Trie;
 
+GTEST_TEST(TestEthTrieBranchNode, CountTestFile)
+{
+	static auto tmp = ++g_numOfTestFile;
+	(void)tmp;
+}
 
-GTEST_TEST(TestEthBranch, TestOneLeaf)
+GTEST_TEST(TestEthTrieBranchNode, TestOneLeaf)
 {
 	std::vector<Nibble> nibbles = {5, 0, 6};
 	SimpleObjects::Bytes val = {'c', 'o', 'i', 'n'};
-	std::unique_ptr<NodeBase> leafNodeBase = LeafNode::NewLeafNodeFromNibbles(nibbles, val);
-	std::unique_ptr<Node> leafNode = SimpleObjects::Internal::make_unique<Node>(std::move(leafNodeBase));
+	std::unique_ptr<NodeBase> leafNodeBase =
+		LeafNode::NewLeafNodeFromNibbles(nibbles, val);
+	std::unique_ptr<Node> leafNode =
+		SimpleObjects::Internal::make_unique<Node>(std::move(leafNodeBase));
 
 	BranchNode branchNode;
 	branchNode.SetBranch(0, std::move(leafNode));
@@ -44,18 +58,21 @@ GTEST_TEST(TestEthBranch, TestOneLeaf)
 	EXPECT_EQ(hashed, expectedHashed);
 }
 
-
-GTEST_TEST(TestEthBranch, TestTwoLeaves)
+GTEST_TEST(TestEthTrieBranchNode, TestTwoLeaves)
 {
 	std::vector<Nibble> nibbles1 = {5, 0, 6};
 	SimpleObjects::Bytes val1 = {'c', 'o', 'i', 'n'};
-	std::unique_ptr<NodeBase> leafNodeBase1 = LeafNode::NewLeafNodeFromNibbles(nibbles1, val1);
-	std::unique_ptr<Node> leafNode1 = SimpleObjects::Internal::make_unique<Node>(std::move(leafNodeBase1));
+	std::unique_ptr<NodeBase> leafNodeBase1 =
+		LeafNode::NewLeafNodeFromNibbles(nibbles1, val1);
+	std::unique_ptr<Node> leafNode1 =
+		SimpleObjects::Internal::make_unique<Node>(std::move(leafNodeBase1));
 
 	std::vector<Nibble> nibbles2 = {1, 2, 3, 4, 5};
 	SimpleObjects::Bytes val2 = {'w', 'a', 't', 'e', 'r'};
-	std::unique_ptr<NodeBase> leafNodeBase2 = LeafNode::NewLeafNodeFromNibbles(nibbles2, val2);
-	std::unique_ptr<Node> leafNode2 = SimpleObjects::Internal::make_unique<Node>(std::move(leafNodeBase2));
+	std::unique_ptr<NodeBase> leafNodeBase2 =
+		LeafNode::NewLeafNodeFromNibbles(nibbles2, val2);
+	std::unique_ptr<Node> leafNode2 =
+		SimpleObjects::Internal::make_unique<Node>(std::move(leafNodeBase2));
 
 
 	BranchNode branchNode;
@@ -83,17 +100,21 @@ GTEST_TEST(TestEthBranch, TestTwoLeaves)
 	EXPECT_EQ(hashed, expectedHashed);
 }
 
-GTEST_TEST(TestEthBranch, TestNestedBranch)
+GTEST_TEST(TestEthTrieBranchNode, TestNestedBranch)
 {
 	std::vector<Nibble> nibbles = {5, 0, 6};
 	SimpleObjects::Bytes val = {'c', 'o', 'i', 'n'};
-	std::unique_ptr<NodeBase> leafNodeBase = LeafNode::NewLeafNodeFromNibbles(nibbles, val);
-	std::unique_ptr<Node> leafNode = SimpleObjects::Internal::make_unique<Node>(std::move(leafNodeBase));
+	std::unique_ptr<NodeBase> leafNodeBase =
+		LeafNode::NewLeafNodeFromNibbles(nibbles, val);
+	std::unique_ptr<Node> leafNode =
+		SimpleObjects::Internal::make_unique<Node>(std::move(leafNodeBase));
 
-	std::unique_ptr<BranchNode> branchNode1Ptr = SimpleObjects::Internal::make_unique<BranchNode>();
+	std::unique_ptr<BranchNode> branchNode1Ptr =
+		SimpleObjects::Internal::make_unique<BranchNode>();
 	branchNode1Ptr->SetBranch(0, std::move(leafNode));
 	branchNode1Ptr->SetValue(SimpleObjects::Bytes({'v', 'e', 'r', 'b'}));
-	std::unique_ptr<Node> branchNode1 = SimpleObjects::Internal::make_unique<Node>(std::move(branchNode1Ptr));
+	std::unique_ptr<Node> branchNode1 =
+		SimpleObjects::Internal::make_unique<Node>(std::move(branchNode1Ptr));
 
 	BranchNode branchNode2;
 	branchNode2.SetBranch(7, std::move(branchNode1));

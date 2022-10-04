@@ -5,7 +5,10 @@
 
 #pragma once
 
+#include "../Internal/SimpleObj.hpp"
+
 #include "../EthKeccak256.hpp"
+
 #include "Nibbles.hpp"
 #include "TrieNode.hpp"
 
@@ -20,18 +23,21 @@ class ExtensionNode : public NodeBase
 {
 public:
 
-	ExtensionNode(std::vector<Nibble>&& otherPath,
-				  std::unique_ptr<Node> next)
-	{
-		Path = std::move(otherPath);
-		Next = std::move(next);
-	}
+	ExtensionNode(
+		std::vector<Nibble>&& otherPath,
+		std::unique_ptr<Node> next
+	) :
+		m_path(std::move(otherPath)),
+		m_next(std::move(next))
+	{}
+
+	// LCOV_EXCL_START
+	virtual ~ExtensionNode() = default;
+	// LCOV_EXCL_STOP
 
 	std::vector<uint8_t> Serialize()
 	{
-		NodeBase* BasePtr = static_cast<NodeBase*>(this);
-
-		return NodeHelper::Serialize(BasePtr);
+		return NodeHelper::Serialize(this);
 	}
 
 	virtual NodeType GetNodeType() const override
@@ -39,26 +45,28 @@ public:
 		return NodeType::Extension;
 	}
 
-	virtual SimpleObjects::Bytes Hash() override
+	virtual Internal::Obj::Bytes Hash() override
 	{
 		std::vector<uint8_t> serialized = Serialize();
 		std::array<uint8_t, 32> hashed = EthKeccak256(serialized);
 
-		return SimpleObjects::Bytes(hashed.begin(), hashed.end());
+		return Internal::Obj::Bytes(hashed.begin(), hashed.end());
 	}
 
-	virtual SimpleObjects::List Raw() override
+	virtual Internal::Obj::List Raw() override
 	{
-		SimpleObjects::List hashes;
+		Internal::Obj::List hashes;
 		hashes.resize(2);
 
-		std::vector<Nibble> prefixedPath = NibbleHelper::ToPrefixed(Path, false);
+		std::vector<Nibble> prefixedPath =
+			NibbleHelper::ToPrefixed(m_path, false);
 		std::vector<uint8_t> pathBytes = NibbleHelper::ToBytes(prefixedPath);
-		SimpleObjects::Bytes pathBytesObject(std::move(pathBytes));
+		Internal::Obj::Bytes pathBytesObject(std::move(pathBytes));
 		hashes[0] = pathBytesObject;
 
-		std::unique_ptr<NodeBase>& nextBasePtr = Next->GetNodeBase();
-		std::vector<uint8_t> serialized = NodeHelper::Serialize(nextBasePtr.get());
+		std::unique_ptr<NodeBase>& nextBasePtr = m_next->GetNodeBase();
+		std::vector<uint8_t> serialized =
+			NodeHelper::Serialize(nextBasePtr.get());
 		if (serialized.size() >= 32)
 		{
 			hashes[1] = nextBasePtr->Hash();
@@ -73,19 +81,20 @@ public:
 
 	std::vector<Nibble>& GetPath()
 	{
-		return Path;
+		return m_path;
 	}
 
 	std::unique_ptr<Node>& GetNext()
 	{
-		return Next;
+		return m_next;
 	}
 
 private:
 
-	std::vector<Nibble> Path;
-	std::unique_ptr<Node> Next;
+	std::vector<Nibble> m_path;
+	std::unique_ptr<Node> m_next;
+
 }; // class ExtensionNode
 
-} // namespace Extension
+} // namespace Trie
 } // namespace EclipseMonitor

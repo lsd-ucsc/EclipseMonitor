@@ -8,9 +8,12 @@
 
 #include <SimpleObjects/Internal/make_unique.hpp>
 
+#include "../Internal/SimpleObj.hpp"
+
 #include "../EthKeccak256.hpp"
-#include "../Trie/Nibbles.hpp"
-#include "../Trie/TrieNode.hpp"
+
+#include "Nibbles.hpp"
+#include "TrieNode.hpp"
 
 namespace EclipseMonitor
 {
@@ -20,14 +23,38 @@ namespace Trie
 
 class LeafNode : public NodeBase
 {
+public: // static members:
+
+	static std::unique_ptr<LeafNode> NewLeafNodeFromNibbles(
+		const std::vector<Nibble>& nibbles,
+		const Internal::Obj::Bytes& value
+	)
+	{
+		return Internal::Obj::Internal::make_unique<LeafNode>(nibbles, value);
+	}
+
+	static std::unique_ptr<LeafNode> NewLeafNodeFromBytes(
+		const std::vector <uint8_t>& key,
+		const Internal::Obj::Bytes& value
+	)
+	{
+		std::vector<Nibble> nibbles = NibbleHelper::FromBytes(key);
+		return NewLeafNodeFromNibbles(nibbles, value);
+	}
+
 public:
 
-	LeafNode(std::vector<Nibble> otherPath,
-			SimpleObjects::Bytes otherValue)
-	{
-		Path = std::move(otherPath);
-		Value = std::move(otherValue);
-	}
+	LeafNode(
+		std::vector<Nibble> otherPath, // TODO[Tuan]: make this type consistent with other child classes
+		Internal::Obj::Bytes otherValue
+	) :
+		m_path(std::move(otherPath)),
+		m_value(std::move(otherValue))
+	{}
+
+	// LCOV_EXCL_START
+	virtual ~LeafNode() = default;
+	// LCOV_EXCL_STOP
 
 	std::vector<uint8_t> Serialize()
 	{
@@ -40,51 +67,40 @@ public:
 		return NodeType::Leaf;
 	}
 
-	virtual SimpleObjects::Bytes Hash() override
+	virtual Internal::Obj::Bytes Hash() override
 	{
 		std::vector<uint8_t> serialized = Serialize();
 		std::array<uint8_t, 32> hashed = EthKeccak256(serialized);
-		return SimpleObjects::Bytes(hashed.begin(), hashed.end());
+		return Internal::Obj::Bytes(hashed.begin(), hashed.end());
 	}
 
-	virtual SimpleObjects::List Raw() override
+	virtual Internal::Obj::List Raw() override
 	{
-		std::vector<Nibble> prefixedPath = NibbleHelper::ToPrefixed(Path, true);
+		std::vector<Nibble> prefixedPath =
+			NibbleHelper::ToPrefixed(m_path, true);
 		std::vector<uint8_t> pathBytes = NibbleHelper::ToBytes(prefixedPath);
 
-		SimpleObjects::Bytes pathBytesObject(std::move(pathBytes));
-		SimpleObjects::List raw = {pathBytesObject, Value};
+		Internal::Obj::Bytes pathBytesObject(std::move(pathBytes));
+		Internal::Obj::List raw = {pathBytesObject, m_value};
 		return raw;
-	}
-
-	static std::unique_ptr<LeafNode> NewLeafNodeFromNibbles(const std::vector<Nibble>& nibbles,
-															 const SimpleObjects::Bytes& value)
-	{
-		return SimpleObjects::Internal::make_unique<LeafNode>(nibbles, value);
-	}
-
-	static std::unique_ptr<LeafNode> NewLeafNodeFromBytes(const std::vector <uint8_t>& key,
-														   const SimpleObjects::Bytes& value)
-	{
-		std::vector<Nibble> nibbles = NibbleHelper::FromBytes(key);
-		return NewLeafNodeFromNibbles(nibbles, value);
 	}
 
 	std::vector<Nibble> const& GetPath()
 	{
-		return Path;
+		return m_path;
 	}
 
-	SimpleObjects::Bytes& GetValue()
+	Internal::Obj::Bytes& GetValue()
 	{
-		return Value;
+		return m_value;
 	}
 
 private:
 
-	std::vector<Nibble> Path;
-	SimpleObjects::Bytes Value;
+	std::vector<Nibble> m_path;
+	Internal::Obj::Bytes m_value;
+
 }; // class LeafNode
 
-} // namespace Leaf
+} // namespace Trie
 } // namespace EclipseMonitor

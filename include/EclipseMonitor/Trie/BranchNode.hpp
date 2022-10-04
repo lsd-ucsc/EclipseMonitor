@@ -5,10 +5,13 @@
 
 #pragma once
 
+#include <SimpleObjects/Internal/make_unique.hpp>
+
+#include "../Internal/SimpleObj.hpp"
 #include "../EthKeccak256.hpp"
-#include "../Trie/Nibbles.hpp"
-#include "../Trie/TrieNode.hpp"
-#include "SimpleObjects/Internal/make_unique.hpp"
+
+#include "Nibbles.hpp"
+#include "TrieNode.hpp"
 
 namespace EclipseMonitor
 {
@@ -18,51 +21,60 @@ namespace Trie
 
 class BranchNode : public NodeBase
 {
+public: // static members:
+
+	static constexpr uint8_t sk_numNodes = 16;
+
 public:
 
-	BranchNode()
-	{
-		NodeHasValue = false;
-		Branches.resize(16);
-	}
+	BranchNode() :
+		m_nodeHasValue(false),
+		m_branches(16), // TODO[Tuan]: where does this number come from?
+		m_value()
+	{}
+
+	// LCOV_EXCL_START
+	virtual ~BranchNode() = default;
+	// LCOV_EXCL_STOP
 
 	bool HasValue()
 	{
-		return NodeHasValue;
+		return m_nodeHasValue;
 	}
 
-	void SetBranch(const Nibble& nibble,
-				   std::unique_ptr<Node> other)
+	void SetBranch(
+		const Nibble& nibble,
+		std::unique_ptr<Node> other
+	)
 	{
 		int nibbleInt = static_cast<int>(nibble);
-		Branches[nibbleInt] = std::move(other);
+		m_branches[nibbleInt] = std::move(other);
 	}
 
 	std::unique_ptr<Node>& GetBranch(Nibble nibble)
 	{
 		int nibbleInt = static_cast<int>(nibble);
-		return Branches[nibbleInt];
+		return m_branches[nibbleInt];
 	}
 
 	void RemoveBranch(const Nibble& nibble)
 	{
 		int nibbleInt = static_cast<int>(nibble);
-		Branches[nibbleInt].reset();
+		m_branches[nibbleInt].reset();
 	}
 
-	void SetValue(SimpleObjects::Bytes otherValue)
+	void SetValue(Internal::Obj::Bytes otherValue)
 	{
-		NodeHasValue = true;
-		Value = std::move(otherValue);
+		m_nodeHasValue = true;
+		m_value = std::move(otherValue);
 	}
 
 	void RemoveValue()
 	{
-		NodeHasValue = false;
-		Value.resize(0);
+		m_nodeHasValue = false;
+		m_value.resize(0);
 
 	}
-
 
 	std::vector <uint8_t> Serialize()
 	{
@@ -75,29 +87,29 @@ public:
 		return NodeType::Branch;
 	}
 
-	virtual SimpleObjects::Bytes Hash() override
+	virtual Internal::Obj::Bytes Hash() override
 	{
 		std::vector<uint8_t> serialized = Serialize();
 		std::array<uint8_t, 32> hashed = EthKeccak256(serialized);
 
-		return SimpleObjects::Bytes(hashed.begin(), hashed.end());
+		return Internal::Obj::Bytes(hashed.begin(), hashed.end());
 	}
 
-	virtual SimpleObjects::List Raw() override
+	virtual Internal::Obj::List Raw() override
 	{
-		SimpleObjects::List hashes;
-		hashes.resize(NumNodes + 1);
+		Internal::Obj::List hashes;
+		hashes.resize(sk_numNodes + 1);
 
-		for (uint8_t i = 0; i < NumNodes; i++)
+		for (uint8_t i = 0; i < sk_numNodes; i++)
 		{
-			if (!Branches[i])
+			if (!m_branches[i])
 			{
 				hashes[i] = EmptyNode::EmptyNodeRaw();
 			}
 			else
 			{
-				// Node* NodePtr = Branches[i].get();
-				std::unique_ptr<NodeBase>& NodeBasePtr = Branches[i]->GetNodeBase();
+				// Node* NodePtr = m_branches[i].get();
+				std::unique_ptr<NodeBase>& NodeBasePtr = m_branches[i]->GetNodeBase();
 				NodeBase* NodePtr = NodeBasePtr.get();
 				std::vector<uint8_t> serialized = NodeHelper::Serialize(NodePtr);
 
@@ -112,18 +124,17 @@ public:
 			}
 		}
 
-		hashes[NumNodes] = Value;
+		hashes[sk_numNodes] = m_value;
 		return hashes;
 	}
 
 private:
 
-	bool NodeHasValue;
-	const uint8_t NumNodes = 16;
+	bool m_nodeHasValue;
+	std::vector<std::unique_ptr<Node> > m_branches;
+	Internal::Obj::Bytes m_value;
 
-	std::vector<std::unique_ptr<Node>> Branches;
-	SimpleObjects::Bytes Value;
 }; // class BranchNode
 
-} // namespace Branch
+} // namespace Trie
 } // namespace EclipseMonitor

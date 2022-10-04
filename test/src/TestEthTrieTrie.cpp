@@ -8,12 +8,25 @@
 #include <EclipseMonitor/Trie/LeafNode.hpp>
 #include <EclipseMonitor/Trie/Trie.hpp>
 
+namespace EclipseMonitor_Test
+{
+	extern size_t g_numOfTestFile;
+}
+
+using namespace EclipseMonitor_Test;
+
 using namespace EclipseMonitor;
+using namespace EclipseMonitor::Trie;
 using namespace SimpleObjects;
 using namespace SimpleRlp;
-using namespace Trie;
 
-GTEST_TEST(TestEthTrie, TestPutSingleKey)
+GTEST_TEST(TestEthTrieTrie, CountTestFile)
+{
+	static auto tmp = ++g_numOfTestFile;
+	(void)tmp;
+}
+
+GTEST_TEST(TestEthTrieTrie, TestPutSingleKey)
 {
 	Trie::PatriciaTrie trie;
 
@@ -29,7 +42,7 @@ GTEST_TEST(TestEthTrie, TestPutSingleKey)
 	EXPECT_EQ(leafNode.Hash(), trie.Hash());
 }
 
-GTEST_TEST(TestEthTrie, TestPutLeafShorter)
+GTEST_TEST(TestEthTrieTrie, TestPutLeafShorter)
 {
 	Trie::PatriciaTrie trie;
 
@@ -51,13 +64,17 @@ GTEST_TEST(TestEthTrie, TestPutLeafShorter)
 	EXPECT_EQ(expected, hash.GetVal());
 
 	std::vector<Nibble> leafNibbles = {4};
-	std::unique_ptr<LeafNode> leafBase = LeafNode::NewLeafNodeFromNibbles(leafNibbles, val1);
-	std::unique_ptr<Node> leaf = SimpleObjects::Internal::make_unique<Node>(std::move(leafBase));
+	std::unique_ptr<LeafNode> leafBase =
+		LeafNode::NewLeafNodeFromNibbles(leafNibbles, val1);
+	std::unique_ptr<Node> leaf =
+		SimpleObjects::Internal::make_unique<Node>(std::move(leafBase));
 
-	std::unique_ptr<BranchNode> branchBase = SimpleObjects::Internal::make_unique<BranchNode>();
+	std::unique_ptr<BranchNode> branchBase =
+		SimpleObjects::Internal::make_unique<BranchNode>();
 	branchBase->SetBranch(0, std::move(leaf));
 	branchBase->SetValue(val2);
-	std::unique_ptr<Node> branch = SimpleObjects::Internal::make_unique<Node>(std::move(branchBase));
+	std::unique_ptr<Node> branch =
+		SimpleObjects::Internal::make_unique<Node>(std::move(branchBase));
 
 	std::vector<Nibble> extNibbles = {0, 1, 0, 2, 0, 3};
 	ExtensionNode extensionNode(std::move(extNibbles), std::move(branch));
@@ -65,7 +82,7 @@ GTEST_TEST(TestEthTrie, TestPutLeafShorter)
 	EXPECT_EQ(expected, hash.GetVal());
 }
 
-GTEST_TEST(TestEthTrie, PutLeafAllMatched)
+GTEST_TEST(TestEthTrieTrie, PutLeafAllMatched)
 {
 	Trie::PatriciaTrie trie;
 
@@ -77,11 +94,12 @@ GTEST_TEST(TestEthTrie, PutLeafAllMatched)
 	SimpleObjects::Bytes val2 = {'w', 'o', 'r', 'l', 'd'};
 	trie.Put(key2, val2);
 
-	std::unique_ptr<LeafNode> leaf = LeafNode::NewLeafNodeFromBytes(key1.GetVal(), val2);
+	std::unique_ptr<LeafNode> leaf =
+		LeafNode::NewLeafNodeFromBytes(key1.GetVal(), val2);
 	EXPECT_EQ(leaf->Hash(), trie.Hash());
 }
 
-GTEST_TEST(TestEthTrie, PutLeafMore)
+GTEST_TEST(TestEthTrieTrie, PutLeafMore)
 {
 	Trie::PatriciaTrie trie;
 
@@ -94,21 +112,29 @@ GTEST_TEST(TestEthTrie, PutLeafMore)
 	trie.Put(key2, val2);
 
 	std::vector<Nibble> leafNibbles = {5, 0, 6};
-	std::unique_ptr<LeafNode> leafBase = LeafNode::NewLeafNodeFromNibbles(leafNibbles, val2);
-	std::unique_ptr<Node> leaf = SimpleObjects::Internal::make_unique<Node>(std::move(leafBase));
+	std::unique_ptr<LeafNode> leafBase =
+		LeafNode::NewLeafNodeFromNibbles(leafNibbles, val2);
+	std::unique_ptr<Node> leaf =
+		SimpleObjects::Internal::make_unique<Node>(std::move(leafBase));
 
 
-	std::unique_ptr<BranchNode> branchBase = SimpleObjects::Internal::make_unique<BranchNode>();
+	std::unique_ptr<BranchNode> branchBase =
+		SimpleObjects::Internal::make_unique<BranchNode>();
 	branchBase->SetValue(val1);
 	branchBase->SetBranch(0, std::move(leaf));
-	std::unique_ptr<Node> branch = SimpleObjects::Internal::make_unique<Node>(std::move(branchBase));
+	std::unique_ptr<Node> branch =
+		SimpleObjects::Internal::make_unique<Node>(std::move(branchBase));
 
 	std::vector<Nibble> extNibbles = {0, 1, 0, 2, 0, 3, 0, 4};
-	std::unique_ptr<ExtensionNode> extension = SimpleObjects::Internal::make_unique<ExtensionNode>(std::move(extNibbles), std::move(branch));
+	std::unique_ptr<ExtensionNode> extension =
+		SimpleObjects::Internal::make_unique<ExtensionNode>(
+			std::move(extNibbles),
+			std::move(branch)
+		);
 	EXPECT_EQ(extension->Hash(), trie.Hash());
 }
 
-GTEST_TEST(TestEthTrie, TestPutMultipleKeys)
+GTEST_TEST(TestEthTrieTrie, TestPutMultipleKeys)
 {
 	Trie::PatriciaTrie trie;
 

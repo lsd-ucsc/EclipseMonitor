@@ -7,16 +7,30 @@
 
 #include <EclipseMonitor/Trie/LeafNode.hpp>
 
+namespace EclipseMonitor_Test
+{
+	extern size_t g_numOfTestFile;
+}
+
+using namespace EclipseMonitor_Test;
+
 using namespace EclipseMonitor;
+using namespace EclipseMonitor::Trie;
 using namespace SimpleObjects;
 using namespace SimpleRlp;
-using namespace Trie;
 
-GTEST_TEST(TestEthLeaf, RawTest1)
+GTEST_TEST(TestEthTrieLeafNode, CountTestFile)
+{
+	static auto tmp = ++g_numOfTestFile;
+	(void)tmp;
+}
+
+GTEST_TEST(TestEthTrieLeafNode, RawTest1)
 {
 	std::vector<uint8_t> nibbleBytes = {1};
 	SimpleObjects::Bytes val = {};
-	std::unique_ptr<LeafNode> leafNode = LeafNode::NewLeafNodeFromBytes(nibbleBytes, val);
+	std::unique_ptr<LeafNode> leafNode =
+		LeafNode::NewLeafNodeFromBytes(nibbleBytes, val);
 
 	SimpleObjects::List raw = leafNode->Raw();
 	SimpleObjects::List expected = {
@@ -27,11 +41,12 @@ GTEST_TEST(TestEthLeaf, RawTest1)
 	EXPECT_EQ(raw[1], expected[1]);
 }
 
-GTEST_TEST(TestEthLeaf, RawTest2)
+GTEST_TEST(TestEthTrieLeafNode, RawTest2)
 {
 	std::vector<uint8_t> nibbleBytes = {1};
 	SimpleObjects::Bytes val = {'h', 'e', 'l', 'l', 'o', ',', ' ', 'w', 'o', 'r', 'l', 'd'};
-	std::unique_ptr<LeafNode> leafNode = LeafNode::NewLeafNodeFromBytes(nibbleBytes, val);
+	std::unique_ptr<LeafNode> leafNode =
+		LeafNode::NewLeafNodeFromBytes(nibbleBytes, val);
 
 	SimpleObjects::List raw = leafNode->Raw();
 	SimpleObjects::List expected = {
@@ -44,11 +59,14 @@ GTEST_TEST(TestEthLeaf, RawTest2)
 	EXPECT_EQ(raw[1], expected[1]);
 }
 
-GTEST_TEST(TestEthLeaf, RawTest3)
+GTEST_TEST(TestEthTrieLeafNode, RawTest3)
 {
 	std::vector<uint8_t> nibbleBytes = {1, 2, 3, 4, 5};
-	SimpleObjects::Bytes val = {'h', 'e', 'l', 'l', 'o', ',', ' ', 'w', 'o', 'r', 'l', 'd'};
-	std::unique_ptr<LeafNode> leafNode = LeafNode::NewLeafNodeFromBytes(nibbleBytes, val);
+	SimpleObjects::Bytes val = {
+		'h', 'e', 'l', 'l', 'o', ',', ' ', 'w', 'o', 'r', 'l', 'd'
+	};
+	std::unique_ptr<LeafNode> leafNode =
+		LeafNode::NewLeafNodeFromBytes(nibbleBytes, val);
 
 	SimpleObjects::List raw = leafNode->Raw();
 	SimpleObjects::List expected = {
@@ -62,12 +80,13 @@ GTEST_TEST(TestEthLeaf, RawTest3)
 	EXPECT_EQ(raw[1], expected[1]);
 }
 
-GTEST_TEST(TestEthLeaf, HashTest1)
+GTEST_TEST(TestEthTrieLeafNode, HashTest1)
 {
 	std::vector<Nibble> nibbles = {5, 0, 6};
 	SimpleObjects::Bytes val = {'c', 'o', 'i', 'n'};
 
-	std::unique_ptr<LeafNode> leafNode = LeafNode::NewLeafNodeFromNibbles(nibbles, val);
+	std::unique_ptr<LeafNode> leafNode =
+		LeafNode::NewLeafNodeFromNibbles(nibbles, val);
 	SimpleObjects::Bytes hash = leafNode->Hash();
 
 	SimpleObjects::Bytes expected = {
@@ -80,11 +99,12 @@ GTEST_TEST(TestEthLeaf, HashTest1)
 	EXPECT_EQ(hash, expected);
 }
 
-GTEST_TEST(TestEthLeaf, HashTest2)
+GTEST_TEST(TestEthTrieLeafNode, HashTest2)
 {
 	std::vector<uint8_t> nibbleBytes = {1, 2, 3, 4};
 	SimpleObjects::Bytes val = {'v', 'e', 'r', 'b'};
-	std::unique_ptr<LeafNode> leafNode = LeafNode::NewLeafNodeFromBytes(nibbleBytes, val);
+	std::unique_ptr<LeafNode> leafNode =
+		LeafNode::NewLeafNodeFromBytes(nibbleBytes, val);
 	SimpleObjects::Bytes hash = leafNode->Hash();
 
 	SimpleObjects::Bytes expected = {

@@ -7,10 +7,23 @@
 
 #include <EclipseMonitor/Trie/Nibbles.hpp>
 
-using namespace EclipseMonitor;
-using namespace Trie;
+namespace EclipseMonitor_Test
+{
+	extern size_t g_numOfTestFile;
+}
 
-GTEST_TEST(TestEthNibble, IsNibble)
+using namespace EclipseMonitor_Test;
+
+using namespace EclipseMonitor;
+using namespace EclipseMonitor::Trie;
+
+GTEST_TEST(TestEthTrieNibble, CountTestFile)
+{
+	static auto tmp = ++g_numOfTestFile;
+	(void)tmp;
+}
+
+GTEST_TEST(TestEthTrieNibble, IsNibble)
 {
 	for(uint i = 0; i < 20; i++)
 	{
@@ -19,7 +32,7 @@ GTEST_TEST(TestEthNibble, IsNibble)
 	}
 }
 
-GTEST_TEST(TestEthNibble, FromNibbleByte)
+GTEST_TEST(TestEthTrieNibble, FromNibbleByte)
 {
 	for(uint i = 0; i < 20; i++)
 	{
@@ -30,26 +43,33 @@ GTEST_TEST(TestEthNibble, FromNibbleByte)
 		}
 		else
 		{
-			EXPECT_THROW(NibbleHelper::FromNibbleByte(i), NibblesConversionException);
+			EXPECT_THROW(
+				NibbleHelper::FromNibbleByte(i),
+				NibblesConversionException
+			);
 		}
 	}
 }
 
-GTEST_TEST(TestEthNibble, FromNibbleBytes)
+GTEST_TEST(TestEthTrieNibble, FromNibbleBytes)
 {
 	{
 		std::vector<uint8_t> nibbleBytes = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-		std::vector<Trie::Nibble> nibbles = Trie::NibbleHelper::FromNibbleBytes(nibbleBytes);
+		std::vector<Trie::Nibble> nibbles =
+			Trie::NibbleHelper::FromNibbleBytes(nibbleBytes);
 		EXPECT_EQ(nibbleBytes.size(), nibbles.size());
 		EXPECT_EQ(nibbleBytes, nibbles);
 	}
 	{
 		std::vector<uint8_t> nibbleBytes = {0, 1, 2, 3, 4, 5, 16, 17, 18, 19};
-		EXPECT_THROW(NibbleHelper::FromNibbleBytes(nibbleBytes), NibblesConversionException);
+		EXPECT_THROW(
+			NibbleHelper::FromNibbleBytes(nibbleBytes),
+			NibblesConversionException
+		);
 	}
 }
 
-GTEST_TEST(TestEthNibble, FromByte)
+GTEST_TEST(TestEthTrieNibble, FromByte)
 {
 	EXPECT_EQ(std::vector<Nibble>({0, 0}), NibbleHelper::FromByte(0));
 	EXPECT_EQ(std::vector<Nibble>({0, 10}), NibbleHelper::FromByte(10));
@@ -57,7 +77,7 @@ GTEST_TEST(TestEthNibble, FromByte)
 	EXPECT_EQ(std::vector<Nibble>({15, 15}), NibbleHelper::FromByte(255));
 }
 
-GTEST_TEST(TestEthNibble, FromBytes)
+GTEST_TEST(TestEthTrieNibble, FromBytes)
 {
 	{
 		std::vector<Nibble> nibbles = {0, 0, 0, 1};
@@ -81,7 +101,7 @@ GTEST_TEST(TestEthNibble, FromBytes)
 	}
 }
 
-GTEST_TEST(TestEthNibble, ToBytes)
+GTEST_TEST(TestEthTrieNibble, ToBytes)
 {
 	{
 		std::vector<uint8_t> bytes = {0};
@@ -100,7 +120,7 @@ GTEST_TEST(TestEthNibble, ToBytes)
 	}
 }
 
-GTEST_TEST(TestEthNibble, ToPrefixed)
+GTEST_TEST(TestEthTrieNibble, ToPrefixed)
 {
 	{
 		std::vector<Nibble> nibbles = {1};
@@ -158,7 +178,7 @@ GTEST_TEST(TestEthNibble, ToPrefixed)
 	}
 }
 
-GTEST_TEST(TestEthNibble, PrefixMatchedLen)
+GTEST_TEST(TestEthTrieNibble, PrefixMatchedLen)
 {
 	{
 		std::vector<Nibble> nibbles1 = {1, 2, 3, 4};

@@ -7,29 +7,27 @@
 
 #include <cstdint>
 
-#include "../Internal/SimpleRlp.hpp"
+#include <vector>
+#include <string>
+
+#include "../Exceptions.hpp"
 
 namespace EclipseMonitor
 {
+
 namespace Trie
 {
-
-// from: https://github.com/zhenghaven/SimpleUtf/blob/main/include/SimpleUtf/Exceptions.hpp
-class Exception : public std::runtime_error
-{
-public:
-	Exception(const std::string& what_arg) :
-		std::runtime_error(what_arg)
-	{}
-};
 
 class NibblesConversionException : public Exception
 {
 public:
-	NibblesConversionException(const std::string& what_arg) :
-		Exception(what_arg)
-	{}
-};
+	using Exception::Exception;
+
+	// LCOV_EXCL_START
+	virtual ~NibblesConversionException() = default;
+	// LCOV_EXCL_STOP
+
+}; // class NibblesConversionException
 
 using Nibble = uint8_t;
 
@@ -42,13 +40,17 @@ struct NibbleHelper
 
 	static Nibble FromNibbleByte(const uint8_t& n)
 	{
-		return IsNibble(n) ? Nibble(n) :
-			   throw NibblesConversionException(
-				   "non-nibble byte " +
-				   std::to_string(n));
+		return
+			IsNibble(n) ?
+				Nibble(n) :
+				throw NibblesConversionException(
+					"non-nibble byte " + std::to_string(n)
+				);
 	}
 
-	static std::vector<Nibble> FromNibbleBytes(std::vector<uint8_t> nibbleBytes)
+	static std::vector<Nibble> FromNibbleBytes(
+		const std::vector<uint8_t>& nibbleBytes
+	)
 	{
 		std::vector<Nibble> nibbles;
 		nibbles.reserve(nibbleBytes.size());
@@ -64,7 +66,8 @@ struct NibbleHelper
 			{
 				throw NibblesConversionException(
 					"contains non-nibble byte " +
-					std::to_string(nibbleByte));
+					std::to_string(nibbleByte)
+				);
 			}
 		}
 
@@ -73,8 +76,10 @@ struct NibbleHelper
 
 	static std::vector<Nibble> FromByte(const uint8_t& byte)
 	{
-		std::vector<Nibble> nibbles = {FromNibbleByte(byte >> 4),
-										FromNibbleByte(byte % 16)};
+		std::vector<Nibble> nibbles = {
+			FromNibbleByte(byte >> 4),
+			FromNibbleByte(byte % 16)
+		};
 		return nibbles;
 	}
 
@@ -86,9 +91,11 @@ struct NibbleHelper
 		for (const auto& byte: bytes)
 		{
 			std::vector <Nibble> nibblesFromByte = FromByte(byte);
-			nibbles.insert(nibbles.end(),
-						   nibblesFromByte.begin(),
-						   nibblesFromByte.end());
+			nibbles.insert(
+				nibbles.end(),
+				nibblesFromByte.begin(),
+				nibblesFromByte.end()
+			);
 		}
 
 		return nibbles;
@@ -101,16 +108,19 @@ struct NibbleHelper
 
 		for (size_t i = 0; i < nibbles.size(); i += 2)
 		{
-			uint8_t nibbleByte = static_cast<uint8_t>(nibbles[i] << 4) +
-								 static_cast<uint8_t>(nibbles[i + 1]);
+			uint8_t nibbleByte =
+				static_cast<uint8_t>(nibbles[i] << 4) |
+				static_cast<uint8_t>(nibbles[i + 1]);
 			nibbleBytes.push_back(nibbleByte);
 		}
 
 		return nibbleBytes;
 	}
 
-	static std::vector<Nibble> ToPrefixed(const std::vector<Nibble>& nibbles,
-										   const bool& isLeafNode)
+	static std::vector<Nibble> ToPrefixed(
+		const std::vector<Nibble>& nibbles,
+		bool isLeafNode
+	)
 	{
 		std::vector<Nibble> prefixBytes;
 
@@ -127,13 +137,17 @@ struct NibbleHelper
 
 		// first append the prefix then the Nibbles
 		prefixed.reserve(prefixBytes.size() + nibbles.size());
-		prefixed.insert(prefixed.end(),
-						prefixBytes.begin(),
-						prefixBytes.end());
+		prefixed.insert(
+			prefixed.end(),
+			prefixBytes.begin(),
+			prefixBytes.end()
+		);
 
-		prefixed.insert(prefixed.end(),
-						nibbles.begin(),
-						nibbles.end());
+		prefixed.insert(
+			prefixed.end(),
+			nibbles.begin(),
+			nibbles.end()
+		);
 
 		if (isLeafNode)
 		{
@@ -143,8 +157,10 @@ struct NibbleHelper
 		return prefixed;
 	}
 
-	static uint8_t PrefixMatchedLen(const std::vector<Nibble>& nibbles1,
-									const std::vector<Nibble>& nibbles2)
+	static uint8_t PrefixMatchedLen(
+		const std::vector<Nibble>& nibbles1,
+		const std::vector<Nibble>& nibbles2
+	)
 	{
 		uint8_t matchedLen = 0;
 

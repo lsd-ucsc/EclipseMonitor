@@ -10,23 +10,39 @@
 #include <EclipseMonitor/Trie/LeafNode.hpp>
 #include <EclipseMonitor/Trie/Nibbles.hpp>
 
+namespace EclipseMonitor_Test
+{
+	extern size_t g_numOfTestFile;
+}
+
+using namespace EclipseMonitor_Test;
+
 using namespace EclipseMonitor;
+using namespace EclipseMonitor::Trie;
 using namespace SimpleObjects;
 using namespace SimpleRlp;
-using namespace Trie;
 
+GTEST_TEST(TestEthTrieExtensionNode, CountTestFile)
+{
+	static auto tmp = ++g_numOfTestFile;
+	(void)tmp;
+}
 
-GTEST_TEST(TestEthExtensionNode, SingleExtensionTest)
+GTEST_TEST(TestEthTrieExtensionNode, SingleExtensionTest)
 {
 	std::vector<Nibble> nibbles = {5, 0, 6};
 	SimpleObjects::Bytes val = {'c', 'o', 'i', 'n'};
-	std::unique_ptr<LeafNode> leafBase = LeafNode::NewLeafNodeFromNibbles(nibbles, val);
-	std::unique_ptr<Node> leaf = SimpleObjects::Internal::make_unique<Node>(std::move(leafBase));
+	std::unique_ptr<LeafNode> leafBase =
+		LeafNode::NewLeafNodeFromNibbles(nibbles, val);
+	std::unique_ptr<Node> leaf =
+		SimpleObjects::Internal::make_unique<Node>(std::move(leafBase));
 
-	std::unique_ptr<BranchNode> branchNodeBase = SimpleObjects::Internal::make_unique<BranchNode>();
+	std::unique_ptr<BranchNode> branchNodeBase =
+		SimpleObjects::Internal::make_unique<BranchNode>();
 	branchNodeBase->SetBranch(0, std::move(leaf));
 	branchNodeBase->SetValue(SimpleObjects::Bytes({'v', 'e', 'r', 'b'}));
-	std::unique_ptr<Node> branchNode = SimpleObjects::Internal::make_unique<Node>(std::move(branchNodeBase));
+	std::unique_ptr<Node> branchNode =
+		SimpleObjects::Internal::make_unique<Node>(std::move(branchNodeBase));
 
 	std::vector<uint8_t> nibbleBytes = {1, 2, 3, 4};
 	std::vector<Nibble> nibs = NibbleHelper::FromBytes(nibbleBytes);
@@ -52,33 +68,48 @@ GTEST_TEST(TestEthExtensionNode, SingleExtensionTest)
 	EXPECT_EQ(hashed, expectedHashed);
 }
 
-GTEST_TEST(TestEthExtensionNode, NestedExtensionTest)
+GTEST_TEST(TestEthTrieExtensionNode, NestedExtensionTest)
 {
 	std::vector<Nibble> nibbles1 = {1, 1, 1};
 	SimpleObjects::Bytes val1 = {'a'};
-	std::unique_ptr<LeafNode> leaf1Base = LeafNode::NewLeafNodeFromNibbles(nibbles1, val1);
-	std::unique_ptr<Node> leaf1 = SimpleObjects::Internal::make_unique<Node>(std::move(leaf1Base));
+	std::unique_ptr<LeafNode> leaf1Base =
+		LeafNode::NewLeafNodeFromNibbles(nibbles1, val1);
+	std::unique_ptr<Node> leaf1 =
+		SimpleObjects::Internal::make_unique<Node>(std::move(leaf1Base));
 
-	std::unique_ptr<BranchNode> branchNode1Base = SimpleObjects::Internal::make_unique<BranchNode>();
+	std::unique_ptr<BranchNode> branchNode1Base =
+		SimpleObjects::Internal::make_unique<BranchNode>();
 	branchNode1Base->SetBranch(0, std::move(leaf1));
 	branchNode1Base->SetValue(SimpleObjects::Bytes({'b'}));
-	std::unique_ptr<Node> branchNode1 = SimpleObjects::Internal::make_unique<Node>(std::move(branchNode1Base));
+	std::unique_ptr<Node> branchNode1 =
+		SimpleObjects::Internal::make_unique<Node>(std::move(branchNode1Base));
 
 	std::vector<uint8_t> nibbleBytes1 = {1, 2};
 	std::vector<Nibble> nibs1 = NibbleHelper::FromBytes(nibbleBytes1);
-	std::unique_ptr<ExtensionNode> extensionNode1Base = SimpleObjects::Internal::make_unique<ExtensionNode>(std::move(nibs1), std::move(branchNode1));
-	std::unique_ptr<Node> extensionNode1 = SimpleObjects::Internal::make_unique<Node>(std::move(extensionNode1Base));
+	std::unique_ptr<ExtensionNode> extensionNode1Base =
+		SimpleObjects::Internal::make_unique<ExtensionNode>(
+			std::move(nibs1),
+			std::move(branchNode1)
+		);
+	std::unique_ptr<Node> extensionNode1 =
+		SimpleObjects::Internal::make_unique<Node>(
+			std::move(extensionNode1Base)
+		);
 
 	std::vector<Nibble> nibbles2 = {7, 7, 7};
 	SimpleObjects::Bytes val2 = {'d'};
-	std::unique_ptr<LeafNode> leaf2Base = LeafNode::NewLeafNodeFromNibbles(nibbles2, val2);
-	std::unique_ptr<Node> leaf2 = SimpleObjects::Internal::make_unique<Node>(std::move(leaf2Base));
+	std::unique_ptr<LeafNode> leaf2Base =
+		LeafNode::NewLeafNodeFromNibbles(nibbles2, val2);
+	std::unique_ptr<Node> leaf2 =
+		SimpleObjects::Internal::make_unique<Node>(std::move(leaf2Base));
 
-	std::unique_ptr<BranchNode> branchNode2Base = SimpleObjects::Internal::make_unique<BranchNode>();
+	std::unique_ptr<BranchNode> branchNode2Base =
+		SimpleObjects::Internal::make_unique<BranchNode>();
 	branchNode2Base->SetBranch(4, std::move(extensionNode1));
 	branchNode2Base->SetBranch(8, std::move(leaf2));
 	branchNode2Base->SetValue(SimpleObjects::Bytes({'e'}));
-	std::unique_ptr<Node> branchNode2 = SimpleObjects::Internal::make_unique<Node>(std::move(branchNode2Base));
+	std::unique_ptr<Node> branchNode2 =
+		SimpleObjects::Internal::make_unique<Node>(std::move(branchNode2Base));
 
 	std::vector<uint8_t> nibbleBytes2 = {3, 4};
 	std::vector<Nibble> nibs2 = NibbleHelper::FromBytes(nibbleBytes2);

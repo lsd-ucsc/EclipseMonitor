@@ -13,36 +13,51 @@ namespace EclipseMonitor
 namespace Trie
 {
 
-// Enum for different node types
+/**
+ * @brief Enum for different node types
+ *
+ */
 enum class NodeType
 {
 	Leaf,
 	Branch,
 	Extension,
 	Null
-};
+}; // enum class NodeType
 
 
 class NodeBase
 {
 public:
+
+	NodeBase() = default;
+
+	// LCOV_EXCL_START
+	virtual ~NodeBase() = default;
+	// LCOV_EXCL_STOP
+
 	virtual NodeType GetNodeType() const = 0;
 
 	virtual SimpleObjects::Bytes Hash() = 0;
 
 	virtual SimpleObjects::List Raw() = 0;
-};
+}; // class NodeBase
 
 
 class Node
 {
 public:
-	Node() : m_node(nullptr)
+	Node() :
+		m_node(nullptr)
 	{}
 
 	Node(std::unique_ptr<NodeBase> nodeBase) :
 		m_node(std::move(nodeBase))
 	{}
+
+	// LCOV_EXCL_START
+	~Node() = default;
+	// LCOV_EXCL_STOP
 
 	void SetNode(std::unique_ptr<NodeBase> nodeBase)
 	{
@@ -69,6 +84,7 @@ public:
 
 private:
 	std::unique_ptr<NodeBase> m_node;
+
 }; // class Node
 
 
@@ -76,7 +92,7 @@ struct EmptyNode
 {
 	static bool IsEmptyNode(const NodeBase* node)
 	{
-		return !node;
+		return node == nullptr;
 	}
 
 	static SimpleObjects::Bytes EmptyNodeRaw()
@@ -113,10 +129,10 @@ struct NodeHelper
 			raw = node->Raw();
 		}
 
-		SimpleRlp::OutputContainerType rlp = SimpleRlp::WriteRlp(raw);
+		Internal::Rlp::OutputContainerType rlp = Internal::Rlp::WriteRlp(raw);
 		return rlp;
 	}
 }; // struct NodeHelper
 
-} // namespace TrieNode
+} // namespace Trie
 } // namespace EclipseMonitor

@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "../Internal/SimpleObj.hpp"
+
 #include "BranchNode.hpp"
 #include "ExtensionNode.hpp"
 #include "LeafNode.hpp"
@@ -18,54 +20,67 @@ namespace Trie
 {
 
 /**
- * This Trie implementation is based on a simplified version of Ethereum's
- * Patricia Merkle Trie.
+ * @brief This Trie implementation is based on a simplified version
+ *        of Ethereum's Patricia Merkle Trie.
+ *        source: https://github.com/zhangchiqing/merkle-patricia-trie
  *
- * source: https://github.com/zhangchiqing/merkle-patricia-trie
- *
- * */
+ */
 class PatriciaTrie
 {
 public:
 
-	PatriciaTrie() = default;
+	PatriciaTrie() :
+		m_root()
+	{}
+
+	// LCOV_EXCL_START
+	~PatriciaTrie() = default;
+	// LCOV_EXCL_STOP
 
 	void Reset()
 	{
-		Root.reset();
+		m_root.reset();
 	}
 
 	/**
-	 * calculates the root hash of the trie. For transactions and receipts, this function
-	 * would produce the "transactionsRoot" and "receiptsRoot", respectively.
+	 * @brief calculates the root hash of the trie.
+	 *        For transactions and receipts, this function would produce
+	 *        the "transactionsRoot" and "receiptsRoot", respectively.
 	 *
-	 * */
-	SimpleObjects::Bytes Hash()
+	 * @return Hash of the root node, or empty hash if the trie is empty.
+	 */
+	Internal::Obj::Bytes Hash()
 	{
-		if (!Root)
+		if (m_root == nullptr)
 		{
 			return EmptyNode::EmptyNodeHash();
 		}
-		std::unique_ptr<NodeBase>& rootBase = Root->GetNodeBase();
+		std::unique_ptr<NodeBase>& rootBase = m_root->GetNodeBase();
 		return rootBase->Hash();
 	}
 
-	void Put(const SimpleObjects::Bytes& key,
-			 const SimpleObjects::Bytes& value)
+	void Put(
+		const Internal::Obj::Bytes& key,
+		const Internal::Obj::Bytes& value
+	)
 	{
 		std::vector<Nibble> nibbles = NibbleHelper::FromBytes(key.GetVal());
-		PutKey(Root, nibbles, value);
+		PutKey(m_root, nibbles, value);
 	}
 
-	void PutKey(std::unique_ptr<Node>& node,
-				std::vector<Nibble> nibbles,
-				const SimpleObjects::Bytes& value)
+	void PutKey(
+		std::unique_ptr<Node>& node,
+		std::vector<Nibble> nibbles,
+		const Internal::Obj::Bytes& value
+	)
 	{
 		// empty node, create a new leaf
-		if (!node)
+		if (node == nullptr)
 		{
-			std::unique_ptr<NodeBase> leafBase = LeafNode::NewLeafNodeFromNibbles(nibbles, value);
-			std::unique_ptr<Node> leaf = SimpleObjects::Internal::make_unique<Node>(std::move(leafBase));
+			std::unique_ptr<NodeBase> leafBase =
+				LeafNode::NewLeafNodeFromNibbles(nibbles, value);
+			std::unique_ptr<Node> leaf =
+				Internal::Obj::Internal::make_unique<Node>(std::move(leafBase));
 			node = std::move(leaf);
 
 			return;
@@ -77,10 +92,8 @@ public:
 		// leaf node, convert to Extension node, add new branch with new leaf
 		if (nodeType == NodeType::Leaf)
 		{
-
-			std::unique_ptr<NodeBase>& nodeBase = node->GetNodeBase();
-			LeafNode* leaf = static_cast<LeafNode*>(nodeBase.get());
-
+			LeafNode* leaf =
+				static_cast<LeafNode*>(node->GetNodeBase().get());
 
 			const std::vector<Nibble>& leafPath = leaf->GetPath();
 
@@ -89,20 +102,25 @@ public:
 			if (matched == nibbles.size() && matched == leafPath.size())
 			{
 				// replace leaf with new value
-				auto newLeafBase = LeafNode::NewLeafNodeFromNibbles(leafPath, value);
-				std::unique_ptr<Node> newLeaf = SimpleObjects::Internal::make_unique<Node>(std::move(newLeafBase));
+				auto newLeafBase =
+					LeafNode::NewLeafNodeFromNibbles(leafPath, value);
+				std::unique_ptr<Node> newLeaf =
+					Internal::Obj::Internal::make_unique<Node>(
+						std::move(newLeafBase)
+					);
 				node.reset();
 				node = std::move(newLeaf);
 
 				return;
 			}
 
-			auto branchBase = SimpleObjects::Internal::make_unique<BranchNode>();
+			auto branchBase =
+				Internal::Obj::Internal::make_unique<BranchNode>();
 
 			// set the branch value
 			if (matched == leafPath.size())
 			{
-				SimpleObjects::Bytes leafValue = leaf->GetValue();
+				Internal::Obj::Bytes leafValue = leaf->GetValue();
 				branchBase->SetValue(leafValue);
 			}
 
@@ -115,9 +133,19 @@ public:
 			if (matched < leafPath.size())
 			{
 				Nibble branchNibble(leafPath[matched]);
-				std::vector<Nibble> leafNibbles(leafPath.begin() + matched + 1, leafPath.end());
-				auto newLeafBase = LeafNode::NewLeafNodeFromNibbles(leafNibbles, leaf->GetValue());
-				std::unique_ptr<Node> newLeaf = SimpleObjects::Internal::make_unique<Node>(std::move(newLeafBase));
+				std::vector<Nibble> leafNibbles(
+					leafPath.begin() + matched + 1,
+					leafPath.end()
+				);
+				auto newLeafBase =
+					LeafNode::NewLeafNodeFromNibbles(
+						leafNibbles,
+						leaf->GetValue()
+					);
+				std::unique_ptr<Node> newLeaf =
+					Internal::Obj::Internal::make_unique<Node>(
+						std::move(newLeafBase)
+					);
 				branchBase->SetBranch(branchNibble, std::move(newLeaf));
 			}
 
@@ -125,22 +153,40 @@ public:
 			if (matched < nibbles.size())
 			{
 				Nibble branchNibble(nibbles[matched]);
-				std::vector<Nibble> leafNibbles(nibbles.begin() + matched + 1, nibbles.end());
-				auto newLeafBase = LeafNode::NewLeafNodeFromNibbles(leafNibbles, value);
-				std::unique_ptr<Node> newLeaf = SimpleObjects::Internal::make_unique<Node>(std::move(newLeafBase));
+				std::vector<Nibble> leafNibbles(
+					nibbles.begin() + matched + 1,
+					nibbles.end()
+				);
+				auto newLeafBase =
+					LeafNode::NewLeafNodeFromNibbles(leafNibbles, value);
+				std::unique_ptr<Node> newLeaf =
+					Internal::Obj::Internal::make_unique<Node>(
+						std::move(newLeafBase)
+					);
 				branchBase->SetBranch(branchNibble, std::move(newLeaf));
 			}
 
-			std::unique_ptr<Node> branch = SimpleObjects::Internal::make_unique<Node>(std::move(branchBase));
+			std::unique_ptr<Node> branch =
+				Internal::Obj::Internal::make_unique<Node>(
+					std::move(branchBase)
+				);
 
 			// if some Nibbles match, make branch part of an ExtensionNode
 			if (matched > 0)
 			{
-				std::vector<Nibble> sharedNibbles(leafPath.begin(), leafPath.begin() + matched);
-				std::unique_ptr<ExtensionNode> extensionBase = SimpleObjects::Internal::make_unique<ExtensionNode>(
-					std::move(sharedNibbles),
-					std::move(branch));
-				std::unique_ptr <Node> extension = SimpleObjects::Internal::make_unique<Node>(std::move(extensionBase));
+				std::vector<Nibble> sharedNibbles(
+					leafPath.begin(),
+					leafPath.begin() + matched
+				);
+				std::unique_ptr<ExtensionNode> extensionBase =
+					Internal::Obj::Internal::make_unique<ExtensionNode>(
+						std::move(sharedNibbles),
+						std::move(branch)
+					);
+				std::unique_ptr<Node> extension =
+					Internal::Obj::Internal::make_unique<Node>(
+						std::move(extensionBase)
+					);
 
 				node.reset();
 				node = std::move(extension);
@@ -156,7 +202,8 @@ public:
 		// branch node, update value if nibbles are empty, otherwise update nibble branch
 		if (nodeType == NodeType::Branch)
 		{
-			BranchNode* branch = static_cast<BranchNode*>(node->GetNodeBase().get());
+			BranchNode* branch =
+				static_cast<BranchNode*>(node->GetNodeBase().get());
 
 			if (nibbles.size() == 0)
 			{
@@ -165,7 +212,10 @@ public:
 			}
 
 			Nibble branchNibble(nibbles[0]);
-			std::vector<Nibble> remaining(nibbles.begin() + 1, nibbles.end());
+			std::vector<Nibble> remaining(
+				nibbles.begin() + 1,
+				nibbles.end()
+			);
 			std::unique_ptr<Node>& branchNode = branch->GetBranch(branchNibble);
 			PutKey(branchNode, remaining, value);
 
@@ -174,22 +224,35 @@ public:
 
 		if (nodeType == NodeType::Extension)
 		{
-			ExtensionNode* extension = static_cast<ExtensionNode*>(node->GetNodeBase().get());
+			ExtensionNode* extension =
+				static_cast<ExtensionNode*>(node->GetNodeBase().get());
 
 			std::vector<Nibble> extensionPath = extension->GetPath();
-			uint8_t matched = NibbleHelper::PrefixMatchedLen(nibbles, extensionPath);
+			uint8_t matched =
+				NibbleHelper::PrefixMatchedLen(nibbles, extensionPath);
 
 			if (matched < extensionPath.size())
 			{
-				std::vector<Nibble> sharedNibbles(extensionPath.begin(), extensionPath.begin() + matched);
+				std::vector<Nibble> sharedNibbles(
+					extensionPath.begin(),
+					extensionPath.begin() + matched
+				);
 				Nibble branchNibble(extensionPath[matched]);
-				std::vector<Nibble> remaining(extensionPath.begin() + matched + 1, extensionPath.end());
+				std::vector<Nibble> remaining(
+					extensionPath.begin() + matched + 1,
+					extensionPath.end()
+				);
 
 				Nibble nodeBranchNibble(nibbles[matched]);
-				std::vector<Nibble> nodeLeafNibbles(nibbles.begin() + matched + 1, nibbles.end());
+				std::vector<Nibble> nodeLeafNibbles(
+					nibbles.begin() + matched + 1,
+					nibbles.end()
+				);
 
-				auto branchBase = SimpleObjects::Internal::make_unique<BranchNode>();
-				std::unique_ptr<Node> nextNode = std::move(extension->GetNext());
+				auto branchBase =
+					Internal::Obj::Internal::make_unique<BranchNode>();
+				std::unique_ptr<Node> nextNode =
+					std::move(extension->GetNext());
 
 				if (remaining.size() == 0)
 				{
@@ -197,19 +260,33 @@ public:
 				}
 				else
 				{
-					auto newExtensionBase = SimpleObjects::Internal::make_unique<ExtensionNode>(std::move(remaining),
-																								std::move(nextNode));
-					std::unique_ptr<Node> newExtension = SimpleObjects::Internal::make_unique<Node>(
-						std::move(newExtensionBase));
-					branchBase->SetBranch(branchNibble, std::move(newExtension));
+					auto newExtensionBase =
+						Internal::Obj::Internal::make_unique<ExtensionNode>(
+							std::move(remaining),
+							std::move(nextNode)
+						);
+					std::unique_ptr<Node> newExtension =
+						Internal::Obj::Internal::make_unique<Node>(
+							std::move(newExtensionBase)
+						);
+					branchBase->SetBranch(
+						branchNibble,
+						std::move(newExtension)
+					);
 				}
 
-				auto remainingLeafBase = LeafNode::NewLeafNodeFromNibbles(nodeLeafNibbles, value);
-				std::unique_ptr<Node> remainingLeaf = SimpleObjects::Internal::make_unique<Node>(
-					std::move(remainingLeafBase));
+				auto remainingLeafBase =
+					LeafNode::NewLeafNodeFromNibbles(nodeLeafNibbles, value);
+				std::unique_ptr<Node> remainingLeaf =
+					Internal::Obj::Internal::make_unique<Node>(
+						std::move(remainingLeafBase)
+					);
 				branchBase->SetBranch(nodeBranchNibble, std::move(remainingLeaf));
 
-				std::unique_ptr<Node> branch = SimpleObjects::Internal::make_unique<Node>(std::move(branchBase));
+				std::unique_ptr<Node> branch =
+					Internal::Obj::Internal::make_unique<Node>(
+						std::move(branchBase)
+					);
 				node.reset();
 
 				if (sharedNibbles.size() == 0)
@@ -218,16 +295,23 @@ public:
 				}
 				else
 				{
-					auto newExtensionBase = SimpleObjects::Internal::make_unique<ExtensionNode>(
-						std::move(sharedNibbles),
-						std::move(branch));
-					std::unique_ptr<Node> newExtension = SimpleObjects::Internal::make_unique<Node>(
-						std::move(newExtensionBase));
+					auto newExtensionBase =
+						Internal::Obj::Internal::make_unique<ExtensionNode>(
+							std::move(sharedNibbles),
+							std::move(branch)
+						);
+					std::unique_ptr<Node> newExtension =
+						Internal::Obj::Internal::make_unique<Node>(
+							std::move(newExtensionBase)
+						);
 					node = std::move(newExtension);
 				}
 				return;
 			}
-			std::vector<Nibble> remaining(nibbles.begin() + matched, nibbles.end());
+			std::vector<Nibble> remaining(
+				nibbles.begin() + matched,
+				nibbles.end()
+			);
 			PutKey(extension->GetNext(), remaining, value);
 
 			return;
@@ -237,8 +321,9 @@ public:
 
 private:
 
-	std::unique_ptr<Node> Root;
-}; // end class Trie
+	std::unique_ptr<Node> m_root;
+
+}; // class PatriciaTrie
 
 } // namespace Trie
-} // namespace SimpleObjects
+} // namespace EclipseMonitor

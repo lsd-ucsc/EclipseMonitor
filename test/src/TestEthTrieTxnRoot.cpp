@@ -9,16 +9,29 @@
 
 #include "EthTransactions.hpp"
 
-using namespace EclipseMonitor;
+namespace EclipseMonitor_Test
+{
+	extern size_t g_numOfTestFile;
+}
+
 using namespace EclipseMonitor_Test;
+
+using namespace EclipseMonitor;
+using namespace EclipseMonitor::Trie;
 using namespace SimpleObjects;
 using namespace SimpleRlp;
-using namespace Trie;
 
 // converts a uint64_t to byte vector
+// TODO: use the new API
 using IntWriter = SimpleRlp::Internal::EncodeSizeValue<Endian::little, false>;
 
-GTEST_TEST(TestEthTransactionsRoot, TestTransactionsRootBlock15415840)
+GTEST_TEST(TestEthTrieTxnRoot, CountTestFile)
+{
+	static auto tmp = ++g_numOfTestFile;
+	(void)tmp;
+}
+
+GTEST_TEST(TestEthTrieTxnRoot, TestTransactionsRootBlock15415840)
 {
 	std::vector<uint8_t> key;
 	SimpleObjects::Bytes keyBytes;
@@ -27,7 +40,7 @@ GTEST_TEST(TestEthTransactionsRoot, TestTransactionsRootBlock15415840)
 	Trie::PatriciaTrie trie;
 
 	const SimpleObjects::Bytes& expected = GetTransactionsRoot_15415840();
-	const std::vector<SimpleObjects::Bytes>& txns = GetEthTransactions_15415840();
+	const auto& txns = GetEthTransactions_15415840();
 
 	// insert first transaction separately
 	if(txns.size() > 0)
@@ -54,7 +67,7 @@ GTEST_TEST(TestEthTransactionsRoot, TestTransactionsRootBlock15415840)
 }
 
 
-GTEST_TEST(TestEthTransactionsRoot, TestTransactionsRootBlock15209997)
+GTEST_TEST(TestEthTrieTxnRoot, TestTransactionsRootBlock15209997)
 {
 	std::vector<uint8_t> key;
 	SimpleObjects::Bytes keyBytes;
@@ -63,7 +76,7 @@ GTEST_TEST(TestEthTransactionsRoot, TestTransactionsRootBlock15209997)
 	Trie::PatriciaTrie trie;
 
 	const SimpleObjects::Bytes& expected = GetTransactionsRoot_15209997();
-	const std::vector<SimpleObjects::Bytes>& txns = GetEthTransactions_15209997();
+	const auto& txns = GetEthTransactions_15209997();
 
 	// insert first transaction separately
 	if(txns.size() > 0)
