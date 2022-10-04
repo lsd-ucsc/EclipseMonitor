@@ -8,16 +8,16 @@
 
 #include <SimpleObjects/Internal/make_unique.hpp>
 
-#include "../Internal/SimpleObj.hpp"
-
-#include "../EthKeccak256.hpp"
+#include "../../Internal/SimpleObj.hpp"
+#include "../../EthKeccak256.hpp"
 
 #include "Nibbles.hpp"
 #include "TrieNode.hpp"
 
 namespace EclipseMonitor
 {
-
+namespace Eth
+{
 namespace Trie
 {
 
@@ -103,4 +103,5 @@ private:
 }; // class LeafNode
 
 } // namespace Trie
+} // namespace Eth
 } // namespace EclipseMonitor

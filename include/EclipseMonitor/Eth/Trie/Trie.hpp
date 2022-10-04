@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "../Internal/SimpleObj.hpp"
+#include "../../Internal/SimpleObj.hpp"
 
 #include "BranchNode.hpp"
 #include "ExtensionNode.hpp"
@@ -15,7 +15,8 @@
 
 namespace EclipseMonitor
 {
-
+namespace Eth
+{
 namespace Trie
 {
 
@@ -326,4 +327,5 @@ private:
 }; // class PatriciaTrie
 
 } // namespace Trie
+} // namespace Eth
 } // namespace EclipseMonitor

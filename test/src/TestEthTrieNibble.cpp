@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 
-#include <EclipseMonitor/Trie/Nibbles.hpp>
+#include <EclipseMonitor/Eth/Trie/Nibbles.hpp>
 
 namespace EclipseMonitor_Test
 {
@@ -14,8 +14,7 @@ namespace EclipseMonitor_Test
 
 using namespace EclipseMonitor_Test;
 
-using namespace EclipseMonitor;
-using namespace EclipseMonitor::Trie;
+using namespace EclipseMonitor::Eth::Trie;
 
 GTEST_TEST(TestEthTrieNibble, CountTestFile)
 {
@@ -28,7 +27,7 @@ GTEST_TEST(TestEthTrieNibble, IsNibble)
 	for(uint i = 0; i < 20; i++)
 	{
 		bool isNibbleExpected = (i <= 15);
-		EXPECT_EQ(isNibbleExpected, Trie::NibbleHelper::IsNibble(i));
+		EXPECT_EQ(isNibbleExpected, NibbleHelper::IsNibble(i));
 	}
 }
 
@@ -55,8 +54,8 @@ GTEST_TEST(TestEthTrieNibble, FromNibbleBytes)
 {
 	{
 		std::vector<uint8_t> nibbleBytes = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-		std::vector<Trie::Nibble> nibbles =
-			Trie::NibbleHelper::FromNibbleBytes(nibbleBytes);
+		std::vector<Nibble> nibbles =
+			NibbleHelper::FromNibbleBytes(nibbleBytes);
 		EXPECT_EQ(nibbleBytes.size(), nibbles.size());
 		EXPECT_EQ(nibbleBytes, nibbles);
 	}

@@ -10,11 +10,12 @@
 #include <vector>
 #include <string>
 
-#include "../Exceptions.hpp"
+#include "../../Exceptions.hpp"
 
 namespace EclipseMonitor
 {
-
+namespace Eth
+{
 namespace Trie
 {
 
@@ -181,4 +182,5 @@ struct NibbleHelper
 }; // struct NibbleHelper
 
 } // namespace Trie
+} // namespace Eth
 } // namespace EclipseMonitor

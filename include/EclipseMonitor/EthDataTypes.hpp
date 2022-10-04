@@ -35,7 +35,7 @@ struct EthPrimitiveTypeTrait
 	static Internal::Rlp::BytesObjType ToBytes(const value_type& v)
 	{
 		auto res = Internal::Rlp::BytesObjType();
-		Internal::Rlp::Internal::EncodePrimitiveIntValue<
+		Internal::Rlp::EncodePrimitiveIntValue<
 			value_type,
 			Internal::Rlp::Endian::native,
 			false>::

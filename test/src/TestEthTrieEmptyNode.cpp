@@ -6,7 +6,7 @@
 #include <gtest/gtest.h>
 
 #include <EclipseMonitor/EthKeccak256.hpp>
-#include <EclipseMonitor/Trie/TrieNode.hpp>
+#include <EclipseMonitor/Eth/Trie/TrieNode.hpp>
 #include <SimpleRlp/SimpleRlp.hpp>
 
 namespace EclipseMonitor_Test
@@ -17,7 +17,7 @@ namespace EclipseMonitor_Test
 using namespace EclipseMonitor_Test;
 
 using namespace EclipseMonitor;
-using namespace EclipseMonitor::Trie;
+using namespace EclipseMonitor::Eth::Trie;
 using namespace SimpleRlp;
 
 GTEST_TEST(TestEthTrieEmptyNode, CountTestFile)
