@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 
-#include <EclipseMonitor/Trie/Trie.hpp>
+#include <EclipseMonitor/Eth/Trie/Trie.hpp>
 
 #include "EthTransactions.hpp"
 
@@ -16,14 +16,14 @@ namespace EclipseMonitor_Test
 
 using namespace EclipseMonitor_Test;
 
-using namespace EclipseMonitor;
-using namespace EclipseMonitor::Trie;
-using namespace SimpleObjects;
-using namespace SimpleRlp;
+using namespace EclipseMonitor::Eth::Trie;
 
 // converts a uint64_t to byte vector
-// TODO: use the new API
-using IntWriter = SimpleRlp::Internal::EncodeSizeValue<Endian::little, false>;
+using IntWriter = SimpleRlp::EncodePrimitiveIntValue<
+	uint64_t,
+	SimpleRlp::Endian::little,
+	false
+>;
 
 GTEST_TEST(TestEthTrieTxnRoot, CountTestFile)
 {
@@ -37,7 +37,7 @@ GTEST_TEST(TestEthTrieTxnRoot, TestTransactionsRootBlock15415840)
 	SimpleObjects::Bytes keyBytes;
 	SimpleObjects::Bytes encodedKey;
 	SimpleObjects::Bytes value;
-	Trie::PatriciaTrie trie;
+	PatriciaTrie trie;
 
 	const SimpleObjects::Bytes& expected = GetTransactionsRoot_15415840();
 	const auto& txns = GetEthTransactions_15415840();
@@ -73,7 +73,7 @@ GTEST_TEST(TestEthTrieTxnRoot, TestTransactionsRootBlock15209997)
 	SimpleObjects::Bytes keyBytes;
 	SimpleObjects::Bytes encodedKey;
 	SimpleObjects::Bytes value;
-	Trie::PatriciaTrie trie;
+	PatriciaTrie trie;
 
 	const SimpleObjects::Bytes& expected = GetTransactionsRoot_15209997();
 	const auto& txns = GetEthTransactions_15209997();

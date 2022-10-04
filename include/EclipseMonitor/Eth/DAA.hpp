@@ -5,30 +5,35 @@
 
 #pragma once
 
-#include "EthDataTypes.hpp"
-#include "EthParams.hpp"
+#include "../Exceptions.hpp"
 
-#include "Exceptions.hpp"
+#include "DataTypes.hpp"
+#include "Params.hpp"
 
 namespace EclipseMonitor
 {
+namespace Eth
+{
+
 
 // Reference: https://github.com/ethereum/go-ethereum/blob/master/consensus/ethash/consensus.go
 
 
-class EthDAABase
+class DAABase
 {
 public: // static members:
 
-	using BlkNumType = typename EthBlkNumTypeTrait::value_type;
-	using TimeType   = typename EthTimeTypeTrait::value_type;
-	using DiffType   = typename EthDiffTypeTrait::value_type;
+	using BlkNumType = typename BlkNumTypeTrait::value_type;
+	using TimeType   = typename TimeTypeTrait::value_type;
+	using DiffType   = typename DiffTypeTrait::value_type;
 
 public:
 
-	EthDAABase() = default;
+	DAABase() = default;
 
-	virtual ~EthDAABase() = default;
+	// LCOV_EXCL_START
+	virtual ~DAABase() = default;
+	// LCOV_EXCL_STOP
 
 	virtual DiffType operator()(
 		const BlkNumType& parentBlkNum,
@@ -62,21 +67,21 @@ protected:
 			return y;
 		}
 	}
-}; // class EthDAABase
+}; // class DAABase
 
 
-class EthDAACalculator : public EthDAABase
+class DAACalculator : public DAABase
 {
 public: // static members:
-	using Base = EthDAABase;
+	using Base = DAABase;
 
 	using BlkNumType = typename Base::BlkNumType;
 	using TimeType   = typename Base::TimeType;
 	using DiffType   = typename Base::DiffType;
 
-	static const EthDAACalculator& GetEip5133()
+	static const DAACalculator& GetEip5133()
 	{
-		static const EthDAACalculator inst(
+		static const DAACalculator inst(
 			/* considerUncle */     true,
 			/* deltaDivisor */      DiffType(9),
 			/* hasMaxCheck */       true,
@@ -85,9 +90,9 @@ public: // static members:
 		return inst;
 	}
 
-	static const EthDAACalculator& GetEip5133Estimated()
+	static const DAACalculator& GetEip5133Estimated()
 	{
-		static const EthDAACalculator inst(
+		static const DAACalculator inst(
 			/* considerUncle */     true,
 			/* deltaDivisor */      DiffType(9),
 			/* hasMaxCheck */       false,
@@ -96,9 +101,9 @@ public: // static members:
 		return inst;
 	}
 
-	static const EthDAACalculator& GetEip4345()
+	static const DAACalculator& GetEip4345()
 	{
-		static const EthDAACalculator inst(
+		static const DAACalculator inst(
 			/* considerUncle */     true,
 			/* deltaDivisor */      DiffType(9),
 			/* hasMaxCheck */       true,
@@ -107,9 +112,9 @@ public: // static members:
 		return inst;
 	}
 
-	static const EthDAACalculator& GetEip3554()
+	static const DAACalculator& GetEip3554()
 	{
-		static const EthDAACalculator inst(
+		static const DAACalculator inst(
 			/* considerUncle */     true,
 			/* deltaDivisor */      DiffType(9),
 			/* hasMaxCheck */       true,
@@ -118,9 +123,9 @@ public: // static members:
 		return inst;
 	}
 
-	static const EthDAACalculator& GetEip2384()
+	static const DAACalculator& GetEip2384()
 	{
-		static const EthDAACalculator inst(
+		static const DAACalculator inst(
 			/* considerUncle */     true,
 			/* deltaDivisor */      DiffType(9),
 			/* hasMaxCheck */       true,
@@ -129,9 +134,9 @@ public: // static members:
 		return inst;
 	}
 
-	static const EthDAACalculator& GetConstantinople()
+	static const DAACalculator& GetConstantinople()
 	{
-		static const EthDAACalculator inst(
+		static const DAACalculator inst(
 			/* considerUncle */     true,
 			/* deltaDivisor */      DiffType(9),
 			/* hasMaxCheck */       true,
@@ -140,9 +145,9 @@ public: // static members:
 		return inst;
 	}
 
-	static const EthDAACalculator& GetByzantium()
+	static const DAACalculator& GetByzantium()
 	{
-		static const EthDAACalculator inst(
+		static const DAACalculator inst(
 			/* considerUncle */     true,
 			/* deltaDivisor */      DiffType(9),
 			/* hasMaxCheck */       true,
@@ -151,9 +156,9 @@ public: // static members:
 		return inst;
 	}
 
-	static const EthDAACalculator& GetHomestead()
+	static const DAACalculator& GetHomestead()
 	{
-		static const EthDAACalculator inst(
+		static const DAACalculator inst(
 			/* considerUncle */     false,
 			/* deltaDivisor */      DiffType(10),
 			/* hasMaxCheck */       true,
@@ -163,13 +168,13 @@ public: // static members:
 	}
 
 public:
-	EthDAACalculator(
+	DAACalculator(
 		bool considerUncle,
 		const DiffType& deltaDivisor,
 		bool hasMaxCheck,
 		bool hasBombDelay,
 		const BlkNumType& bombDelay) :
-		EthDAABase(),
+		DAABase(),
 		m_considerUncle(considerUncle),
 		m_deltaDivisor(deltaDivisor),
 		m_hasMaxCheck(hasMaxCheck),
@@ -178,7 +183,9 @@ public:
 		m_bombDelayFromParent(m_bombDelay - BlkNumType(1))
 	{}
 
-	virtual ~EthDAACalculator() = default;
+	// LCOV_EXCL_START
+	virtual ~DAACalculator() = default;
+	// LCOV_EXCL_STOP
 
 	virtual DiffType operator()(
 		const BlkNumType& parentBlkNum,
@@ -194,7 +201,7 @@ public:
 		static const DiffType sk_diffBig2  = DiffType(2);
 		static const DiffType sk_diffBig99 = DiffType(99);
 		static const DiffType sk_minDiff   =
-			DiffType(EthParams::GetMinimumDifficulty());
+			DiffType(Params::GetMinimumDifficulty());
 
 		static const BlkNumType sk_blkNBig0      = BlkNumType(0);
 		static const BlkNumType sk_blkNBig1      = BlkNumType(1);
@@ -258,7 +265,7 @@ public:
 		}
 
 		// parent_diff / 2048
-		DiffType y = parentDiff >> EthParams::GetDifficultyBoundDivisorBitShift();
+		DiffType y = parentDiff >> Params::GetDifficultyBoundDivisorBitShift();
 
 		// (parent_diff / 2048) *
 		//     max((2 if len(parent.uncles) else 1) - ((timestamp - parent.timestamp) // 9), -99)
@@ -316,28 +323,30 @@ private:
 	bool m_hasBombDelay;
 	BlkNumType m_bombDelay;
 	BlkNumType m_bombDelayFromParent;
-}; // class EthDAACalculator
+}; // class DAACalculator
 
 
-class EthDAACalculatorFrontier : public EthDAABase
+class DAACalculatorFrontier : public DAABase
 {
 public: // static members:
-	using Base = EthDAABase;
+	using Base = DAABase;
 
 	using BlkNumType = typename Base::BlkNumType;
 	using TimeType   = typename Base::TimeType;
 	using DiffType   = typename Base::DiffType;
 
-	static const EthDAACalculatorFrontier& GetInstance()
+	static const DAACalculatorFrontier& GetInstance()
 	{
-		static const EthDAACalculatorFrontier inst;
+		static const DAACalculatorFrontier inst;
 		return inst;
 	}
 
 public:
-	EthDAACalculatorFrontier() = default;
+	DAACalculatorFrontier() = default;
 
-	virtual ~EthDAACalculatorFrontier() = default;
+	// LCOV_EXCL_START
+	virtual ~DAACalculatorFrontier() = default;
+	// LCOV_EXCL_STOP
 
 	virtual DiffType operator()(
 		const BlkNumType& parentBlkNum,
@@ -350,7 +359,7 @@ public:
 		static const DiffType sk_diffBig1  = DiffType(1);
 		static const DiffType sk_diffBig2  = DiffType(2);
 		static const DiffType sk_minDiff   =
-			DiffType(EthParams::GetMinimumDifficulty());
+			DiffType(Params::GetMinimumDifficulty());
 
 		static const BlkNumType sk_blkNBig1      = BlkNumType(1);
 		static const BlkNumType sk_blkNBig2      = BlkNumType(2);
@@ -363,12 +372,12 @@ public:
 		//            (parent_diff - (parent_diff / 2048)) +
 		//                2^(periodCount - 2)
 
-		DiffType adjust = parentDiff >> EthParams::GetDifficultyBoundDivisorBitShift();
+		DiffType adjust = parentDiff >> Params::GetDifficultyBoundDivisorBitShift();
 
 		TimeType delta = currTime - parentTime;
 
 		DiffType diff = parentDiff;
-		if (delta < EthParams::GetDurationLimit())
+		if (delta < Params::GetDurationLimit())
 		{
 			diff += adjust;
 		}
@@ -395,15 +404,15 @@ public:
 		return diff;
 	}
 
-}; // class EthDAACalculatorFrontier
+}; // class DAACalculatorFrontier
 
 
 template<typename _ChainConfig>
-class EthGenericDAAImpl : public EthDAABase
+class GenericDAAImpl : public DAABase
 {
 public: // static members:
-	using Self = EthGenericDAAImpl<_ChainConfig>;
-	using Base = EthDAABase;
+	using Self = GenericDAAImpl<_ChainConfig>;
+	using Base = DAABase;
 
 	using ChainConfig = _ChainConfig;
 
@@ -415,43 +424,45 @@ public: // static members:
 	{
 		if (blkNum >= ChainConfig::GetGrayGlacierBlkNum())
 		{
-			return EthDAACalculator::GetEip5133();
+			return DAACalculator::GetEip5133();
 		}
 		else if (blkNum >= ChainConfig::GetArrowGlacierBlkNum())
 		{
-			return EthDAACalculator::GetEip4345();
+			return DAACalculator::GetEip4345();
 		}
 		else if (blkNum >= ChainConfig::GetLondonBlkNum())
 		{
-			return EthDAACalculator::GetEip3554();
+			return DAACalculator::GetEip3554();
 		}
 		else if (blkNum >= ChainConfig::GetMuirGlacierBlkNum())
 		{
-			return EthDAACalculator::GetEip2384();
+			return DAACalculator::GetEip2384();
 		}
 		else if (blkNum >= ChainConfig::GetConstantinopleBlkNum())
 		{
-			return EthDAACalculator::GetConstantinople();
+			return DAACalculator::GetConstantinople();
 		}
 		else if (blkNum >= ChainConfig::GetByzantiumBlkNum())
 		{
-			return EthDAACalculator::GetByzantium();
+			return DAACalculator::GetByzantium();
 		}
 		else if (blkNum >= ChainConfig::GetHomesteadBlkNum())
 		{
-			return EthDAACalculator::GetHomestead();
+			return DAACalculator::GetHomestead();
 		}
 		else
 		{
-			return EthDAACalculatorFrontier::GetInstance();
+			return DAACalculatorFrontier::GetInstance();
 		}
 	}
 
 public:
 
-	EthGenericDAAImpl() = default;
+	GenericDAAImpl() = default;
 
-	virtual ~EthGenericDAAImpl() = default;
+	// LCOV_EXCL_START
+	virtual ~GenericDAAImpl() = default;
+	// LCOV_EXCL_STOP
 
 	virtual DiffType operator()(
 		const BlkNumType& parentBlkNum,
@@ -461,21 +472,21 @@ public:
 		const BlkNumType& currBlkNum,
 		const TimeType& currTime) const override
 	{
-		const EthDAABase& calculator = GetCalculator(currBlkNum);
+		const DAABase& calculator = GetCalculator(currBlkNum);
 		return calculator(
 			parentBlkNum, parentTime, parentDiff, parentHasUncle,
 			currBlkNum, currTime);
 	}
 
-}; // class EthGenericDAAImpl
+}; // class GenericDAAImpl
 
 
 template<typename _ChainConfig>
-class EthGenericDAAEstImpl : public EthDAABase
+class GenericDAAEstImpl : public DAABase
 {
 public: // static members:
-	using Self = EthGenericDAAEstImpl<_ChainConfig>;
-	using Base = EthDAABase;
+	using Self = GenericDAAEstImpl<_ChainConfig>;
+	using Base = DAABase;
 
 	using ChainConfig = _ChainConfig;
 
@@ -487,7 +498,7 @@ public: // static members:
 	{
 		if (blkNum >= ChainConfig::GetGrayGlacierBlkNum())
 		{
-			return EthDAACalculator::GetEip5133Estimated();
+			return DAACalculator::GetEip5133Estimated();
 		}
 		else
 		{
@@ -498,9 +509,11 @@ public: // static members:
 
 public:
 
-	EthGenericDAAEstImpl() = default;
+	GenericDAAEstImpl() = default;
 
-	virtual ~EthGenericDAAEstImpl() = default;
+	// LCOV_EXCL_START
+	virtual ~GenericDAAEstImpl() = default;
+	// LCOV_EXCL_STOP
 
 	virtual DiffType operator()(
 		const BlkNumType& parentBlkNum,
@@ -510,16 +523,17 @@ public:
 		const BlkNumType& currBlkNum,
 		const TimeType& currTime) const override
 	{
-		const EthDAABase& calculator = GetCalculator(currBlkNum);
+		const DAABase& calculator = GetCalculator(currBlkNum);
 		return calculator(
 			parentBlkNum, parentTime, parentDiff, parentHasUncle,
 			currBlkNum, currTime);
 	}
 
-}; // class EthGenericDAAEstImpl
+}; // class GenericDAAEstImpl
 
 
-using EthMainnetDAA = EthGenericDAAImpl<EthMainnetConfig>;
-using EthMainnetDAAEstimator = EthGenericDAAEstImpl<EthMainnetConfig>;
+using MainnetDAA = GenericDAAImpl<MainnetConfig>;
+using MainnetDAAEstimator = GenericDAAEstImpl<MainnetConfig>;
 
+} // namespace Eth
 } // namespace EclipseMonitor

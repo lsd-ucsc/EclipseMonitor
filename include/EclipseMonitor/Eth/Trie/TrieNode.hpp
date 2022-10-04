@@ -5,11 +5,12 @@
 
 #pragma once
 
-#include "../Internal/SimpleRlp.hpp"
+#include "../../Internal/SimpleRlp.hpp"
 
 namespace EclipseMonitor
 {
-
+namespace Eth
+{
 namespace Trie
 {
 
@@ -135,4 +136,5 @@ struct NodeHelper
 }; // struct NodeHelper
 
 } // namespace Trie
+} // namespace Eth
 } // namespace EclipseMonitor

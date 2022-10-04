@@ -5,8 +5,8 @@
 
 #include <gtest/gtest.h>
 
-#include <EclipseMonitor/Trie/LeafNode.hpp>
-#include <EclipseMonitor/Trie/Trie.hpp>
+#include <EclipseMonitor/Eth/Trie/LeafNode.hpp>
+#include <EclipseMonitor/Eth/Trie/Trie.hpp>
 
 namespace EclipseMonitor_Test
 {
@@ -15,10 +15,7 @@ namespace EclipseMonitor_Test
 
 using namespace EclipseMonitor_Test;
 
-using namespace EclipseMonitor;
-using namespace EclipseMonitor::Trie;
-using namespace SimpleObjects;
-using namespace SimpleRlp;
+using namespace EclipseMonitor::Eth::Trie;
 
 GTEST_TEST(TestEthTrieTrie, CountTestFile)
 {
@@ -28,7 +25,7 @@ GTEST_TEST(TestEthTrieTrie, CountTestFile)
 
 GTEST_TEST(TestEthTrieTrie, TestPutSingleKey)
 {
-	Trie::PatriciaTrie trie;
+	PatriciaTrie trie;
 
 	SimpleObjects::Bytes emptyHash = EmptyNode::EmptyNodeHash();
 	EXPECT_EQ(emptyHash, trie.Hash());
@@ -44,7 +41,7 @@ GTEST_TEST(TestEthTrieTrie, TestPutSingleKey)
 
 GTEST_TEST(TestEthTrieTrie, TestPutLeafShorter)
 {
-	Trie::PatriciaTrie trie;
+	PatriciaTrie trie;
 
 	SimpleObjects::Bytes key1 = {1, 2, 3, 4};
 	SimpleObjects::Bytes val1 = {'h', 'e', 'l', 'l', 'o'};
@@ -84,7 +81,7 @@ GTEST_TEST(TestEthTrieTrie, TestPutLeafShorter)
 
 GTEST_TEST(TestEthTrieTrie, PutLeafAllMatched)
 {
-	Trie::PatriciaTrie trie;
+	PatriciaTrie trie;
 
 	SimpleObjects::Bytes key1 = {1, 2, 3, 4};
 	SimpleObjects::Bytes val1 = {'h', 'e', 'l', 'l', 'o'};
@@ -101,7 +98,7 @@ GTEST_TEST(TestEthTrieTrie, PutLeafAllMatched)
 
 GTEST_TEST(TestEthTrieTrie, PutLeafMore)
 {
-	Trie::PatriciaTrie trie;
+	PatriciaTrie trie;
 
 	SimpleObjects::Bytes key1 = {1, 2, 3, 4};
 	SimpleObjects::Bytes val1 = {'h', 'e', 'l', 'l', 'o'};
@@ -136,7 +133,7 @@ GTEST_TEST(TestEthTrieTrie, PutLeafMore)
 
 GTEST_TEST(TestEthTrieTrie, TestPutMultipleKeys)
 {
-	Trie::PatriciaTrie trie;
+	PatriciaTrie trie;
 
 	SimpleObjects::Bytes key1 = {1};
 	SimpleObjects::Bytes val1 = {'a'};

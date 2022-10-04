@@ -9,25 +9,29 @@
 #include <vector>
 #include <memory>
 
-#include "EthHeaderNode.hpp"
-#include "EthDataTypes.hpp"
-#include "EthHeaderMgr.hpp"
-#include "Exceptions.hpp"
-#include "MonitorReport.hpp"
+#include "../Exceptions.hpp"
+#include "../MonitorReport.hpp"
+
+#include "HeaderNode.hpp"
+#include "DataTypes.hpp"
+#include "HeaderMgr.hpp"
 
 namespace EclipseMonitor
 {
+namespace Eth
+{
 
-class EthCheckpointMgr
+
+class CheckpointMgr
 {
 public: // Static members
 
 	using OnCompleteCallback = std::function<void()>;
 
-	using BlkNumType = typename EthBlkNumTypeTrait::value_type;
+	using BlkNumType = typename BlkNumTypeTrait::value_type;
 
 public:
-	EthCheckpointMgr(
+	CheckpointMgr(
 		const MonitorConfig& mConf,
 		OnCompleteCallback onComplete) :
 		m_chkptSize(static_cast<size_t>(mConf.get_checkpointSize().GetVal())),
@@ -37,7 +41,9 @@ public:
 		m_lastNode()
 	{}
 
-	~EthCheckpointMgr() = default;
+	// LCOV_EXCL_START
+	~CheckpointMgr() = default;
+	// LCOV_EXCL_STOP
 
 	size_t GetNumOfCandidates() const
 	{
@@ -54,7 +60,7 @@ public:
 	 *
 	 * @param node
 	 */
-	void AddNode(std::unique_ptr<EthHeaderNode> node)
+	void AddNode(std::unique_ptr<HeaderNode> node)
 	{
 		if (node == nullptr)
 		{
@@ -114,7 +120,7 @@ public:
 	 *
 	 * @param node
 	 */
-	void AddHeader(std::unique_ptr<EthHeaderMgr> header)
+	void AddHeader(std::unique_ptr<HeaderMgr> header)
 	{
 		if (header == nullptr)
 		{
@@ -153,9 +159,9 @@ public:
 	 *
 	 * @return the median difficulty value of this checkpoint
 	 */
-	typename EthDiffTypeTrait::value_type GetDiffMedian() const
+	typename DiffTypeTrait::value_type GetDiffMedian() const
 	{
-		std::vector<typename EthDiffTypeTrait::value_type> diffs;
+		std::vector<typename DiffTypeTrait::value_type> diffs;
 		for (const auto& header : m_currWindow)
 		{
 			diffs.push_back(header->GetDiff());
@@ -186,13 +192,13 @@ public:
 			throw Exception("There are still headers in candidate window");
 		}
 
-		m_lastNode = Internal::Obj::Internal::make_unique<EthHeaderNode>(
+		m_lastNode = Internal::Obj::Internal::make_unique<HeaderNode>(
 			std::move(m_currWindow.back()));
 		m_isLastNodeCandidate = false;
 		m_currWindow.pop_back();
 	}
 
-	EthHeaderNode* GetLastNodePtr() const
+	HeaderNode* GetLastNodePtr() const
 	{
 		if (m_lastNode == nullptr)
 		{
@@ -201,12 +207,12 @@ public:
 		return m_lastNode.get();
 	}
 
-	const EthHeaderNode& GetLastNode() const
+	const HeaderNode& GetLastNode() const
 	{
 		return *GetLastNodePtr();
 	}
 
-	const EthHeaderMgr& GetLastHeader() const
+	const HeaderMgr& GetLastHeader() const
 	{
 		if (m_lastNode != nullptr)
 		{
@@ -257,11 +263,13 @@ public:
 private:
 	size_t m_chkptSize;
 	OnCompleteCallback m_onComplete;
-	std::vector<std::unique_ptr<EthHeaderMgr> > m_currWindow;
-	std::vector<std::unique_ptr<EthHeaderMgr> > m_candidate;
-	std::unique_ptr<EthHeaderNode> m_lastNode;
+	std::vector<std::unique_ptr<HeaderMgr> > m_currWindow;
+	std::vector<std::unique_ptr<HeaderMgr> > m_candidate;
+	std::unique_ptr<HeaderNode> m_lastNode;
 	bool m_isLastNodeCandidate;
 
-}; // class EthCheckpointMgr
+}; // class CheckpointMgr
 
+
+} // namespace Eth
 } // namespace EclipseMonitor

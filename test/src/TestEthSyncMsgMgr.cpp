@@ -5,15 +5,16 @@
 
 #include <gtest/gtest.h>
 
-#include <EclipseMonitor/EthSyncMsgMgr.hpp>
+#include <EclipseMonitor/Eth/SyncMsgMgr.hpp>
 
 namespace EclipseMonitor_Test
 {
 	extern size_t g_numOfTestFile;
 }
 
-using namespace EclipseMonitor;
 using namespace EclipseMonitor_Test;
+
+using namespace EclipseMonitor::Eth;
 
 GTEST_TEST(TestEthSyncMsgMgr, CountTestFile)
 {

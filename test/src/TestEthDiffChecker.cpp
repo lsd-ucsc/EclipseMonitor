@@ -5,7 +5,8 @@
 
 #include <gtest/gtest.h>
 
-#include <EclipseMonitor/EthDiffChecker.hpp>
+#include <EclipseMonitor/Eth/DAA.hpp>
+#include <EclipseMonitor/Eth/DiffChecker.hpp>
 
 #include "EthHistHdr_0_100.hpp"
 
@@ -13,7 +14,7 @@ namespace EclipseMonitor_Test
 {
 	extern size_t g_numOfTestFile;
 
-	class FixedDiffEstimator : public EclipseMonitor::EthDAABase
+	class FixedDiffEstimator : public EclipseMonitor::Eth::DAABase
 	{
 	public:
 
@@ -35,8 +36,9 @@ namespace EclipseMonitor_Test
 	}; // class FixedDiffEstimator
 }
 
-using namespace EclipseMonitor;
 using namespace EclipseMonitor_Test;
+
+using namespace EclipseMonitor::Eth;
 
 GTEST_TEST(TestEthDiffChecker, CountTestFile)
 {
@@ -46,17 +48,17 @@ GTEST_TEST(TestEthDiffChecker, CountTestFile)
 
 
 static std::vector<uint8_t> BuildHeader(
-	typename EthBlkNumTypeTrait::value_type blkNum,
-	typename EthDiffTypeTrait::value_type diffVal
+	typename BlkNumTypeTrait::value_type blkNum,
+	typename DiffTypeTrait::value_type diffVal
 )
 {
-	auto diffBytes = EthDiffTypeTrait::ToBytes(diffVal);
-	auto blkNumBytes = EthDiffTypeTrait::ToBytes(blkNum);
+	auto diffBytes = DiffTypeTrait::ToBytes(diffVal);
+	auto blkNumBytes = DiffTypeTrait::ToBytes(blkNum);
 
 	SimpleRlp::EthHeader rlpHdr;
 	rlpHdr.get_Number() = blkNumBytes;
 	rlpHdr.get_Difficulty() = diffBytes;
-	rlpHdr.get_Sha3Uncles() = EthHeaderMgr::GetEmptyUncleHash();
+	rlpHdr.get_Sha3Uncles() = HeaderMgr::GetEmptyUncleHash();
 
 	return SimpleRlp::WriteRlp(rlpHdr);
 }
@@ -72,25 +74,25 @@ GTEST_TEST(TestEthDiffChecker, TestHistBlocks)
 	static constexpr size_t sk_endBlkNum = 60;
 
 	// Testing variables
-	MonitorConfig mConf;
+	EclipseMonitor::MonitorConfig mConf;
 	mConf.get_checkpointSize() = sk_checkpointSize;
 	mConf.get_minDiffPercent() = sk_minDiffPercent;
 	mConf.get_maxWaitTime() = sk_maxWaitTime;
-	std::unique_ptr<EthDAABase> diffEstimator =
-		SimpleObjects::Internal::make_unique<EthMainnetDAAEstimator>();
-	std::unique_ptr<EthDAABase> fixedDiffEstimator =
+	std::unique_ptr<DAABase> diffEstimator =
+		SimpleObjects::Internal::make_unique<MainnetDAAEstimator>();
+	std::unique_ptr<DAABase> fixedDiffEstimator =
 		SimpleObjects::Internal::make_unique<FixedDiffEstimator>();
-	EthDiffCheckerMainNet diffChecker(
+	DiffCheckerMainNet diffChecker(
 		mConf,
 		std::move(diffEstimator)
 	);
-	EthDiffCheckerMainNet diffCheckerFixedEst(
+	DiffCheckerMainNet diffCheckerFixedEst(
 		mConf,
 		std::move(fixedDiffEstimator)
 	);
-	typename EthDiffTypeTrait::value_type diffMedian = 0;
-	std::unique_ptr<EthCheckpointMgr> chkptMgr;
-	chkptMgr = SimpleObjects::Internal::make_unique<EthCheckpointMgr>(
+	typename DiffTypeTrait::value_type diffMedian = 0;
+	std::unique_ptr<CheckpointMgr> chkptMgr;
+	chkptMgr = SimpleObjects::Internal::make_unique<CheckpointMgr>(
 		mConf,
 		[&diffMedian, &diffChecker, &diffCheckerFixedEst, &chkptMgr](){
 			diffChecker.UpdateDiffMin(*chkptMgr);
@@ -100,7 +102,7 @@ GTEST_TEST(TestEthDiffChecker, TestHistBlocks)
 	);
 	for (size_t i = sk_beginBlkNum; i < sk_endBlkNum; ++i)
 	{
-		auto header = SimpleObjects::Internal::make_unique<EthHeaderMgr>(
+		auto header = SimpleObjects::Internal::make_unique<HeaderMgr>(
 			GetEthHistHdr_0_100()[i], 0);
 		chkptMgr->AddHeader(std::move(header));
 	}
@@ -110,8 +112,8 @@ GTEST_TEST(TestEthDiffChecker, TestHistBlocks)
 	// ===== CheckDifficulty
 	// OK header
 	auto okHeaderBin = BuildHeader(15050001UL, expDiffMin + 1);
-	auto okHeaderParent = EthHeaderMgr(okHeaderBin, 10);
-	auto okHeader = EthHeaderMgr(okHeaderBin, 20);
+	auto okHeaderParent = HeaderMgr(okHeaderBin, 10);
+	auto okHeader = HeaderMgr(okHeaderBin, 20);
 	EXPECT_TRUE(
 		diffChecker.CheckDifficulty(okHeaderParent, okHeader));
 
@@ -120,13 +122,13 @@ GTEST_TEST(TestEthDiffChecker, TestHistBlocks)
 		diffChecker.CheckDifficulty(okHeader, okHeaderParent));
 
 	// Wrong - exceeds max wait time
-	auto headerExcWait = EthHeaderMgr(okHeaderBin, 999999);
+	auto headerExcWait = HeaderMgr(okHeaderBin, 999999);
 	EXPECT_FALSE(
 		diffChecker.CheckDifficulty(okHeaderParent, headerExcWait));
 
 	// Wrong - difficulty too low
 	auto HeaderLowDiffBin = BuildHeader(15050002UL, expDiffMin - 1);
-	auto headerLowDiff = EthHeaderMgr(HeaderLowDiffBin, 20);
+	auto headerLowDiff = HeaderMgr(HeaderLowDiffBin, 20);
 	EXPECT_FALSE(
 		diffChecker.CheckDifficulty(okHeaderParent, headerLowDiff));
 

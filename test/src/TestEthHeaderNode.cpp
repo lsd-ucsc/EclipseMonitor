@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 
-#include <EclipseMonitor/EthHeaderNode.hpp>
+#include <EclipseMonitor/Eth/HeaderNode.hpp>
 
 #include "EthHistHdr_0_100.hpp"
 
@@ -14,8 +14,9 @@ namespace EclipseMonitor_Test
 	extern size_t g_numOfTestFile;
 }
 
-using namespace EclipseMonitor;
 using namespace EclipseMonitor_Test;
+
+using namespace EclipseMonitor::Eth;
 
 GTEST_TEST(TestEthHeaderNode, CountTestFile)
 {
@@ -27,18 +28,18 @@ GTEST_TEST(TestEthHeaderNode, AddChildAndFindDesc)
 {
 	static constexpr size_t testingEnd = 50;
 
-	std::unique_ptr<EthHeaderNode> root =
-		SimpleObjects::Internal::make_unique<EthHeaderNode>(
-			SimpleObjects::Internal::make_unique<EthHeaderMgr>(
+	std::unique_ptr<HeaderNode> root =
+		SimpleObjects::Internal::make_unique<HeaderNode>(
+			SimpleObjects::Internal::make_unique<HeaderMgr>(
 				GetEthHistHdr_0_100()[0], 0)
 		);
 
 	// Add children
-	EthHeaderNode* currPtr = root.get();
+	HeaderNode* currPtr = root.get();
 	for (size_t i = 1; i < testingEnd; ++i)
 	{
 		EXPECT_EQ(currPtr->GetNumOfChildren(), 0);
-		auto header = SimpleObjects::Internal::make_unique<EthHeaderMgr>(
+		auto header = SimpleObjects::Internal::make_unique<HeaderMgr>(
 			GetEthHistHdr_0_100()[i], 0);
 		auto nextPtr = currPtr->AddChild(std::move(header));
 		EXPECT_EQ(currPtr->GetNumOfChildren(), 1);
@@ -58,7 +59,7 @@ GTEST_TEST(TestEthHeaderNode, AddChildAndFindDesc)
 
 		auto rootBlkNum = i;
 		auto rootExpHeader =
-			EthHeaderMgr(GetEthHistHdr_0_100()[rootBlkNum], 0);
+			HeaderMgr(GetEthHistHdr_0_100()[rootBlkNum], 0);
 		EXPECT_EQ(
 			root->GetHeader().GetRawHeader(),
 			rootExpHeader.GetRawHeader()
@@ -74,7 +75,7 @@ GTEST_TEST(TestEthHeaderNode, AddChildAndFindDesc)
 
 		auto childBlkNum = i + 1;
 		auto childExpHeader =
-			EthHeaderMgr(GetEthHistHdr_0_100()[childBlkNum], 0);
+			HeaderMgr(GetEthHistHdr_0_100()[childBlkNum], 0);
 		EXPECT_EQ(
 			child->GetHeader().GetRawHeader(),
 			childExpHeader.GetRawHeader()

@@ -8,13 +8,15 @@
 
 #include <cstdint>
 
-#include "Internal/SimpleRlp.hpp"
+#include "../Internal/SimpleRlp.hpp"
 
 namespace EclipseMonitor
 {
+namespace Eth
+{
 
 template<typename _PrimitiveType>
-struct EthPrimitiveTypeTrait
+struct PrimitiveTypeTrait
 {
 	using value_type = _PrimitiveType;
 
@@ -35,22 +37,23 @@ struct EthPrimitiveTypeTrait
 	static Internal::Rlp::BytesObjType ToBytes(const value_type& v)
 	{
 		auto res = Internal::Rlp::BytesObjType();
-		Internal::Rlp::Internal::EncodePrimitiveIntValue<
+		Internal::Rlp::EncodePrimitiveIntValue<
 			value_type,
 			Internal::Rlp::Endian::native,
 			false>::
 				Encode(res, v);
 		return res;
 	}
-}; // struct EthPrimitiveTypeTrait
+}; // struct PrimitiveTypeTrait
 
-struct EthBlkNumTypeTrait : EthPrimitiveTypeTrait<uint64_t>
-{}; // struct EthBlkNumTypeTrait
+struct BlkNumTypeTrait : PrimitiveTypeTrait<uint64_t>
+{}; // struct BlkNumTypeTrait
 
-struct EthTimeTypeTrait : EthPrimitiveTypeTrait<uint64_t>
-{}; // struct EthTimeTypeTrait
+struct TimeTypeTrait : PrimitiveTypeTrait<uint64_t>
+{}; // struct TimeTypeTrait
 
-struct EthDiffTypeTrait : EthPrimitiveTypeTrait<uint64_t>
-{}; // struct EthDiffTypeTrait
+struct DiffTypeTrait : PrimitiveTypeTrait<uint64_t>
+{}; // struct DiffTypeTrait
 
+} // namespace Eth
 } // namespace EclipseMonitor

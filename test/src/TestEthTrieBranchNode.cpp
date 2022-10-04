@@ -5,8 +5,8 @@
 
 #include <gtest/gtest.h>
 
-#include <EclipseMonitor/Trie/BranchNode.hpp>
-#include <EclipseMonitor/Trie/LeafNode.hpp>
+#include <EclipseMonitor/Eth/Trie/BranchNode.hpp>
+#include <EclipseMonitor/Eth/Trie/LeafNode.hpp>
 
 namespace EclipseMonitor_Test
 {
@@ -15,10 +15,7 @@ namespace EclipseMonitor_Test
 
 using namespace EclipseMonitor_Test;
 
-using namespace EclipseMonitor;
-using namespace EclipseMonitor::Trie;
-using namespace SimpleObjects;
-using namespace SimpleRlp;
+using namespace EclipseMonitor::Eth::Trie;
 
 GTEST_TEST(TestEthTrieBranchNode, CountTestFile)
 {

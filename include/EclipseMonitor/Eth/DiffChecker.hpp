@@ -7,24 +7,30 @@
 
 #include <memory>
 
-#include "EthHeaderMgr.hpp"
-#include "EthCheckpointMgr.hpp"
-#include "EthDataTypes.hpp"
-#include "EthDAA.hpp"
-#include "EthParams.hpp"
-#include "MonitorReport.hpp"
+#include "../MonitorReport.hpp"
+
+#include "CheckpointMgr.hpp"
+#include "DAA.hpp"
+#include "DataTypes.hpp"
+#include "HeaderMgr.hpp"
+#include "Params.hpp"
 
 namespace EclipseMonitor
 {
+namespace Eth
+{
 
-class EthDiffCheckerBase
+
+class DiffCheckerBase
 {
 public:
-	EthDiffCheckerBase() = default;
+	DiffCheckerBase() = default;
 
-	virtual ~EthDiffCheckerBase() = default;
+	// LCOV_EXCL_START
+	virtual ~DiffCheckerBase() = default;
+	// LCOV_EXCL_STOP
 
-	virtual void UpdateDiffMin(const EthCheckpointMgr& chkpt) = 0;
+	virtual void UpdateDiffMin(const CheckpointMgr& chkpt) = 0;
 
 	/**
 	 * @brief Check the difficulty value (or anything equivalent) of the
@@ -35,8 +41,8 @@ public:
 	 * @return true if the difficulty value is OK, otherwise false
 	 */
 	virtual bool CheckDifficulty(
-		const EthHeaderMgr& parentHdr,
-		const EthHeaderMgr& currentHdr) const = 0;
+		const HeaderMgr& parentHdr,
+		const HeaderMgr& currentHdr) const = 0;
 
 	/**
 	 * @brief Check the estimated difficulty value (or anything equivalent)
@@ -47,41 +53,43 @@ public:
 	 * @return true if the difficulty value is OK, otherwise false
 	 */
 	virtual bool CheckEstDifficulty(
-		const EthHeaderMgr& parentHdr,
+		const HeaderMgr& parentHdr,
 		uint64_t currentTime) const = 0;
 
-}; // class EthDiffCheckerBase
+}; // class DiffCheckerBase
 
 
-class EthPoWDiffChecker : public EthDiffCheckerBase
+class PoWDiffChecker : public DiffCheckerBase
 {
 public: // static members:
-	using Self = EthPoWDiffChecker;
-	using Base = EthDiffCheckerBase;
+	using Self = PoWDiffChecker;
+	using Base = DiffCheckerBase;
 
-	using DiffType = typename EthDiffTypeTrait::value_type;
+	using DiffType = typename DiffTypeTrait::value_type;
 
 public:
-	EthPoWDiffChecker(
+	PoWDiffChecker(
 		const MonitorConfig& mConf,
-		std::unique_ptr<EthDAABase> diffEstimator
+		std::unique_ptr<DAABase> diffEstimator
 	) :
-		EthDiffCheckerBase(),
+		DiffCheckerBase(),
 		m_minDiffPercent(mConf.get_minDiffPercent().GetVal()),
 		m_maxWaitTime(mConf.get_maxWaitTime().GetVal()),
 		m_diffEstimator(std::move(diffEstimator))
 	{}
 
-	virtual ~EthPoWDiffChecker() = default;
+	// LCOV_EXCL_START
+	virtual ~PoWDiffChecker() = default;
+	// LCOV_EXCL_STOP
 
-	virtual void UpdateDiffMin(const EthCheckpointMgr& chkpt) override
+	virtual void UpdateDiffMin(const CheckpointMgr& chkpt) override
 	{
 		m_minDiff = (chkpt.GetDiffMedian() >> 7) * m_minDiffPercent;
 	}
 
 	virtual bool CheckDifficulty(
-		const EthHeaderMgr& parentHdr,
-		const EthHeaderMgr& currentHdr) const override
+		const HeaderMgr& parentHdr,
+		const HeaderMgr& currentHdr) const override
 	{
 		return
 			// current header is received after the parent header
@@ -94,7 +102,7 @@ public:
 	}
 
 	virtual bool CheckEstDifficulty(
-		const EthHeaderMgr& parentHdr,
+		const HeaderMgr& parentHdr,
 		uint64_t currentTime) const override
 	{
 		auto deltaTime = currentTime - parentHdr.GetTrustedTime();
@@ -119,33 +127,34 @@ private:
 	DiffType m_minDiff;
 	uint64_t m_maxWaitTime;
 
-	std::unique_ptr<EthDAABase> m_diffEstimator;
+	std::unique_ptr<DAABase> m_diffEstimator;
 
-}; // class EthPoWDiffChecker
+}; // class PoWDiffChecker
 
 
 template<typename _NetConfig>
-class EthGenericDiffCheckerImpl : public EthDiffCheckerBase
+class GenericDiffCheckerImpl : public DiffCheckerBase
 {
 public: // static members:
-	using Self = EthGenericDiffCheckerImpl<_NetConfig>;
-	using Base = EthDiffCheckerBase;
+	using Self = GenericDiffCheckerImpl<_NetConfig>;
+	using Base = DiffCheckerBase;
 
-	using DiffType = typename EthDiffTypeTrait::value_type;
+	using DiffType = typename DiffTypeTrait::value_type;
 
 public:
-	EthGenericDiffCheckerImpl(
+	GenericDiffCheckerImpl(
 		const MonitorConfig& mConf,
-		std::unique_ptr<EthDAABase> diffEstimator
+		std::unique_ptr<DAABase> diffEstimator
 	) :
 		Base(),
 		m_powChecker(mConf, std::move(diffEstimator))
 	{}
 
-	virtual ~EthGenericDiffCheckerImpl() = default;
+	// LCOV_EXCL_START
+	virtual ~GenericDiffCheckerImpl() = default;
+	// LCOV_EXCL_STOP
 
-
-	virtual void UpdateDiffMin(const EthCheckpointMgr& chkpt) override
+	virtual void UpdateDiffMin(const CheckpointMgr& chkpt) override
 	{
 		auto blkNumRange = chkpt.GetCheckpointBlkNumRange();
 		if (blkNumRange.second < _NetConfig::GetParisBlkNum())
@@ -159,8 +168,8 @@ public:
 	}
 
 	virtual bool CheckDifficulty(
-		const EthHeaderMgr& parentHdr,
-		const EthHeaderMgr& currentHdr) const override
+		const HeaderMgr& parentHdr,
+		const HeaderMgr& currentHdr) const override
 	{
 		if (currentHdr.GetNumber() < _NetConfig::GetParisBlkNum())
 		{
@@ -173,7 +182,7 @@ public:
 	}
 
 	virtual bool CheckEstDifficulty(
-		const EthHeaderMgr& parentHdr,
+		const HeaderMgr& parentHdr,
 		uint64_t currentTime) const override
 	{
 		if (parentHdr.GetNumber() + 1 < _NetConfig::GetParisBlkNum())
@@ -188,11 +197,13 @@ public:
 
 private:
 
-	EthPoWDiffChecker m_powChecker;
-}; // class EthGenericDiffCheckerImpl
+	PoWDiffChecker m_powChecker;
+}; // class GenericDiffCheckerImpl
 
 
-using EthDiffCheckerMainNet =
-	EthGenericDiffCheckerImpl<EthMainnetConfig>;
+using DiffCheckerMainNet =
+	GenericDiffCheckerImpl<MainnetConfig>;
 
+
+} // namespace Eth
 } // namespace EclipseMonitor

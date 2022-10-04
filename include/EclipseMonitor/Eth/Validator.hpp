@@ -8,44 +8,50 @@
 #include <algorithm>
 #include <memory>
 
-#include "EthDAA.hpp"
-#include "EthHeaderMgr.hpp"
+#include "DAA.hpp"
+#include "HeaderMgr.hpp"
 
 namespace EclipseMonitor
 {
+namespace Eth
+{
 
-class EthValidatorBase
+class ValidatorBase
 {
 public:
-	EthValidatorBase() = default;
+	ValidatorBase() = default;
 
-	virtual ~EthValidatorBase() = default;
+	// LCOV_EXCL_START
+	virtual ~ValidatorBase() = default;
+	// LCOV_EXCL_STOP
 
 	virtual bool CommonValidate(
-		const EthHeaderMgr& parent,
+		const HeaderMgr& parent,
 		bool isParentLive,
-		const EthHeaderMgr& current,
+		const HeaderMgr& current,
 		bool isCurrLive
 	) const = 0;
 };
 
-class EthValidator : public EthValidatorBase
+class Validator : public ValidatorBase
 {
 public: // Static member:
-	using Base = EthValidatorBase;
-	using Self = EthValidator;
+	using Base = ValidatorBase;
+	using Self = Validator;
 
 public:
-	EthValidator(std::unique_ptr<EthDAABase> diffCalculator) :
+	Validator(std::unique_ptr<DAABase> diffCalculator) :
 		m_diffCalculator(std::move(diffCalculator))
 	{}
 
-	virtual ~EthValidator() = default;
+	// LCOV_EXCL_START
+	virtual ~Validator() = default;
+	// LCOV_EXCL_STOP
 
 	virtual bool CommonValidate(
-		const EthHeaderMgr& parent,
+		const HeaderMgr& parent,
 		bool isParentLive,
-		const EthHeaderMgr& current,
+		const HeaderMgr& current,
 		bool isCurrLive
 	) const override
 	{
@@ -87,7 +93,9 @@ public:
 
 private:
 
-	std::unique_ptr<EthDAABase> m_diffCalculator;
-}; // class EthValidator
+	std::unique_ptr<DAABase> m_diffCalculator;
+}; // class Validator
 
+
+} // namespace Eth
 } // namespace EclipseMonitor

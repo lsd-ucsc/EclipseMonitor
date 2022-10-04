@@ -5,8 +5,8 @@
 
 #include <gtest/gtest.h>
 
-#include <EclipseMonitor/EthKeccak256.hpp>
-#include <EclipseMonitor/Trie/TrieNode.hpp>
+#include <EclipseMonitor/Eth/Keccak256.hpp>
+#include <EclipseMonitor/Eth/Trie/TrieNode.hpp>
 #include <SimpleRlp/SimpleRlp.hpp>
 
 namespace EclipseMonitor_Test
@@ -17,7 +17,7 @@ namespace EclipseMonitor_Test
 using namespace EclipseMonitor_Test;
 
 using namespace EclipseMonitor;
-using namespace EclipseMonitor::Trie;
+using namespace EclipseMonitor::Eth::Trie;
 using namespace SimpleRlp;
 
 GTEST_TEST(TestEthTrieEmptyNode, CountTestFile)
@@ -36,7 +36,7 @@ GTEST_TEST(TestEthTrieEmptyNode, EmptyRawTest)
 GTEST_TEST(TestEthTrieEmptyNode, EmptyNodeTest)
 {
 	std::vector<uint8_t> emptyNodeRlp = WriteRlp(EmptyNode::EmptyNodeRaw());
-	std::array<uint8_t, 32> emptyNodeHashArr = EthKeccak256(emptyNodeRlp);
+	std::array<uint8_t, 32> emptyNodeHashArr = Eth::Keccak256(emptyNodeRlp);
 
 	std::vector<uint8_t> emptyNodeHash(
 		emptyNodeHashArr.begin(),

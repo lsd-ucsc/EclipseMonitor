@@ -5,12 +5,15 @@
 
 #pragma once
 
-#include "EthDataTypes.hpp"
+#include "DataTypes.hpp"
 
 namespace EclipseMonitor
 {
+namespace Eth
+{
 
-struct EthParams
+
+struct Params
 {
 	// Reference: https://github.com/ethereum/go-ethereum/blob/master/consensus/ethash/difficulty.go
 	// Reference: https://github.com/ethereum/go-ethereum/blob/master/params/protocol_params.go
@@ -30,14 +33,14 @@ struct EthParams
 		return 13;
 	}
 
-}; // struct EthParams
+}; // struct Params
 
 
-struct EthMainnetConfig
+struct MainnetConfig
 {
 public: // static members:
 
-	using BlkNumType = typename EthBlkNumTypeTrait::value_type;
+	using BlkNumType = typename BlkNumTypeTrait::value_type;
 
 	static const BlkNumType& GetParisBlkNum()
 	{
@@ -87,6 +90,8 @@ public: // static members:
 		static const BlkNumType blkNum(1150000UL);
 		return blkNum;
 	}
-}; // struct EthMainnetConfig
+}; // struct MainnetConfig
 
+
+} // namespace Eth
 } // namespace EclipseMonitor
