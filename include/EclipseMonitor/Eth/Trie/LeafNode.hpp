@@ -46,10 +46,10 @@ public: // static members:
 public:
 
 	LeafNode(
-		std::vector<Nibble> otherPath, // TODO[Tuan]: make this type consistent with other child classes
+		const std::vector<Nibble>& otherPath,
 		Internal::Obj::Bytes otherValue
 	) :
-		m_path(std::move(otherPath)),
+		m_path(otherPath),
 		m_value(std::move(otherValue))
 	{}
 

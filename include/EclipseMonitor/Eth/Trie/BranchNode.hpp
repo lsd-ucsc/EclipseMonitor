@@ -31,7 +31,7 @@ public:
 
 	BranchNode() :
 		m_nodeHasValue(false),
-		m_branches(16), // TODO[Tuan]: where does this number come from?
+		m_branches(sk_numNodes), // TODO[Tuan]: where does this number come from?
 		m_value()
 	{}
 

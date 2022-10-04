@@ -42,16 +42,8 @@ GTEST_TEST(TestEthTrieTxnRoot, TestTransactionsRootBlock15415840)
 	const SimpleObjects::Bytes& expected = GetTransactionsRoot_15415840();
 	const auto& txns = GetEthTransactions_15415840();
 
-	// insert first transaction separately
-	if(txns.size() > 0)
-	{
-		keyBytes = SimpleObjects::Bytes({0x80U});
-		value = txns[0];
-		trie.Put(keyBytes, value);
-	}
-
-	// insert remaining transactions
-	for(uint64_t i = 1; i < txns.size(); i++)
+	// insert transactions
+	for(uint64_t i = 0; i < txns.size(); i++)
 	{
 		key.clear();
 
@@ -78,16 +70,8 @@ GTEST_TEST(TestEthTrieTxnRoot, TestTransactionsRootBlock15209997)
 	const SimpleObjects::Bytes& expected = GetTransactionsRoot_15209997();
 	const auto& txns = GetEthTransactions_15209997();
 
-	// insert first transaction separately
-	if(txns.size() > 0)
-	{
-		keyBytes = SimpleObjects::Bytes({0x80U});
-		value = txns[0];
-		trie.Put(keyBytes, value);
-	}
-
-	// insert remaining transactions
-	for(uint64_t i = 1; i < txns.size(); i++)
+	// insert transactions
+	for(uint64_t i = 0; i < txns.size(); i++)
 	{
 		key.clear();
 
