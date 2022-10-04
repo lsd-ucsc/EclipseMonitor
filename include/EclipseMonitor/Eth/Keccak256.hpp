@@ -1,3 +1,14 @@
+// Copyright (c) 2022 Haofan Zheng
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+
+// Original source: https://github.com/ethereum/solidity/blob/develop/libsolutil/Keccak256.cpp
+// Code changes from original source:
+// - removed dependencies on external libraries
+// - replaced macros with constexpr variables and inline functions
+// - changed namespace name
+
 /*
 	This file is part of solidity.
 	solidity is free software: you can redistribute it and/or modify
@@ -236,7 +247,18 @@ inline void Hash(
 
 } // namespace Internal
 
-inline std::array<uint8_t, 32> EthKeccak256(const std::vector<uint8_t>& _input)
+
+namespace Eth
+{
+
+
+/**
+ * @brief Compute the Ethereum Keccak-256 hash of a given input.
+ *
+ * @param _input input data
+ * @return Keccak-256 hash of the input
+ */
+inline std::array<uint8_t, 32> Keccak256(const std::vector<uint8_t>& _input)
 {
 	std::array<uint8_t, 32> output;
 	// Parameters used:
@@ -253,4 +275,6 @@ inline std::array<uint8_t, 32> EthKeccak256(const std::vector<uint8_t>& _input)
 	return output;
 }
 
+
+} // namespace Eth
 } // namespace EclipseMonitor

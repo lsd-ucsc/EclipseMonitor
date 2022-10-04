@@ -7,8 +7,8 @@
 
 #include <gtest/gtest.h>
 
+#include <EclipseMonitor/Eth/HeaderMgr.hpp>
 #include <EclipseMonitor/MonitorReport.hpp>
-#include <EclipseMonitor/EthHeaderMgr.hpp>
 
 #include "EthHistHdr_0_100.hpp"
 
@@ -58,9 +58,9 @@ GTEST_TEST(TestMonitorReport, MonitorSecState)
 {
 	{
 		auto header00Bin = GetEthHistHdr_0_100()[0];
-		EthHeaderMgr header00 = EthHeaderMgr(header00Bin, 0);
+		Eth::HeaderMgr header00 = Eth::HeaderMgr(header00Bin, 0);
 		auto header01Bin = GetEthHistHdr_0_100()[1];
-		EthHeaderMgr header01 = EthHeaderMgr(header01Bin, 0);
+		Eth::HeaderMgr header01 = Eth::HeaderMgr(header01Bin, 0);
 
 		MonitorSecState mSecState;
 		mSecState.get_chainName()      = "ethereum";

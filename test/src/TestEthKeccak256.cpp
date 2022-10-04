@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 
-#include <EclipseMonitor/EthKeccak256.hpp>
+#include <EclipseMonitor/Eth/Keccak256.hpp>
 
 #include "EthHistHdr_0_100.hpp"
 
@@ -14,8 +14,9 @@ namespace EclipseMonitor_Test
 	extern size_t g_numOfTestFile;
 }
 
-using namespace EclipseMonitor;
 using namespace EclipseMonitor_Test;
+
+using namespace EclipseMonitor::Eth;
 
 GTEST_TEST(TestEthKeccak256, CountTestFile)
 {
@@ -33,7 +34,7 @@ GTEST_TEST(TestEthKeccak256, EmptyCalculation)
 		0xa4, 0x70
 	};
 
-	auto actOut = EthKeccak256(input);
+	auto actOut = Keccak256(input);
 	EXPECT_EQ(actOut, expOut);
 }
 
@@ -48,6 +49,6 @@ GTEST_TEST(TestEthKeccak256, GenesisBlkCalculation)
 		0x8f, 0xa3
 	};
 
-	auto actOut = EthKeccak256(input);
+	auto actOut = Keccak256(input);
 	EXPECT_EQ(actOut, expOut);
 }

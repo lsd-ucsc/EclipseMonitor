@@ -7,24 +7,27 @@
 
 #include <algorithm>
 
-#include "Internal/SimpleObj.hpp"
-#include "Internal/SimpleRlp.hpp"
+#include "../Internal/SimpleObj.hpp"
+#include "../Internal/SimpleRlp.hpp"
 
-#include "EthDataTypes.hpp"
-#include "EthKeccak256.hpp"
+#include "DataTypes.hpp"
+#include "Keccak256.hpp"
 
 namespace EclipseMonitor
 {
+namespace Eth
+{
 
-class EthHeaderMgr
+
+class HeaderMgr
 {
 public: // static member
 
 	using RawHeaderType = Internal::Rlp::EthHeader;
 	using RawHeaderParser = Internal::Rlp::EthHeaderParser;
-	using BlkNumType = typename EthBlkNumTypeTrait::value_type;
-	using TimeType = typename EthTimeTypeTrait::value_type;
-	using DiffType = typename EthDiffTypeTrait::value_type;
+	using BlkNumType = typename BlkNumTypeTrait::value_type;
+	using TimeType = typename TimeTypeTrait::value_type;
+	using DiffType = typename DiffTypeTrait::value_type;
 
 	using BytesObjType = Internal::Rlp::BytesObjType;
 
@@ -41,18 +44,20 @@ public: // static member
 
 public:
 
-	EthHeaderMgr(const std::vector<uint8_t>& rawBinary, uint64_t trustedTime) :
+	HeaderMgr(const std::vector<uint8_t>& rawBinary, uint64_t trustedTime) :
 		m_rawHeader(RawHeaderParser().Parse(rawBinary)),
 		m_trustedTime(trustedTime),
-		m_hash(EthKeccak256(rawBinary)),
+		m_hash(Keccak256(rawBinary)),
 		m_hashObj(m_hash.begin(), m_hash.end()),
-		m_blkNum(EthBlkNumTypeTrait::FromBytes(m_rawHeader.get_Number())),
-		m_time(EthTimeTypeTrait::FromBytes(m_rawHeader.get_Timestamp())),
-		m_diff(EthDiffTypeTrait::FromBytes(m_rawHeader.get_Difficulty())),
+		m_blkNum(BlkNumTypeTrait::FromBytes(m_rawHeader.get_Number())),
+		m_time(TimeTypeTrait::FromBytes(m_rawHeader.get_Timestamp())),
+		m_diff(DiffTypeTrait::FromBytes(m_rawHeader.get_Difficulty())),
 		m_hasUncle(m_rawHeader.get_Sha3Uncles() != GetEmptyUncleHash())
 	{}
 
-	~EthHeaderMgr() = default;
+	// LCOV_EXCL_START
+	~HeaderMgr() = default;
+	// LCOV_EXCL_STOP
 
 	const RawHeaderType& GetRawHeader() const
 	{
@@ -104,6 +109,8 @@ private:
 	TimeType m_time;
 	DiffType m_diff;
 	bool m_hasUncle;
-}; // class EthHeaderMgr
+}; // class HeaderMgr
 
+
+} // namespace Eth
 } // namespace EclipseMonitor

@@ -7,18 +7,20 @@
 
 #include <gtest/gtest.h>
 
-#include <EclipseMonitor/EthDAA.hpp>
-
-using namespace EclipseMonitor;
+#include <EclipseMonitor/Eth/DAA.hpp>
 
 namespace EclipseMonitor_Test
 {
 	extern size_t g_numOfTestFile;
 }
 
+using namespace EclipseMonitor_Test;
+
+using namespace EclipseMonitor::Eth;
+
 GTEST_TEST(TestEthDAA, CountTestFile)
 {
-	static auto tmp = ++EclipseMonitor_Test::g_numOfTestFile;
+	static auto tmp = ++g_numOfTestFile;
 	(void)tmp;
 }
 
@@ -27,9 +29,9 @@ namespace
 
 struct TestBlkHeader
 {
-	using BlkNumType = typename EthBlkNumTypeTrait::value_type;
-	using TimeType   = typename EthTimeTypeTrait::value_type;
-	using DiffType   = typename EthDiffTypeTrait::value_type;
+	using BlkNumType = typename BlkNumTypeTrait::value_type;
+	using TimeType   = typename TimeTypeTrait::value_type;
+	using DiffType   = typename DiffTypeTrait::value_type;
 
 	BlkNumType m_blkNum;
 	TimeType   m_time;
@@ -53,7 +55,7 @@ static void TestDiffCalcResult(
 	const TestBlkHeader& curr)
 {
 	EXPECT_EQ(
-		EthMainnetDAA()(
+		MainnetDAA()(
 			parent.m_blkNum, parent.m_time, parent.m_diff, parent.m_hasUncle,
 			curr.m_blkNum, curr.m_time),
 		curr.m_diff);

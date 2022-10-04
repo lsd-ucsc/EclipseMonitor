@@ -14,7 +14,7 @@
 namespace EclipseMonitor
 {
 
-class SyncMsgMgr
+class SyncMsgMgrBase
 {
 public: // static members:
 	using NonceType = std::array<uint8_t, 32>;
@@ -29,14 +29,16 @@ public:
 	 * @param time current timestamp, used to mark the time when the nonce
 	 *             is generated
 	 */
-	SyncMsgMgr(const MonitorId& mId, const MonitorConfig& mConf, uint64_t time) :
+	SyncMsgMgrBase(const MonitorId& mId, const MonitorConfig& mConf, uint64_t time) :
 		m_mId(mId),
 		m_mConf(mConf),
 		m_nonce(), // TODO - Haofan: generate random nonce
 		m_time(time)
 	{}
 
-	virtual ~SyncMsgMgr() = default;
+	// LCOV_EXCL_START
+	virtual ~SyncMsgMgrBase() = default;
+	// LCOV_EXCL_STOP
 
 	const sesIdType& GetSessionId() const
 	{
@@ -77,6 +79,6 @@ private:
 	const MonitorConfig&    m_mConf; // <- reference to configuration of the monitor, containing the m_syncMaxWaitTime
 	NonceType               m_nonce; // <- 256-bit nonce
 	uint64_t                m_time;  // <- The timestamp when the nonce is generated
-}; // class SyncMsgMgr
+}; // class SyncMsgMgrBase
 
 } // namespace EclipseMonitor

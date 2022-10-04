@@ -7,20 +7,23 @@
 
 #include <vector>
 
-#include "Internal/SimpleObj.hpp"
+#include "../Internal/SimpleObj.hpp"
+#include "../SyncMsgMgrBase.hpp"
 
-#include "SyncMsgMgr.hpp"
-#include "EthHeaderMgr.hpp"
+#include "HeaderMgr.hpp"
 
 namespace EclipseMonitor
 {
+namespace Eth
+{
 
-class EthSyncMsgMgr : public SyncMsgMgr
+
+class SyncMsgMgr : public SyncMsgMgrBase
 {
 public: // static member
 
-	using Self = EthSyncMsgMgr;
-	using Base = SyncMsgMgr;
+	using Self = SyncMsgMgr;
+	using Base = SyncMsgMgrBase;
 
 	using ContractAddrType = std::array<uint8_t, 32>;
 
@@ -34,20 +37,22 @@ public:
 	 *             is generated
 	 * @param contractAddr Ethereum contract address of the dummy smart contract
 	 */
-	EthSyncMsgMgr(
+	SyncMsgMgr(
 		const MonitorId& mId,
 		const MonitorConfig& mConf,
 		uint64_t time,
 		ContractAddrType contractAddr
 	) :
-		SyncMsgMgr(mId, mConf, time),
+		Base(mId, mConf, time),
 		m_contractAddr(contractAddr)
 	{}
 
-	virtual ~EthSyncMsgMgr() = default;
+	// LCOV_EXCL_START
+	virtual ~SyncMsgMgr() = default;
+	// LCOV_EXCL_STOP
 
 	bool ValidateBlock(
-		const EthHeaderMgr& header,
+		const HeaderMgr& header,
 		const std::vector<std::vector<uint8_t> >& txBinList) const
 	{
 		Base::NonceType nonce;
@@ -99,6 +104,8 @@ public:
 
 private:
 	ContractAddrType m_contractAddr;
-}; // class EthSyncMsgMgr
+}; // class SyncMsgMgr
 
+
+} // namespace Eth
 } // namespace EclipseMonitor

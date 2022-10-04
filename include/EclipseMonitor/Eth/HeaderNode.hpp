@@ -8,17 +8,20 @@
 #include <memory>
 #include <vector>
 
-#include "Internal/SimpleObj.hpp"
+#include "../Exceptions.hpp"
+#include "../Internal/SimpleObj.hpp"
 
-#include "Exceptions.hpp"
-#include "EthHeaderMgr.hpp"
+#include "HeaderMgr.hpp"
 
 namespace EclipseMonitor
 {
+namespace Eth
+{
 
-class EthHeaderNode;
 
-class EthHeaderNode
+class HeaderNode;
+
+class HeaderNode
 {
 public: // static members:
 	struct ChildInfo
@@ -28,31 +31,33 @@ public: // static members:
 		 *
 		 */
 		size_t m_numOfDesc;
-		std::unique_ptr<EthHeaderNode> m_child;
+		std::unique_ptr<HeaderNode> m_child;
 
 		ChildInfo(
 			size_t numOfDesc,
-			std::unique_ptr<EthHeaderNode> child) :
+			std::unique_ptr<HeaderNode> child) :
 			m_numOfDesc(numOfDesc),
 			m_child(std::move(child))
 		{}
 	};
 
 public:
-	EthHeaderNode(std::unique_ptr<EthHeaderMgr> header) :
+	HeaderNode(std::unique_ptr<HeaderMgr> header) :
 		m_children(),
 		m_parent(nullptr),
 		m_header(std::move(header)),
 		m_isLive(false)
 	{}
 
-	~EthHeaderNode() = default;
+	// LCOV_EXCL_START
+	~HeaderNode() = default;
+	// LCOV_EXCL_STOP
 
-	EthHeaderNode* AddChild(std::unique_ptr<EthHeaderMgr> childHeader)
+	HeaderNode* AddChild(std::unique_ptr<HeaderMgr> childHeader)
 	{
-		auto child = Internal::Obj::Internal::make_unique<EthHeaderNode>(
+		auto child = Internal::Obj::Internal::make_unique<HeaderNode>(
 			std::move(childHeader));
-		EthHeaderNode* childPtr = child.get();
+		HeaderNode* childPtr = child.get();
 
 		// if parent is a live node (passed the sync phase),
 		// then so do its children
@@ -73,7 +78,7 @@ public:
 		return childPtr;
 	}
 
-	const EthHeaderMgr& GetHeader() const
+	const HeaderMgr& GetHeader() const
 	{
 		if (m_header == nullptr)
 		{
@@ -82,12 +87,12 @@ public:
 		return *m_header;
 	}
 
-	std::unique_ptr<EthHeaderMgr> ReleaseHeader()
+	std::unique_ptr<HeaderMgr> ReleaseHeader()
 	{
 		return std::move(m_header);
 	}
 
-	std::unique_ptr<EthHeaderNode> ReleaseChildHasNDesc(
+	std::unique_ptr<HeaderNode> ReleaseChildHasNDesc(
 		size_t numOfDesc)
 	{
 		// find the child in the children list
@@ -103,7 +108,7 @@ public:
 		}
 
 		// remove the child from the children list
-		std::unique_ptr<EthHeaderNode> child = std::move(it->m_child);
+		std::unique_ptr<HeaderNode> child = std::move(it->m_child);
 		m_children.erase(it);
 
 		return child;
@@ -116,7 +121,7 @@ public:
 
 protected:
 
-	void AddDescCount(EthHeaderNode* childPtr)
+	void AddDescCount(HeaderNode* childPtr)
 	{
 		// ensure that the child is a child of this node
 		if (childPtr->m_parent != this)
@@ -152,10 +157,12 @@ protected:
 
 private:
 	std::vector<ChildInfo> m_children;
-	EthHeaderNode* m_parent;
-	std::unique_ptr<EthHeaderMgr> m_header;
+	HeaderNode* m_parent;
+	std::unique_ptr<HeaderMgr> m_header;
 	bool m_isLive;
 
-}; // class EthHeaderNode
+}; // class HeaderNode
 
+
+} // namespace Eth
 } // namespace EclipseMonitor

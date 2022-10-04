@@ -9,7 +9,8 @@
 #include <SimpleObjects/Internal/make_unique.hpp>
 
 #include "../../Internal/SimpleObj.hpp"
-#include "../../EthKeccak256.hpp"
+
+#include "../Keccak256.hpp"
 
 #include "Nibbles.hpp"
 #include "TrieNode.hpp"
@@ -70,7 +71,7 @@ public:
 	virtual Internal::Obj::Bytes Hash() override
 	{
 		std::vector<uint8_t> serialized = Serialize();
-		std::array<uint8_t, 32> hashed = EthKeccak256(serialized);
+		std::array<uint8_t, 32> hashed = Keccak256(serialized);
 		return Internal::Obj::Bytes(hashed.begin(), hashed.end());
 	}
 

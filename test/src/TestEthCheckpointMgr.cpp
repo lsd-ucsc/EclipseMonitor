@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 
-#include <EclipseMonitor/EthCheckpointMgr.hpp>
+#include <EclipseMonitor/Eth/CheckpointMgr.hpp>
 
 #include "EthHistHdr_0_100.hpp"
 
@@ -14,29 +14,30 @@ namespace EclipseMonitor_Test
 	extern size_t g_numOfTestFile;
 }
 
-using namespace EclipseMonitor;
 using namespace EclipseMonitor_Test;
 
-GTEST_TEST(TestCheckpointMgr, CountTestFile)
+using namespace EclipseMonitor::Eth;
+
+GTEST_TEST(TestEthCheckpointMgr, CountTestFile)
 {
 	static auto tmp = ++EclipseMonitor_Test::g_numOfTestFile;
 	(void)tmp;
 }
 
-GTEST_TEST(TestCheckpointMgr, Normal_BootstrapI_Add)
+GTEST_TEST(TestEthCheckpointMgr, Normal_BootstrapI_Add)
 {
 	// Testing configurations
 	static constexpr size_t testingChkptSize = 10;
 	static constexpr size_t testingNumChkpt = 5;
 
 	// Expected results
-	std::vector<typename EthDiffTypeTrait::value_type> expDiffMedian;
+	std::vector<typename DiffTypeTrait::value_type> expDiffMedian;
 	for (size_t i = 0; i < testingNumChkpt; ++i)
 	{
-		std::vector<typename EthDiffTypeTrait::value_type> diffs;
+		std::vector<typename DiffTypeTrait::value_type> diffs;
 		for (size_t j = 0; j < testingChkptSize; ++j)
 		{
-			EthHeaderMgr header(
+			HeaderMgr header(
 				GetEthHistHdr_0_100()[(i * testingChkptSize) + j], 0);
 			diffs.push_back(header.GetDiff());
 		}
@@ -44,17 +45,17 @@ GTEST_TEST(TestCheckpointMgr, Normal_BootstrapI_Add)
 		std::nth_element(diffs.begin(), mit, diffs.end());
 		expDiffMedian.push_back(*mit);
 	}
-	EthHeaderMgr expLastHeader(
+	HeaderMgr expLastHeader(
 				GetEthHistHdr_0_100()[
 					(testingNumChkpt * testingChkptSize) - 1],
 				0);
 
 	// Testing variables
-	MonitorConfig mConf;
+	EclipseMonitor::MonitorConfig mConf;
 	mConf.get_checkpointSize() = testingChkptSize;
 	size_t currChkptIdx = 0;
-	std::unique_ptr<EthCheckpointMgr> chkptMgr;
-	chkptMgr = SimpleObjects::Internal::make_unique<EthCheckpointMgr>(
+	std::unique_ptr<CheckpointMgr> chkptMgr;
+	chkptMgr = SimpleObjects::Internal::make_unique<CheckpointMgr>(
 		mConf,
 		[&chkptMgr, &currChkptIdx, expDiffMedian](){
 			auto actDiff = chkptMgr->GetDiffMedian();
@@ -73,13 +74,13 @@ GTEST_TEST(TestCheckpointMgr, Normal_BootstrapI_Add)
 
 	// Test
 	EXPECT_TRUE(chkptMgr->IsEmpty());
-	EXPECT_THROW(chkptMgr->GetLastHeader(), Exception);
-	EXPECT_THROW(chkptMgr->GetLastNode(), Exception);
+	EXPECT_THROW(chkptMgr->GetLastHeader(), EclipseMonitor::Exception);
+	EXPECT_THROW(chkptMgr->GetLastNode(), EclipseMonitor::Exception);
 	for (size_t i = 0; i < testingNumChkpt; ++i)
 	{
 		for (size_t j = 0; j < testingChkptSize; ++j)
 		{
-			auto header = SimpleObjects::Internal::make_unique<EthHeaderMgr>(
+			auto header = SimpleObjects::Internal::make_unique<HeaderMgr>(
 				GetEthHistHdr_0_100()[(i * testingChkptSize) + j], 0);
 			chkptMgr->AddHeader(std::move(header));
 		}
@@ -93,7 +94,7 @@ GTEST_TEST(TestCheckpointMgr, Normal_BootstrapI_Add)
 			expLastHeader.GetRawHeader()
 		)
 	);
-	EXPECT_THROW(chkptMgr->GetLastNode(), Exception);
+	EXPECT_THROW(chkptMgr->GetLastNode(), EclipseMonitor::Exception);
 
 	EXPECT_NO_THROW(chkptMgr->EndBootstrapPhase());
 	EXPECT_NO_THROW(
@@ -110,7 +111,7 @@ GTEST_TEST(TestCheckpointMgr, Normal_BootstrapI_Add)
 	);
 }
 
-GTEST_TEST(TestCheckpointMgr, Normal_Runtime_Add)
+GTEST_TEST(TestEthCheckpointMgr, Normal_Runtime_Add)
 {
 	// Testing configurations
 	static constexpr size_t testingChkptSize = 10;
@@ -118,13 +119,13 @@ GTEST_TEST(TestCheckpointMgr, Normal_Runtime_Add)
 	static constexpr size_t testingChkptEnd = 7;
 
 	// Expected results
-	std::vector<typename EthDiffTypeTrait::value_type> expDiffMedian;
+	std::vector<typename DiffTypeTrait::value_type> expDiffMedian;
 	for (size_t i = testingChkptStart; i < testingChkptEnd; ++i)
 	{
-		std::vector<typename EthDiffTypeTrait::value_type> diffs;
+		std::vector<typename DiffTypeTrait::value_type> diffs;
 		for (size_t j = 0; j < testingChkptSize; ++j)
 		{
-			EthHeaderMgr header(
+			HeaderMgr header(
 				GetEthHistHdr_0_100()[(i * testingChkptSize) + j], 0);
 			diffs.push_back(header.GetDiff());
 		}
@@ -132,17 +133,17 @@ GTEST_TEST(TestCheckpointMgr, Normal_Runtime_Add)
 		std::nth_element(diffs.begin(), mit, diffs.end());
 		expDiffMedian.push_back(*mit);
 	}
-	EthHeaderMgr expLastHeader(
+	HeaderMgr expLastHeader(
 				GetEthHistHdr_0_100()[
 					(testingChkptEnd * testingChkptSize) - 1],
 				0);
 
 	// Testing variables
-	MonitorConfig mConf;
+	EclipseMonitor::MonitorConfig mConf;
 	mConf.get_checkpointSize() = testingChkptSize;
 	size_t currChkptIdx = 0;
-	std::unique_ptr<EthCheckpointMgr> chkptMgr;
-	chkptMgr = SimpleObjects::Internal::make_unique<EthCheckpointMgr>(
+	std::unique_ptr<CheckpointMgr> chkptMgr;
+	chkptMgr = SimpleObjects::Internal::make_unique<CheckpointMgr>(
 		mConf,
 		[&chkptMgr, &currChkptIdx, expDiffMedian](){
 			if (currChkptIdx >= testingChkptStart)
@@ -154,7 +155,7 @@ GTEST_TEST(TestCheckpointMgr, Normal_Runtime_Add)
 				{
 					EXPECT_EQ(actDiff, expDiffMedian[adjChkptIdx]);
 				}
-				EthHeaderMgr header(
+				HeaderMgr header(
 					GetEthHistHdr_0_100()[
 						((currChkptIdx + 1) * testingChkptSize) - 1],
 					0
@@ -177,7 +178,7 @@ GTEST_TEST(TestCheckpointMgr, Normal_Runtime_Add)
 	{
 		for (size_t j = 0; j < testingChkptSize; ++j)
 		{
-			auto header = SimpleObjects::Internal::make_unique<EthHeaderMgr>(
+			auto header = SimpleObjects::Internal::make_unique<HeaderMgr>(
 				GetEthHistHdr_0_100()[(i * testingChkptSize) + j], 0);
 			chkptMgr->AddHeader(std::move(header));
 		}
@@ -190,9 +191,9 @@ GTEST_TEST(TestCheckpointMgr, Normal_Runtime_Add)
 	{
 		for (size_t j = 0; j < testingChkptSize; ++j)
 		{
-			auto header = SimpleObjects::Internal::make_unique<EthHeaderMgr>(
+			auto header = SimpleObjects::Internal::make_unique<HeaderMgr>(
 				GetEthHistHdr_0_100()[(i * testingChkptSize) + j], 0);
-			auto node = SimpleObjects::Internal::make_unique<EthHeaderNode>(
+			auto node = SimpleObjects::Internal::make_unique<HeaderNode>(
 				std::move(header));
 			chkptMgr->AddNode(std::move(node));
 		}

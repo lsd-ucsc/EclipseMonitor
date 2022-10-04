@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 
-#include <EclipseMonitor/EthHeaderMgr.hpp>
+#include <EclipseMonitor/Eth/HeaderMgr.hpp>
 
 #include "EthHistHdr_0_100.hpp"
 
@@ -14,8 +14,10 @@ namespace EclipseMonitor_Test
 	extern size_t g_numOfTestFile;
 }
 
-using namespace EclipseMonitor;
 using namespace EclipseMonitor_Test;
+
+using namespace EclipseMonitor::Eth;
+
 
 GTEST_TEST(TestEthHeaderMgr, CountTestFile)
 {
@@ -27,7 +29,7 @@ GTEST_TEST(TestEthHeaderMgr, Header_0)
 {
 	std::vector<uint8_t> input = GetEthHistHdr_0_100()[0];
 	uint64_t trustedTime = 1234567890;
-	EthHeaderMgr header(input, trustedTime);
+	HeaderMgr header(input, trustedTime);
 
 	// Some data in raw header
 	auto expUncleHash = SimpleObjects::Bytes({
@@ -61,15 +63,15 @@ GTEST_TEST(TestEthHeaderMgr, Header_0)
 	// Block number
 	EXPECT_EQ(
 		header.GetNumber(),
-		typename EthHeaderMgr::BlkNumType(0));
+		typename HeaderMgr::BlkNumType(0));
 
 	// Timestamp
 	EXPECT_EQ(
 		header.GetTime(),
-		typename EthHeaderMgr::TimeType(0));
+		typename HeaderMgr::TimeType(0));
 
 	// Difficulty
 	EXPECT_EQ(
 		header.GetDiff(),
-		typename EthHeaderMgr::DiffType(17179869184ULL));
+		typename HeaderMgr::DiffType(17179869184ULL));
 }
