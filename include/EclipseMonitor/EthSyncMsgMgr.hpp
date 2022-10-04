@@ -38,7 +38,8 @@ public:
 		const MonitorId& mId,
 		const MonitorConfig& mConf,
 		uint64_t time,
-		ContractAddrType contractAddr) :
+		ContractAddrType contractAddr
+	) :
 		SyncMsgMgr(mId, mConf, time),
 		m_contractAddr(contractAddr)
 	{}
@@ -89,6 +90,11 @@ public:
 		}
 
 		return false;
+	}
+
+	const ContractAddrType& GetContractAddr() const
+	{
+		return m_contractAddr;
 	}
 
 private:
