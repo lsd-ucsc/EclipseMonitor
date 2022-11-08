@@ -26,7 +26,7 @@ GTEST_TEST(TestEthAbiParam, CountTestFile)
 GTEST_TEST(TestEthAbiParam, ParseUint64)
 {
 	std::string paramStr = "uint64";
-	auto param = AbiParam::ParseParam(paramStr);
+	auto param = AbiParamType::ParseParamString(paramStr);
 
 	EXPECT_EQ(param->GetType(), ParamType::Uint64);
 	EXPECT_EQ(param->IsStatic(), true);
@@ -35,7 +35,7 @@ GTEST_TEST(TestEthAbiParam, ParseUint64)
 GTEST_TEST(TestEthAbiParam, ParseBool)
 {
 	std::string paramStr = "bool";
-	auto param = AbiParam::ParseParam(paramStr);
+	auto param = AbiParamType::ParseParamString(paramStr);
 
 	EXPECT_EQ(param->GetType(), ParamType::Bool);
 	EXPECT_EQ(param->IsStatic(), true);
@@ -44,7 +44,7 @@ GTEST_TEST(TestEthAbiParam, ParseBool)
 GTEST_TEST(TestEthAbiParam, ParseBytes)
 {
 	std::string paramStr = "bytes";
-	auto param = AbiParam::ParseParam(paramStr);
+	auto param = AbiParamType::ParseParamString(paramStr);
 
 	EXPECT_EQ(param->GetType(), ParamType::Bytes);
 	EXPECT_EQ(param->IsStatic(), false);
@@ -53,7 +53,7 @@ GTEST_TEST(TestEthAbiParam, ParseBytes)
 GTEST_TEST(TestEthAbiParam, ParseBytes32)
 {
 	std::string paramStr = "bytes32";
-	auto param = AbiParam::ParseParam(paramStr);
+	auto param = AbiParamType::ParseParamString(paramStr);
 
 	EXPECT_EQ(param->GetType(), ParamType::Bytes32);
 	EXPECT_EQ(param->IsStatic(), true);
@@ -62,7 +62,7 @@ GTEST_TEST(TestEthAbiParam, ParseBytes32)
 GTEST_TEST(TestEthAbiParam, ParseUint256Arr)
 {
 	std::string paramStr = "uint64[]";
-	auto param = AbiParam::ParseParam(paramStr);
+	auto param = AbiParamType::ParseParamString(paramStr);
 
 	EXPECT_EQ(param->GetType(), ParamType::Uint64);
 	EXPECT_EQ(param->IsStatic(), false);
@@ -71,7 +71,7 @@ GTEST_TEST(TestEthAbiParam, ParseUint256Arr)
 GTEST_TEST(TestEthAbiParam, ParseBoolArr)
 {
 	std::string paramStr = "bool[]";
-	auto param = AbiParam::ParseParam(paramStr);
+	auto param = AbiParamType::ParseParamString(paramStr);
 
 	EXPECT_EQ(param->GetType(), ParamType::Bool);
 	EXPECT_EQ(param->IsStatic(), false);
@@ -80,7 +80,7 @@ GTEST_TEST(TestEthAbiParam, ParseBoolArr)
 GTEST_TEST(TestEthAbiParam, ParseBytes32Arr)
 {
 	std::string paramStr = "bytes32[]";
-	auto param = AbiParam::ParseParam(paramStr);
+	auto param = AbiParamType::ParseParamString(paramStr);
 
 	EXPECT_EQ(param->GetType(), ParamType::Bytes32);
 	EXPECT_EQ(param->IsStatic(), false);

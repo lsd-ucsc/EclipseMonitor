@@ -28,7 +28,7 @@ GTEST_TEST(TestEthAbiInputParser, CountTestFile)
 GTEST_TEST(TestEthAbiInputParser, SimpleParseInt)
 {
 	std::string funcSig = "function foo(uint64 num) public";
-	auto params = AbiParamParser::ParseParams(funcSig);
+	auto params = AbiParamType::ParseParams(funcSig);
 
 	SimpleObjects::Bytes input = {
 		0xcaU, 0xfeU, 0xbaU, 0xbeU, 0x00U, 0x00U, 0x00U, 0x00U,
@@ -44,7 +44,7 @@ GTEST_TEST(TestEthAbiInputParser, SimpleParseInt)
 GTEST_TEST(TestEthAbiInputParser, SimpleParseBool)
 {
 	std::string funcSig = "function bar(bool isFoo) public";
-	auto params = AbiParamParser::ParseParams(funcSig);
+	auto params = AbiParamType::ParseParams(funcSig);
 
 	SimpleObjects::Bytes input = {
 		0xcaU, 0xfeU, 0xbaU, 0xbeU, 0x00U, 0x00U, 0x00U, 0x00U,
@@ -60,7 +60,7 @@ GTEST_TEST(TestEthAbiInputParser, SimpleParseBool)
 GTEST_TEST(TestEthAbiInputParser, SimpleParseBytes32)
 {
 	std::string funcSig = "function bar(bytes32 fooBytes) public";
-	auto params = AbiParamParser::ParseParams(funcSig);
+	auto params = AbiParamType::ParseParams(funcSig);
 
 	SimpleObjects::Bytes input = {
 		0xcaU, 0xfeU, 0xbaU, 0xbeU, 0x48U, 0x65U, 0x6cU, 0x6cU,
@@ -77,7 +77,7 @@ GTEST_TEST(TestEthAbiInputParser, SimpleParseBytes32)
 GTEST_TEST(TestEthAbiInputParser, ArrayUintTest)
 {
 	std::string funcSig = "function bar(uint64[] nums) public";
-	auto params = AbiParamParser::ParseParams(funcSig);
+	auto params = AbiParamType::ParseParams(funcSig);
 
 	SimpleObjects::Bytes input = {
 		0xcaU, 0xfeU, 0xbaU, 0xbeU, 0x00U, 0x00U, 0x00U, 0x00U,
@@ -109,7 +109,7 @@ GTEST_TEST(TestEthAbiInputParser, ArrayUintTest)
 GTEST_TEST(TestEthAbiInputParser, ArrayBoolTest)
 {
 	std::string funcSig = "function bar(bool[] isFoo) public";
-	auto params = AbiParamParser::ParseParams(funcSig);
+	auto params = AbiParamType::ParseParams(funcSig);
 
 	SimpleObjects::Bytes input = {
 		0xcaU, 0xfeU, 0xbaU, 0xbeU, 0x00U, 0x00U, 0x00U, 0x00U,
@@ -141,7 +141,7 @@ GTEST_TEST(TestEthAbiInputParser, ArrayBoolTest)
 GTEST_TEST(TestEthAbiInputParser, MixTest1)
 {
 	std::string funcSig = "function bar(uint64 num, bool isFoo) public";
-	auto params = AbiParamParser::ParseParams(funcSig);
+	auto params = AbiParamType::ParseParams(funcSig);
 
 	SimpleObjects::Bytes input = {
 		0xcaU, 0xfeU, 0xbaU, 0xbeU, 0x00U, 0x00U, 0x00U, 0x00U,
@@ -161,7 +161,7 @@ GTEST_TEST(TestEthAbiInputParser, MixTest1)
 GTEST_TEST(TestEthAbiInputParser, MixTest2)
 {
 	std::string funcSig = "function bar(uint64 num, bool isFoo, bytes32 fooBytes) public";
-	auto params = AbiParamParser::ParseParams(funcSig);
+	auto params = AbiParamType::ParseParams(funcSig);
 
 	SimpleObjects::Bytes input = {
 		0xcaU, 0xfeU, 0xbaU, 0xbeU, 0x00U, 0x00U, 0x00U, 0x00U,
@@ -185,7 +185,7 @@ GTEST_TEST(TestEthAbiInputParser, MixTest2)
 GTEST_TEST(TestEthAbiInputParser, MixTest3)
 {
 	std::string funcSig = "function bar(bool isFoo, bytes32 fooBytes, uint64 num) public";
-	auto params = AbiParamParser::ParseParams(funcSig);
+	auto params = AbiParamType::ParseParams(funcSig);
 
 	SimpleObjects::Bytes input = {
 		0xcaU, 0xfeU, 0xbaU, 0xbeU, 0x00U, 0x00U, 0x00U, 0x00U,
@@ -209,7 +209,7 @@ GTEST_TEST(TestEthAbiInputParser, MixTest3)
 GTEST_TEST(TestEthAbiInputParser, MixTest4)
 {
 	std::string funcSig = "function bar(uint64[] nums, bytes32 fooBytes) public";
-	auto params = AbiParamParser::ParseParams(funcSig);
+	auto params = AbiParamType::ParseParams(funcSig);
 
 	SimpleObjects::Bytes input = {
 		0xcaU, 0xfeU, 0xbaU, 0xbeU, 0x00U, 0x00U, 0x00U, 0x00U,
@@ -246,7 +246,7 @@ GTEST_TEST(TestEthAbiInputParser, MixTest4)
 GTEST_TEST(TestEthAbiInputParser, BytesTest1)
 {
 	std::string funcSig = "function bar(bytes fooBytes) public";
-	auto params = AbiParamParser::ParseParams(funcSig);
+	auto params = AbiParamType::ParseParams(funcSig);
 
 	SimpleObjects::Bytes input = {
 		0xcaU, 0xfeU, 0xbaU, 0xbeU, 0x00U, 0x00U, 0x00U, 0x00U,
@@ -270,7 +270,7 @@ GTEST_TEST(TestEthAbiInputParser, BytesTest1)
 GTEST_TEST(TestEthAbiInputParser, BytesTest2)
 {
 	std::string funcSig = "function bar(bytes fooBytes) public";
-	auto params = AbiParamParser::ParseParams(funcSig);
+	auto params = AbiParamType::ParseParams(funcSig);
 
 	SimpleObjects::Bytes input = {
 		0xcaU, 0xfeU, 0xbaU, 0xbeU, 0x00U, 0x00U, 0x00U, 0x00U,
@@ -298,7 +298,7 @@ GTEST_TEST(TestEthAbiInputParser, BytesTest2)
 GTEST_TEST(TestEthAbiInputParser, BytesTest3)
 {
 	std::string funcSig = "function bar(bytes fooBytes) public";
-	auto params = AbiParamParser::ParseParams(funcSig);
+	auto params = AbiParamType::ParseParams(funcSig);
 
 	SimpleObjects::Bytes input = {
 		0xcaU, 0xfeU, 0xbaU, 0xbeU, 0x00U, 0x00U, 0x00U, 0x00U,

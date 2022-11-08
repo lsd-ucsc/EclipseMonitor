@@ -78,7 +78,7 @@ public:
 	}
 
 	static void ParseInput(
-		const std::vector<std::unique_ptr<AbiParam>>& params,
+		const std::vector<std::unique_ptr<AbiParamType>>& params,
 		Internal::Obj::Bytes& input
 	)
 	{
@@ -97,7 +97,7 @@ public:
 		uint dataPos = params.size();
 		for (uint i = 0; i < params.size(); i++)
 		{
-			AbiParam& param = *params[i];
+			AbiParamType& param = *params[i];
 
 			// static parameters are stored directly
 			if (param.IsStatic())
