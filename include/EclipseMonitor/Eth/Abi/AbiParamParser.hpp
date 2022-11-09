@@ -14,6 +14,8 @@
 
 #include "../../Exceptions.hpp"
 #include "AbiParam.hpp"
+#include "AbiParamType.hpp"
+#include "AbiInputParser.hpp"
 
 namespace EclipseMonitor
 {
@@ -25,16 +27,29 @@ namespace Abi
 class AbiParamParser
 {
 public:
-	AbiParamParser() = default;
+	AbiParamParser(std::vector<std::unique_ptr<AbiParam>> params) :
+		m_params(std::move(params))
+	{}
 
-	// static void ParseParams(
-	// 	const std::string& paramStr,
-	// 	Internal::Obj::Bytes& input
-	// )
-	// {
-	// 	// std::vector<std::unique_ptr<AbiParam>> params;
+	static AbiParamParser ParseParams(
+		const std::string& paramStr,
+		Internal::Obj::Bytes& inputBytes
+	)
+	{
+		auto paramTypes = AbiParamType::ParseParamType(paramStr);
+		auto abiParams =
+			AbiInputParser::ParseInput(std::move(paramTypes), inputBytes);
 
-	// }
+		return AbiParamParser(std::move(abiParams));
+	}
+
+	std::vector<std::unique_ptr<AbiParam>>& GetParams()
+	{
+		return m_params;
+	}
+
+private:
+	std::vector<std::unique_ptr<AbiParam>> m_params;
 
 };
 
