@@ -92,7 +92,7 @@ public:
 		return params;
 	}
 
-	static std::vector<std::unique_ptr<AbiParamType>> ParseParams(
+	static std::vector<std::unique_ptr<AbiParamType>> ParseParamType(
 		const std::string& paramStr
 	)
 	{
@@ -111,17 +111,17 @@ public:
 		return parsedParams;
 	}
 
-	ParamType const& GetType()
+	ParamType& GetType()
 	{
 		return m_type;
 	}
 
-	bool const& IsStatic()
+	bool& IsStatic()
 	{
 		return m_isStatic;
 	}
 
-	bool const& IsArray()
+	bool& IsArray()
 	{
 		return m_isArray;
 	}

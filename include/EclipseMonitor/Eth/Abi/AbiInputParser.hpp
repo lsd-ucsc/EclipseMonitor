@@ -77,8 +77,8 @@ public:
 		return val;
 	}
 
-	static void ParseInput(
-		const std::vector<std::unique_ptr<AbiParamType>>& params,
+	static std::vector<std::unique_ptr<AbiParam>> ParseInput(
+		std::vector<std::unique_ptr<AbiParamType>> paramTypes,
 		Internal::Obj::Bytes& input
 	)
 	{
@@ -92,12 +92,18 @@ public:
 			= {input.data() + FUNC_SIG_SIZE,
 				input.data() + input.size()};
 
-		Internal::Obj::List chunks = DataToChunks(inputData);
+		std::vector<std::unique_ptr<AbiParam>> parsedParams;
+		parsedParams.reserve(paramTypes.size());
 
-		uint dataPos = params.size();
-		for (uint i = 0; i < params.size(); i++)
+		Internal::Obj::List chunks = DataToChunks(inputData);
+		Internal::Obj::Object paramObj;
+
+
+		uint dataPos = paramTypes.size();
+		uint paramsSize = paramTypes.size();
+		for (uint i = 0; i < paramsSize; i++)
 		{
-			AbiParamType& param = *params[i];
+			AbiParamType& param = *paramTypes[i];
 
 			// static parameters are stored directly
 			if (param.IsStatic())
@@ -106,20 +112,25 @@ public:
 				{
 					// TODO: why num displayed as byte here while
 					// TestEThAbiDecode shows as int correctly
-					// Internal::Obj::BytesBaseObj& chunk = chunks[i].AsBytes();
-					Internal::Obj::UInt64 val = ChunkToInt(chunks[i], IntWriter);
-					std::cout << "val: " << val.GetVal() << std::endl;
+					// Internal::Obj::UInt64 val = ChunkToInt(chunks[i], IntWriter);
+					// paramObj = ChunkToInt(chunks[i], IntWriter);
+					paramObj = std::move(ChunkToInt(chunks[i], IntWriter));
+					// std::cout << "val: " << val.GetVal() << std::endl;
 				}
 				else if (param.GetType() == ParamType::Bool)
 				{
 					Internal::Obj::BytesBaseObj& chunk = chunks[i].AsBytes();
-					Internal::Obj::Bool val(chunk[chunk.size() - 1]);
-					std::cout << "bool val: " << val.GetVal() << std::endl;
+					// Internal::Obj::Bool val(chunk[chunk.size() - 1]);
+					// paramObj = Internal::Obj::Bool(chunk[chunk.size() - 1]);
+					paramObj = std::move(Internal::Obj::Bool(chunk[chunk.size() - 1]));
+					// std::cout << "bool val: " << val.GetVal() << std::endl;
 				}
 				else if (param.GetType() == ParamType::Bytes32)
 				{
-					Internal::Obj::BytesBaseObj& chunk = chunks[i].AsBytes();
-					PrintBytes(chunk);
+					// Internal::Obj::BytesBaseObj& chunk = chunks[i].AsBytes();
+					// paramObj = chunks[i].AsBytes();
+					paramObj = std::move(chunks[i].AsBytes());
+					// PrintBytes(chunk);
 				}
 
 			}
@@ -148,6 +159,7 @@ public:
 						arrayData.push_back(std::move(val));
 					}
 				}
+				paramObj = std::move(arrayData);
 			}
 			else if(param.GetType() == ParamType::Bytes)
 			{
@@ -162,11 +174,14 @@ public:
 					Internal::Obj::BytesBaseObj& chunk = currChunk.AsBytes();
 					bytes += chunk;
 				}
+				paramObj = std::move(bytes);
 			}
+			auto abiParam = Internal::Obj::Internal::make_unique<AbiParam>(std::move(paramTypes[i]), std::move(paramObj));
+			parsedParams.push_back(std::move(abiParam));
 		}
 
-	}
-
+		return parsedParams;
+	} // ParseInput
 
 
 

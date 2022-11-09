@@ -8,6 +8,7 @@
 #include <string>
 
 #include <SimpleObjects/Internal/make_unique.hpp>
+#include <SimpleRlp/SimpleRlp.hpp>
 
 #include "AbiParamType.hpp"
 
@@ -18,23 +19,32 @@ namespace Eth
 namespace Abi
 {
 
+
 class AbiParam
 {
 public:
+	AbiParam(const AbiParam&) = delete;
+	AbiParam& operator=(const AbiParam&) = delete;
+
 	AbiParam(
 		std::unique_ptr<AbiParamType> type,
-		Internal::Obj::Object& input
+		Internal::Obj::Object input
 	) :
 		m_abiparamtype(std::move(type)),
 		m_input(input)
 	{}
 
-	const std::unique_ptr<AbiParamType>& GetAbiParamType()
+	// const void SetType(std::unique_ptr<AbiParamType> type)
+	// {
+	// 	m_abiparamtype = std::move(type);
+	// }
+
+	std::unique_ptr<AbiParamType>& GetAbiParamType()
 	{
 		return m_abiparamtype;
 	}
 
-	const Internal::Obj::Object& GetInput()
+	Internal::Obj::Object& GetInput()
 	{
 		return m_input;
 	}
