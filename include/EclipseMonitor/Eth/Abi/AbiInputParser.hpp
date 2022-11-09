@@ -8,17 +8,15 @@
 #include <iostream>
 #include <string>
 
-#include <SimpleObjects/Internal/make_unique.hpp>
 #include <EclipseMonitor/Internal/SimpleRlp.hpp>
+#include <SimpleObjects/Internal/make_unique.hpp>
 
 #include "AbiParam.hpp"
 
 namespace EclipseMonitor
 {
-
 namespace Eth
 {
-
 namespace Abi
 {
 
@@ -34,19 +32,11 @@ public:
 
 	AbiInputParser() = default;
 
-	static void PrintBytes(const Internal::Obj::BytesBaseObj& bytes)
-	{
-		for (const uint8_t& byte : bytes)
-		{
-			std::cout << static_cast<unsigned int>(byte) << " ";
-		}
-		std::cout << std::endl;
-	}
-
 	static Internal::Obj::List DataToChunks(Internal::Obj::Bytes& data)
 	{
 		uint64_t numChunks = data.size() / BYTE_CHUNK;
 		Internal::Obj::List chunks;
+
 		for (uint64_t i = 0; i < numChunks; i++)
 		{
 			Internal::Obj::Bytes chunk =
@@ -68,6 +58,7 @@ public:
 
 		uint8_t numInBytes[8];
 		uint8_t k = chunk.size() - 1;
+
 		for (uint j = 0; j < 8; j++, k--)
 		{
 			numInBytes[j] = chunk[k];
@@ -85,12 +76,11 @@ public:
 		// writing bytes into an int
 		auto IntWriter = SimpleRlp::Internal::DecodeIntBytes<uint64_t>;
 
-		Internal::Obj::Bytes funcSig
-			= {input.data(), input.data() + FUNC_SIG_SIZE};
+		Internal::Obj::Bytes funcSig =
+			{input.data(), input.data() + FUNC_SIG_SIZE};
 
-		Internal::Obj::Bytes inputData
-			= {input.data() + FUNC_SIG_SIZE,
-				input.data() + input.size()};
+		Internal::Obj::Bytes inputData =
+			{input.data() + FUNC_SIG_SIZE, input.data() + input.size()};
 
 		std::vector<std::unique_ptr<AbiParam>> parsedParams;
 		parsedParams.reserve(paramTypes.size());
@@ -112,25 +102,17 @@ public:
 				{
 					// TODO: why num displayed as byte here while
 					// TestEThAbiDecode shows as int correctly
-					// Internal::Obj::UInt64 val = ChunkToInt(chunks[i], IntWriter);
-					// paramObj = ChunkToInt(chunks[i], IntWriter);
 					paramObj = std::move(ChunkToInt(chunks[i], IntWriter));
-					// std::cout << "val: " << val.GetVal() << std::endl;
 				}
 				else if (param.GetType() == ParamType::Bool)
 				{
 					Internal::Obj::BytesBaseObj& chunk = chunks[i].AsBytes();
-					// Internal::Obj::Bool val(chunk[chunk.size() - 1]);
-					// paramObj = Internal::Obj::Bool(chunk[chunk.size() - 1]);
-					paramObj = std::move(Internal::Obj::Bool(chunk[chunk.size() - 1]));
-					// std::cout << "bool val: " << val.GetVal() << std::endl;
+					paramObj =
+						std::move(Internal::Obj::Bool(chunk[chunk.size() - 1]));
 				}
 				else if (param.GetType() == ParamType::Bytes32)
 				{
-					// Internal::Obj::BytesBaseObj& chunk = chunks[i].AsBytes();
-					// paramObj = chunks[i].AsBytes();
 					paramObj = std::move(chunks[i].AsBytes());
-					// PrintBytes(chunk);
 				}
 
 			}
@@ -139,7 +121,8 @@ public:
 				// array parameters are stored as a list of chunks
 				// the first chunk is the length of the array
 				// the rest of the chunks are the elements
-				Internal::Obj::UInt64 arrLen = ChunkToInt(chunks[dataPos++], IntWriter);
+				Internal::Obj::UInt64 arrLen =
+					ChunkToInt(chunks[dataPos++], IntWriter);
 
 				Internal::Obj::List arrayData;
 				for (uint i = 0; i < arrLen.GetVal(); i++)
@@ -147,7 +130,8 @@ public:
 					Internal::Obj::Object& currChunk = chunks[dataPos++];
 					if(param.GetType() == ParamType::Uint64)
 					{
-						Internal::Obj::UInt64 val = ChunkToInt(currChunk, IntWriter);
+						Internal::Obj::UInt64 val =
+							ChunkToInt(currChunk, IntWriter);
 
 						arrayData.push_back(std::move(val));
 					}
@@ -163,9 +147,11 @@ public:
 			}
 			else if(param.GetType() == ParamType::Bytes)
 			{
-				Internal::Obj::UInt64 numBytes = ChunkToInt(chunks[dataPos++], IntWriter);
+				Internal::Obj::UInt64 numBytes =
+					ChunkToInt(chunks[dataPos++], IntWriter);
 
-				uint64_t numChunks = (numBytes.GetVal() + BYTE_CHUNK - 1) / BYTE_CHUNK;
+				uint64_t numChunks =
+					(numBytes.GetVal() + BYTE_CHUNK - 1) / BYTE_CHUNK;
 
 				Internal::Obj::Bytes bytes;
 				for (uint i = 0; i < numChunks; i++)
@@ -176,16 +162,18 @@ public:
 				}
 				paramObj = std::move(bytes);
 			}
-			auto abiParam = Internal::Obj::Internal::make_unique<AbiParam>(std::move(paramTypes[i]), std::move(paramObj));
+			auto abiParam =
+				Internal::Obj::Internal::make_unique<AbiParam>
+				(
+					std::move(paramTypes[i]),
+					std::move(paramObj)
+				);
+
 			parsedParams.push_back(std::move(abiParam));
 		}
 
 		return parsedParams;
 	} // ParseInput
-
-
-
-
 
 }; // class AbiInputParser
 

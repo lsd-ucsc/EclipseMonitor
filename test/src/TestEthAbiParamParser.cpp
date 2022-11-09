@@ -6,10 +6,9 @@
 #include <gtest/gtest.h>
 #include <string>
 
+#include <EclipseMonitor/Eth/Abi/AbiInputParser.hpp>
 #include <EclipseMonitor/Eth/Abi/AbiParam.hpp>
 #include <EclipseMonitor/Eth/Abi/AbiParamParser.hpp>
-#include <EclipseMonitor/Eth/Abi/AbiInputParser.hpp>
-
 
 namespace EclipseMonitor_Test
 {
@@ -18,7 +17,6 @@ namespace EclipseMonitor_Test
 
 using namespace EclipseMonitor_Test;
 using namespace EclipseMonitor::Eth::Abi;
-
 
 GTEST_TEST(TestEthAbiParamParser, CountTestFile)
 {

@@ -13,10 +13,8 @@
 
 namespace EclipseMonitor
 {
-
 namespace Eth
 {
-
 namespace Abi
 {
 
@@ -36,8 +34,6 @@ public:
 		m_isStatic(isStatic),
 		m_isArray(isArray)
 	{}
-
-
 
 	static std::unique_ptr<AbiParamType> ParseParamString(const std::string& param)
 	{
@@ -73,7 +69,8 @@ public:
 			isArray = true;
 		}
 
-		return SimpleObjects::Internal::make_unique<AbiParamType>(type, isStatic, isArray);
+		return SimpleObjects::Internal::make_unique<AbiParamType>(
+			type, isStatic, isArray);
 	}
 
 
@@ -98,7 +95,7 @@ public:
 	{
 		int openBraceIndex = paramStr.find("(");
 		int closeBraceIndex = paramStr.find(")");
-		std::string delimitedParams = paramStr.substr(
+		std::string delimitedParams =  paramStr.substr(
 			openBraceIndex + 1, closeBraceIndex - openBraceIndex);
 
 		std::vector<std::string> params = SplitParams(delimitedParams, ',');
@@ -132,11 +129,6 @@ private:
 	bool m_isArray;
 
 }; // class AbiParam
-
-
-
-
-
 
 } // namespace Abi
 } // namespace Eth

@@ -5,6 +5,7 @@
 
 #include <gtest/gtest.h>
 #include <string>
+
 #include <EclipseMonitor/Eth/Abi/AbiParam.hpp>
 #include <EclipseMonitor/Eth/Abi/AbiParamParser.hpp>
 
@@ -12,7 +13,6 @@ namespace EclipseMonitor_Test
 {
 	extern size_t g_numOfTestFile;
 }
-
 
 using namespace EclipseMonitor_Test;
 using namespace EclipseMonitor::Eth::Abi;
@@ -22,7 +22,6 @@ GTEST_TEST(TestEthAbiParamTypeParser, CountTestFile)
 	static auto tmp = ++g_numOfTestFile;
 	(void)tmp;
 }
-
 
 GTEST_TEST(TestEthAbiParamTypeParser, ParseSingleUint256)
 {

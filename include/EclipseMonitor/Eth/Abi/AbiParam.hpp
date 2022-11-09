@@ -19,13 +19,9 @@ namespace Eth
 namespace Abi
 {
 
-
 class AbiParam
 {
 public:
-	AbiParam(const AbiParam&) = delete;
-	AbiParam& operator=(const AbiParam&) = delete;
-
 	AbiParam(
 		std::unique_ptr<AbiParamType> type,
 		Internal::Obj::Object input
@@ -33,11 +29,6 @@ public:
 		m_abiparamtype(std::move(type)),
 		m_input(input)
 	{}
-
-	// const void SetType(std::unique_ptr<AbiParamType> type)
-	// {
-	// 	m_abiparamtype = std::move(type);
-	// }
 
 	std::unique_ptr<AbiParamType>& GetAbiParamType()
 	{
@@ -53,8 +44,6 @@ private:
 	std::unique_ptr<AbiParamType> m_abiparamtype;
 	Internal::Obj::Object m_input;
 };
-
-
 
 } // namespace Abi
 } // namespace Eth

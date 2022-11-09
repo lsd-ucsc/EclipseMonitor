@@ -12,15 +12,13 @@
 
 #include <SimpleObjects/Internal/make_unique.hpp>
 
-#include "AbiParam.hpp"
 #include "../../Exceptions.hpp"
+#include "AbiParam.hpp"
 
 namespace EclipseMonitor
 {
-
 namespace Eth
 {
-
 namespace Abi
 {
 

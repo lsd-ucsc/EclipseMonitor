@@ -5,13 +5,13 @@
 
 #include <gtest/gtest.h>
 #include <string>
+
 #include <EclipseMonitor/Eth/Abi/AbiParam.hpp>
 
 namespace EclipseMonitor_Test
 {
 	extern size_t g_numOfTestFile;
 }
-
 
 using namespace EclipseMonitor_Test;
 using namespace EclipseMonitor::Eth::Abi;
@@ -21,7 +21,6 @@ GTEST_TEST(TestEthAbiParam, CountTestFile)
 	static auto tmp = ++g_numOfTestFile;
 	(void)tmp;
 }
-
 
 GTEST_TEST(TestEthAbiParam, ParseUint64)
 {
