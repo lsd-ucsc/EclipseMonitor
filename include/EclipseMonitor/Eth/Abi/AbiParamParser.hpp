@@ -33,12 +33,13 @@ public:
 
 	static AbiParamParser ParseParams(
 		const std::string& paramStr,
-		Internal::Obj::Bytes& inputBytes
+		Internal::Obj::Bytes& inputBytes,
+		bool functionHeader
 	)
 	{
 		auto paramTypes = AbiParamType::ParseParamType(paramStr);
-		auto abiParams =
-			AbiInputParser::ParseInput(std::move(paramTypes), inputBytes);
+		auto abiParams = AbiInputParser::ParseInput(
+				std::move(paramTypes), inputBytes, functionHeader);
 
 		return AbiParamParser(std::move(abiParams));
 	}

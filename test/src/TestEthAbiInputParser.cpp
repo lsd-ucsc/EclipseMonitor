@@ -18,6 +18,7 @@ namespace EclipseMonitor_Test
 using namespace EclipseMonitor_Test;
 using namespace EclipseMonitor::Eth::Abi;
 
+
 GTEST_TEST(TestEthAbiInputParser, CountTestFile)
 {
 	static auto tmp = ++g_numOfTestFile;
@@ -37,7 +38,8 @@ GTEST_TEST(TestEthAbiInputParser, SimpleParseInt)
 		0x00U, 0x00U, 0x00U, 0x45U
 	};
 
-	auto params = AbiInputParser::ParseInput(std::move(paramTypes), input);
+	auto params =
+		AbiInputParser::ParseInput(std::move(paramTypes), input, true);
 
 	AbiParamType* paramTypeObj = params[0]->GetAbiParamType().get();
 	SimpleObjects::Object& paramInput = params[0]->GetInput();
@@ -76,7 +78,8 @@ GTEST_TEST(TestEthAbiInputParser, SimpleParseBool)
 		0x00U, 0x00U, 0x00U, 0x01U
 	};
 
-	auto params = AbiInputParser::ParseInput(std::move(paramTypes), input);
+	auto params =
+		AbiInputParser::ParseInput(std::move(paramTypes), input, true);
 
 	AbiParamType *paramTypeObj = params[0]->GetAbiParamType().get();
 	SimpleObjects::Object& paramInput = params[0]->GetInput();
@@ -108,7 +111,8 @@ GTEST_TEST(TestEthAbiInputParser, SimpleParseBytes32)
 		0x00U, 0x00U, 0x00U, 0x00U
 	};
 
-	auto params = AbiInputParser::ParseInput(std::move(paramTypes), input);
+	auto params =
+		AbiInputParser::ParseInput(std::move(paramTypes), input, true);
 
 	AbiParamType *paramTypeObj = params[0]->GetAbiParamType().get();
 	SimpleObjects::Object& paramInput = params[0]->GetInput();
@@ -161,7 +165,8 @@ GTEST_TEST(TestEthAbiInputParser, ArrayUintTest)
 		0x00U, 0x00U, 0x00U, 0x03U
 	};
 
-	auto params = AbiInputParser::ParseInput(std::move(paramTypes), input);
+	auto params =
+		AbiInputParser::ParseInput(std::move(paramTypes), input, true);
 
 	AbiParamType *paramTypeObj = params[0]->GetAbiParamType().get();
 	SimpleObjects::Object& paramInput = params[0]->GetInput();
@@ -213,7 +218,8 @@ GTEST_TEST(TestEthAbiInputParser, ArrayBoolTest)
 		0x00U, 0x00U, 0x00U, 0x01U
 	};
 
-	auto params = AbiInputParser::ParseInput(std::move(paramTypes), input);
+	auto params =
+		AbiInputParser::ParseInput(std::move(paramTypes), input, true);
 
 	AbiParamType *paramTypeObj = params[0]->GetAbiParamType().get();
 	SimpleObjects::Object& paramInput = params[0]->GetInput();
@@ -257,7 +263,8 @@ GTEST_TEST(TestEthAbiInputParser, BytesTest1)
 		0x00U, 0x00U, 0x00U, 0x00U
 	};
 
-	auto params = AbiInputParser::ParseInput(std::move(paramTypes), input);
+	auto params =
+		AbiInputParser::ParseInput(std::move(paramTypes), input, true);
 
 	AbiParamType *paramTypeObj = params[0]->GetAbiParamType().get();
 	SimpleObjects::Object& paramInput = params[0]->GetInput();
@@ -306,7 +313,8 @@ GTEST_TEST(TestEthAbiInputParser, BytesTest2)
 		0x72U, 0x6cU, 0x64U, 0x21U
 	};
 
-	auto params = AbiInputParser::ParseInput(std::move(paramTypes), input);
+	auto params =
+		AbiInputParser::ParseInput(std::move(paramTypes), input, true);
 
 	AbiParamType *paramTypeObj = params[0]->GetAbiParamType().get();
 	SimpleObjects::Object& paramInput = params[0]->GetInput();
@@ -363,7 +371,8 @@ GTEST_TEST(TestEthAbiInputParser, BytesTest3)
 		0x00U, 0x00U, 0x00U, 0x00U
 	};
 
-	auto params = AbiInputParser::ParseInput(std::move(paramTypes), input);
+	auto params =
+		AbiInputParser::ParseInput(std::move(paramTypes), input, true);
 
 	AbiParamType *paramTypeObj = params[0]->GetAbiParamType().get();
 	SimpleObjects::Object& paramInput = params[0]->GetInput();
@@ -413,7 +422,8 @@ GTEST_TEST(TestEthAbiInputParser, MixTest1)
 		0x00U, 0x00U, 0x00U, 0x01U
 	};
 
-	auto params = AbiInputParser::ParseInput(std::move(paramTypes), input);
+	auto params =
+		AbiInputParser::ParseInput(std::move(paramTypes), input, true);
 
 	AbiParamType expectedParamTypes[2] = {
 		AbiParamType(ParamType::Uint64, true, false),
@@ -458,7 +468,8 @@ GTEST_TEST(TestEthAbiInputParser, MixTest2)
 		0x00U, 0x00U, 0x00U, 0x00U
 	};
 
-	auto params = AbiInputParser::ParseInput(std::move(paramTypes), input);
+	auto params =
+		AbiInputParser::ParseInput(std::move(paramTypes), input, true);
 
 	AbiParamType expectedParamTypes[3] = {
 		AbiParamType(ParamType::Uint64, true, false),
@@ -511,7 +522,8 @@ GTEST_TEST(TestEthAbiInputParser, MixTest3)
 		0x00U, 0x00U, 0x00U, 0x45U
 	};
 
-	auto params = AbiInputParser::ParseInput(std::move(paramTypes), input);
+	auto params =
+		AbiInputParser::ParseInput(std::move(paramTypes), input, true);
 
 	AbiParamType expectedParamTypes[3] = {
 		AbiParamType(ParamType::Bool, true, false),
@@ -575,7 +587,8 @@ GTEST_TEST(TestEthAbiInputParser, MixTest4)
 		0x00U, 0x00U, 0x00U, 0x0aU
 	};
 
-	auto params = AbiInputParser::ParseInput(std::move(paramTypes), input);
+	auto params =
+		AbiInputParser::ParseInput(std::move(paramTypes), input, true);
 
 	AbiParamType expectedParamTypes[2] = {
 		AbiParamType(ParamType::Uint64, false, true),

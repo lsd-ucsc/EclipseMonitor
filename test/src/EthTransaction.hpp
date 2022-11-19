@@ -16,4 +16,10 @@ const SimpleObjects::Bytes& AccessListTxn_15415840();
 
 const SimpleObjects::Bytes& DynamicFeeTxn_15415840();
 
+const SimpleObjects::Bytes& TestTxn1();
+
+const SimpleObjects::Bytes& TestTxn2();
+
+const SimpleObjects::Bytes& TestTxn3();
+
 }

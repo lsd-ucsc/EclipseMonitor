@@ -16,6 +16,7 @@ namespace EclipseMonitor_Test
 using namespace EclipseMonitor_Test;
 using namespace EclipseMonitor::Eth::Abi;
 
+
 GTEST_TEST(TestEthAbiParamParser, CountTestFile)
 {
 	static auto tmp = ++g_numOfTestFile;
@@ -33,7 +34,9 @@ GTEST_TEST(TestEthAbiParamParser, SimpleParseInt)
 		0x00U, 0x00U, 0x00U, 0x45U
 	};
 
-	AbiParamParser paramParser = AbiParamParser::ParseParams(funcSig, input);
+	AbiParamParser paramParser =
+		AbiParamParser::ParseParams(funcSig, input, true);
+
 	auto& params = paramParser.GetParams();
 
 	AbiParamType* paramTypeObj = params[0]->GetAbiParamType().get();
@@ -93,7 +96,8 @@ GTEST_TEST(TestEthAbiInputParser, MixTest)
 		0x00U, 0x00U, 0x00U, 0x0aU
 	};
 
-	AbiParamParser paramParser = AbiParamParser::ParseParams(funcSig, input);
+	AbiParamParser paramParser =
+		AbiParamParser::ParseParams(funcSig, input, true);
 	auto& params = paramParser.GetParams();
 
 	AbiParamType expectedParamTypes[2] = {
