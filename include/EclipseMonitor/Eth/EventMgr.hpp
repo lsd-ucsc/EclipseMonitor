@@ -26,7 +26,10 @@ class EventMgr
 
 public:
 
-	void Subscribe(Internal::Obj::Bytes address, std::string event)
+	void Subscribe(
+		const Internal::Obj::Bytes& address,
+		const std::string& event
+	)
 	{
 		if (!m_subscriptions.HasKey(address))
 		{
@@ -57,7 +60,7 @@ public:
 	}
 
 	std::tuple<bool, Internal::Obj::Bytes> IsEventEmitted(
-		Internal::Obj::Bytes address,
+		const Internal::Obj::Bytes& address,
 		const Internal::Obj::Bytes& receiptBytes
 	)
 	{

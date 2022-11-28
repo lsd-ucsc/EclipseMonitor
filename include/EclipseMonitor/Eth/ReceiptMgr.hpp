@@ -82,15 +82,12 @@ public:
 		return ReceiptMgr(receiptObj);
 	}
 
-	// param: eventHash
-	// param: address  (contract address)
-	// return tuple <isomitted, logdata>
 	std::tuple<bool, Internal::Obj::Bytes> IsEventEmitted(
-		Internal::Obj::Bytes& contractAddress,
-		Internal::Obj::Bytes& eventHash
+		const Internal::Obj::Bytes& contractAddress,
+		const Internal::Obj::Bytes& eventHash
 	)
 	{
-		// iterate over the logs to see if any event is omitted by the contract
+		// iterate over the logs to see if any event is emitted by the contract
 		auto it = m_receiptLogs.begin();
 		for (; it != m_receiptLogs.end(); it++)
 		{

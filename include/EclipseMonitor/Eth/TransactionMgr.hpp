@@ -81,6 +81,8 @@ public:
 		Internal::Obj::ListBaseObj& txnListObj
 	) :
 		m_version(version),
+		m_contractAddr(),
+		m_data(),
 		m_txnObj(txnObj),
 		m_txnBody(txnListObj)
 	{

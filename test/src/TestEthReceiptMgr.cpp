@@ -5,8 +5,6 @@
 
 #include <gtest/gtest.h>
 
-
-#include <EclipseMonitor/Eth/Abi/AbiParamParser.hpp>
 #include <EclipseMonitor/Eth/Keccak256.hpp>
 #include <EclipseMonitor/Eth/ReceiptMgr.hpp>
 #include <SimpleObjects/SimpleObjects.hpp>
@@ -20,7 +18,6 @@ namespace EclipseMonitor_Test
 
 using namespace EclipseMonitor_Test;
 using namespace EclipseMonitor::Eth;
-using namespace EclipseMonitor::Eth::Abi;
 
 GTEST_TEST(TestEthReceiptMgr, CountTestFile)
 {
@@ -182,25 +179,6 @@ GTEST_TEST(TestEThReceiptMgr, EventTest1)
 	};
 
 	EXPECT_EQ(eventData, expectedEventData);
-
-	// parse event data using ABIParser
-	AbiParamParser paramParser =
-		AbiParamParser::ParseParams(event, eventData, false);
-	auto& params = paramParser.GetParams();
-
-	AbiParamType* paramTypeObj = params[0]->GetAbiParamType().get();
-	SimpleObjects::Object& paramInput = params[0]->GetInput();
-
-	AbiParamType expectedParamType(
-		ParamType::Bytes32,
-		true,
-		false
-	);
-
-	EXPECT_EQ(paramTypeObj->GetType(), expectedParamType.GetType());
-	EXPECT_EQ(paramTypeObj->IsStatic(), expectedParamType.IsStatic());
-	EXPECT_EQ(paramTypeObj->IsArray(), expectedParamType.IsArray());
-	EXPECT_EQ(paramInput, expectedEventData);
 }
 
 GTEST_TEST(TestEThReceiptMgr, EventTest2)
@@ -226,39 +204,6 @@ GTEST_TEST(TestEThReceiptMgr, EventTest2)
 		mgr.IsEventEmitted(contractAddress, eventBytes);
 
 	EXPECT_TRUE(eventEmitted);
-
-	AbiParamParser paramParser =
-		AbiParamParser::ParseParams(event, eventData, false);
-	auto& params = paramParser.GetParams();
-
-	AbiParamType expectedParamTypes[3] = {
-		AbiParamType(ParamType::Bytes32, true, false),
-		AbiParamType(ParamType::Uint64, true, false),
-		AbiParamType(ParamType::Bool, true, false)
-	};
-
-	SimpleObjects::List expectedInput = {
-		SimpleObjects::Bytes({
-			0x9fU, 0x8fU, 0x72U, 0xaaU, 0x93U, 0x04U, 0xc8U, 0xb5U,
-			0x93U, 0xd5U, 0x55U, 0xf1U, 0x2eU, 0xf6U, 0x58U, 0x9cU,
-			0xc3U, 0xa5U, 0x79U, 0xa2U, 0x9fU, 0x8fU, 0x72U, 0xaaU,
-			0x93U, 0x04U, 0xc8U, 0xb5U, 0x93U, 0xd5U, 0x9fU, 0x8fU
-		}),
-		SimpleObjects::UInt64(1337),
-		SimpleObjects::Bool(false)
-	};
-
-	for (uint i = 0; i < params.size(); i++)
-	{
-		AbiParamType *paramTypeObj = params[i]->GetAbiParamType().get();
-		SimpleObjects::Object& paramInput = params[i]->GetInput();
-
-		EXPECT_EQ(paramTypeObj->GetType(), expectedParamTypes[i].GetType());
-		EXPECT_EQ(paramTypeObj->IsStatic(), expectedParamTypes[i].IsStatic());
-		EXPECT_EQ(paramTypeObj->IsArray(), expectedParamTypes[i].IsArray());
-		EXPECT_EQ(paramInput, expectedInput[i]);
-	}
-
 }
 
 GTEST_TEST(TestEThReceiptMgr, EventTest3)
@@ -284,47 +229,4 @@ GTEST_TEST(TestEThReceiptMgr, EventTest3)
 		mgr.IsEventEmitted(contractAddress, eventBytes);
 
 	EXPECT_TRUE(eventEmitted);
-
-	AbiParamParser paramParser =
-		AbiParamParser::ParseParams(event, eventData, false);
-	auto& params = paramParser.GetParams();
-
-	AbiParamType* paramTypeObj = params[0]->GetAbiParamType().get();
-	SimpleObjects::Object& paramInput = params[0]->GetInput();
-
-	AbiParamType expectedParamType(
-		ParamType::Bytes,
-		false,
-		true
-	);
-
-
-	SimpleObjects::List expectedEventData = {
-			SimpleObjects::Bytes({
-				0x9fU, 0x8fU, 0x72U, 0xaaU, 0x93U, 0x04U, 0xc8U, 0xb5U,
-				0x93U, 0xd5U, 0x55U, 0xf1U, 0x2eU, 0xf6U, 0x58U, 0x9cU,
-				0xc3U, 0xa5U, 0x79U, 0xa2U, 0x9fU, 0x8fU, 0x72U, 0xaaU,
-				0x93U, 0x04U, 0xc8U, 0xb5U, 0x93U, 0xd5U, 0x9fU, 0x8fU,
-				0xdeU, 0xadU, 0xbeU, 0xafU, 0x00U, 0x00U, 0x00U, 0x00U,
-				0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
-				0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
-				0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
-			}),
-			SimpleObjects::Bytes({
-				0xcaU, 0xfeU, 0xbaU, 0xbeU, 0x9fU, 0x8fU, 0x72U, 0xaaU,
-				0x93U, 0x04U, 0xc8U, 0xb5U, 0x93U, 0xd5U, 0x55U, 0xf1U,
-				0x2eU, 0xf6U, 0x58U, 0x9cU, 0xc3U, 0xa5U, 0x79U, 0xa2U,
-				0x9fU, 0x8fU, 0x72U, 0xaaU, 0x93U, 0x04U, 0xc8U, 0xb5U,
-				0x93U, 0xd5U, 0x9fU, 0x8fU, 0x00U, 0x00U, 0x00U, 0x00U,
-				0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
-				0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
-				0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U
-			})
-
-	};
-
-	EXPECT_EQ(paramTypeObj->GetType(), expectedParamType.GetType());
-	EXPECT_EQ(paramTypeObj->IsStatic(), expectedParamType.IsStatic());
-	EXPECT_EQ(paramTypeObj->IsArray(), expectedParamType.IsArray());
-	EXPECT_EQ(paramInput, expectedEventData);
 }
