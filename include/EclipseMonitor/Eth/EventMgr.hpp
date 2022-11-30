@@ -6,6 +6,7 @@
 #pragma once
 
 #include <cstdint>
+
 #include <tuple>
 
 #include "../Internal/SimpleObj.hpp"
@@ -25,6 +26,14 @@ class EventMgr
 {
 
 public:
+
+	EventMgr() :
+		m_subscriptions()
+	{}
+
+	// LCOV_EXCL_START
+	~EventMgr() = default;
+	// LCOV_EXCL_STOP
 
 	void Subscribe(
 		const Internal::Obj::Bytes& address,
@@ -54,7 +63,7 @@ public:
 	{
 		TransactionMgr mgr = TransactionMgr::FromBytes(txnBytes);
 
-		const Internal::Obj::Bytes& contractAddr = mgr.GetContractAddr();
+		const Internal::Obj::BytesBaseObj& contractAddr = mgr.GetContractAddr();
 
 		return m_subscriptions.HasKey(contractAddr);
 	}
@@ -88,12 +97,6 @@ public:
 		}
 
 		return std::make_tuple(eventEmitted, eventData);
-	}
-
-public:
-	EventMgr()
-	{
-		m_subscriptions = Internal::Obj::Dict();
 	}
 
 private:

@@ -6,10 +6,12 @@
 #pragma once
 
 #include <cstdint>
+
 #include <tuple>
 
 #include "../Internal/SimpleObj.hpp"
 #include "../Internal/SimpleRlp.hpp"
+#include "../Exceptions.hpp"
 
 
 namespace EclipseMonitor
@@ -20,10 +22,10 @@ namespace Eth
 
 enum class TxnVersion : uint8_t
 {
-	Legacy  = 0,
+	Legacy     = 0,
 	AccessList = 1,
 	DynamicFee = 2,
-}; // enum class TnxVersion
+}; // enum class TxnVersion
 
 
 class TransactionMgr
@@ -31,45 +33,51 @@ class TransactionMgr
 public: // static members:
 
 	static std::tuple<TxnVersion, Internal::Obj::Object> ParseTnx(
-		const Internal::Obj::Bytes& rlpBytes
+		const Internal::Obj::BytesBaseObj& rlpBytes
 	)
 	{
-		TxnVersion version;
+		TxnVersion version = TxnVersion::Legacy;
+		Internal::Obj::Object txObj;
+
 		uint8_t firstByte = rlpBytes[0];
-		Internal::Obj::Bytes innerRlp;
+
+		auto itBegin = rlpBytes.begin();
+		auto itEnd = rlpBytes.end();
+		size_t size = rlpBytes.size();
+
 		if (firstByte == 0x01)
 		{
 			version = TxnVersion::AccessList;
-			innerRlp = Internal::Obj::Bytes(rlpBytes.data() + 1, rlpBytes.data() + rlpBytes.size());
+			++itBegin;
+			--size;
 		}
 		else if (firstByte == 0x02)
 		{
 			version = TxnVersion::DynamicFee;
-			innerRlp = Internal::Obj::Bytes(rlpBytes.data() + 1, rlpBytes.data() + rlpBytes.size());
-		}
-		else
-		{
-			version = TxnVersion::Legacy;
-			innerRlp = rlpBytes;
+			++itBegin;
+			--size;
 		}
 
-		Internal::Obj::Object txObj
-			= Internal::Rlp::ParseRlp(innerRlp.GetVal());
+		using _FrItType = typename Internal::Rlp::GeneralParser::IteratorType;
+		txObj = Internal::Rlp::GeneralParser().Parse(
+			_FrItType(itBegin.CopyPtr()),
+			_FrItType(itEnd.CopyPtr()),
+			size
+		);
+
 		return std::make_tuple(version, txObj);
 	}
 
 
 	static TransactionMgr FromBytes(
-		const Internal::Obj::Bytes& rlpBytes
+		const Internal::Obj::BytesBaseObj& rlpBytes
 	)
 	{
 		TxnVersion ver;
 		Internal::Obj::Object txnObj;
 		std::tie(ver, txnObj) = ParseTnx(rlpBytes);
 
-		Internal::Obj::ListBaseObj &txnListObj = txnObj.AsList();
-
-		return TransactionMgr(ver, txnObj, txnListObj);
+		return TransactionMgr(ver, std::move(txnObj));
 	}
 
 
@@ -77,62 +85,65 @@ public:
 
 	TransactionMgr(
 		TxnVersion version,
-		const Internal::Obj::Object& txnObj,
-		Internal::Obj::ListBaseObj& txnListObj
+		Internal::Obj::Object txnObj
 	) :
 		m_version(version),
-		m_contractAddr(),
-		m_data(),
-		m_txnObj(txnObj),
-		m_txnBody(txnListObj)
-	{
-		if (m_version == TxnVersion::Legacy)
-		{
-			Internal::Obj::BytesBaseObj& addr = m_txnBody[3].AsBytes();
-			m_contractAddr = Internal::Obj::Bytes(addr.data(), addr.data() + addr.size());
-
-			Internal::Obj::BytesBaseObj& data = m_txnBody[5].AsBytes();
-			m_data = Internal::Obj::Bytes(data.data(), data.data() + data.size());
-		}
-		else if (m_version == TxnVersion::AccessList)
-		{
-			Internal::Obj::BytesBaseObj& addr = m_txnBody[4].AsBytes();
-			m_contractAddr = Internal::Obj::Bytes(addr.data(), addr.data() + addr.size());
-
-			Internal::Obj::BytesBaseObj& data = m_txnBody[6].AsBytes();
-			m_data = Internal::Obj::Bytes(data.data(), data.data() + data.size());
-		}
-		else if (m_version == TxnVersion::DynamicFee)
-		{
-			Internal::Obj::BytesBaseObj& addr = m_txnBody[5].AsBytes();
-			m_contractAddr = Internal::Obj::Bytes(addr.data(), addr.data() + addr.size());
-
-			Internal::Obj::BytesBaseObj& data = m_txnBody[7].AsBytes();
-			m_data = Internal::Obj::Bytes(data.data(), data.data() + data.size());
-		}
-	};
+		m_txnObj(std::move(txnObj)),
+		m_txnBody(m_txnObj.AsList()),
+		m_contractAddr(GetContractAddrRef(m_version, m_txnBody)),
+		m_data(GetContractParamRef(m_version, m_txnBody))
+	{}
 
 	// LCOV_EXCL_START
 	~TransactionMgr() = default;
 	// LCOV_EXCL_STOP
 
-	const Internal::Obj::Bytes& GetContractAddr() const
+	const Internal::Obj::BytesBaseObj& GetContractAddr() const
 	{
 		return m_contractAddr;
 	}
 
-	const Internal::Obj::Bytes& GetContactParams() const
+	const Internal::Obj::BytesBaseObj& GetContactParams() const
 	{
 		return m_data;
 	}
 
+
+private: // static members:
+
+	static Internal::Obj::BytesBaseObj& GetContractAddrRef(
+		TxnVersion version,
+		Internal::Obj::ListBaseObj& txnBody
+	)
+	{
+		return
+			(version == TxnVersion::Legacy     ? txnBody[3].AsBytes() :
+			(version == TxnVersion::AccessList ? txnBody[4].AsBytes() :
+			(version == TxnVersion::DynamicFee ? txnBody[5].AsBytes() :
+				throw Exception("Invalid transaction version"))));
+	}
+
+	static Internal::Obj::BytesBaseObj& GetContractParamRef(
+		TxnVersion version,
+		Internal::Obj::ListBaseObj& txnBody
+	)
+	{
+		return
+			(version == TxnVersion::Legacy     ? txnBody[5].AsBytes() :
+			(version == TxnVersion::AccessList ? txnBody[6].AsBytes() :
+			(version == TxnVersion::DynamicFee ? txnBody[7].AsBytes() :
+				throw Exception("Invalid transaction version"))));
+	}
+
 private:
+
 	TxnVersion m_version;
-	Internal::Obj::Bytes m_contractAddr;
-	Internal::Obj::Bytes m_data;
 	Internal::Obj::Object m_txnObj;
 	Internal::Obj::ListBaseObj& m_txnBody;
-};
+	Internal::Obj::BytesBaseObj& m_contractAddr;
+	Internal::Obj::BytesBaseObj& m_data;
+
+}; // class TransactionMgr
 
 
 } // namespace Eth

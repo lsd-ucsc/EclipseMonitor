@@ -31,19 +31,21 @@ GTEST_TEST(TestEthTransactionMgr, LegacyTxn_15415840)
 	const SimpleObjects::Bytes& txnBytes = LegacyTxn_15415840();
 	TransactionMgr mgr = TransactionMgr::FromBytes(txnBytes);
 
-	const SimpleObjects::Bytes& contractAddr = mgr.GetContractAddr();
+
 	auto expContractAddr = SimpleObjects::Bytes({
 		0x29U, 0x2fU, 0x04U, 0xa4U, 0x45U, 0x06U, 0xc2U, 0xfdU,
 		0x49U, 0xbaU, 0xc0U, 0x32U, 0xe1U, 0xcaU, 0x14U, 0x8cU,
 		0x35U, 0xa4U, 0x78U, 0xc8U
 	});
+	const SimpleObjects::BytesBaseObj& expContractAddrObj = expContractAddr;
 
-	EXPECT_EQ(expContractAddr, contractAddr);
+	EXPECT_EQ(expContractAddrObj, mgr.GetContractAddr());
 
-	const SimpleObjects::Bytes& data = mgr.GetContactParams();
+
 	auto expData = SimpleObjects::Bytes({});
+	const SimpleObjects::BytesBaseObj& expDataObj = expData;
 
-	EXPECT_EQ(expData, data);
+	EXPECT_EQ(expDataObj, mgr.GetContactParams());
 }
 
 
@@ -52,16 +54,17 @@ GTEST_TEST(TestEthTransactionMgr, AccessListTxn_15415840)
 	const SimpleObjects::Bytes& txnBytes = AccessListTxn_15415840();
 	TransactionMgr mgr = TransactionMgr::FromBytes(txnBytes);
 
-	const SimpleObjects::Bytes& contractAddr = mgr.GetContractAddr();
+
 	auto expContractAddr = SimpleObjects::Bytes({
 		0xa1U, 0x00U, 0x6dU, 0x00U, 0x51U, 0xa3U, 0x5bU, 0x00U,
 		0x00U, 0xf9U, 0x61U, 0xa8U, 0x00U, 0x00U, 0x00U, 0x00U,
 		0x9eU, 0xa8U, 0xd2U, 0xdbU
 	});
+	const SimpleObjects::BytesBaseObj& expContractAddrObj = expContractAddr;
 
-	EXPECT_EQ(expContractAddr, contractAddr);
+	EXPECT_EQ(expContractAddrObj, mgr.GetContractAddr());
 
-	const SimpleObjects::Bytes& data = mgr.GetContactParams();
+
 	auto expData = SimpleObjects::Bytes({
 		0x01U, 0x00U, 0x14U, 0x96U, 0x1cU, 0xb0U, 0xb3U, 0x9aU,
 		0xf5U, 0x01U, 0x09U, 0x29U, 0x0aU, 0x6aU, 0x74U, 0x60U,
@@ -89,8 +92,9 @@ GTEST_TEST(TestEthTransactionMgr, AccessListTxn_15415840)
 		0x19U, 0x02U, 0x3dU, 0x2dU, 0x00U, 0xdeU, 0x60U, 0x4bU,
 		0xcfU, 0x5bU, 0x42U
 	});
+	const SimpleObjects::BytesBaseObj& expDataObj = expData;
 
-	EXPECT_EQ(expData, data);
+	EXPECT_EQ(expDataObj, mgr.GetContactParams());
 }
 
 
@@ -99,16 +103,17 @@ GTEST_TEST(TestEthTransactionMgr, DynamicFeeTxn_15415840)
 	const SimpleObjects::Bytes& txnBytes = DynamicFeeTxn_15415840();
 	TransactionMgr mgr = TransactionMgr::FromBytes(txnBytes);
 
-	const SimpleObjects::Bytes& contractAddr = mgr.GetContractAddr();
+
 	auto expContractAddr = SimpleObjects::Bytes({
 		0x9fU, 0x8fU, 0x72U, 0xaaU, 0x93U, 0x04U, 0xc8U, 0xb5U,
 		0x93U, 0xd5U, 0x55U, 0xf1U, 0x2eU, 0xf6U, 0x58U, 0x9cU,
 		0xc3U, 0xa5U, 0x79U, 0xa2U
 	});
+	const SimpleObjects::BytesBaseObj& expContractAddrObj = expContractAddr;
 
-	EXPECT_EQ(contractAddr, expContractAddr);
+	EXPECT_EQ(expContractAddrObj, mgr.GetContractAddr());
 
-	const SimpleObjects::Bytes& data = mgr.GetContactParams();
+
 	auto expData = SimpleObjects::Bytes({
 		0xa9U, 0x05U, 0x9cU, 0xbbU, 0x00U, 0x00U, 0x00U, 0x00U,
 		0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
@@ -120,6 +125,7 @@ GTEST_TEST(TestEthTransactionMgr, DynamicFeeTxn_15415840)
 		0x00U, 0x00U, 0x00U, 0x00U, 0x37U, 0x3bU, 0xccU, 0xe9U,
 		0xbeU, 0x0eU, 0x00U, 0x00U
 	});
+	const SimpleObjects::BytesBaseObj& expDataObj = expData;
 
-	EXPECT_EQ(data, expData);
+	EXPECT_EQ(expDataObj, mgr.GetContactParams());
 }

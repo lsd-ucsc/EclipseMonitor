@@ -6,6 +6,7 @@
 #pragma once
 
 #include <cstdint>
+
 #include <tuple>
 
 #include "../Internal/SimpleObj.hpp"
@@ -48,87 +49,42 @@ namespace Eth
 
 class ReceiptMgr
 {
-public:
+public: // static members:
+
 	static Internal::Obj::Object ParseReceipt(
-		const Internal::Obj::Bytes& rlpBytes
+		const Internal::Obj::BytesBaseObj& rlpBytes
 	)
 	{
 		uint8_t firstByte = rlpBytes[0];
-		Internal::Obj::Bytes innerRlp;
 
+		auto itBegin = rlpBytes.begin();
+		auto itEnd = rlpBytes.end();
+		size_t size = rlpBytes.size();
 		if (firstByte == 0x01 || firstByte == 0x02)
 		{
-			innerRlp = 	Internal::Obj::Bytes(
-				rlpBytes.data() + 1, rlpBytes.data() + rlpBytes.size());
-		}
-		else
-		{
-			innerRlp = rlpBytes;
+			++itBegin;
+			--size;
 		}
 
-		Internal::Obj::Object receiptObj =
-			Internal::Rlp::ParseRlp(innerRlp.GetVal());
-
-		return receiptObj;
+		using _FrItType = typename Internal::Rlp::GeneralParser::IteratorType;
+		return Internal::Rlp::GeneralParser().Parse(
+			_FrItType(itBegin.CopyPtr()),
+			_FrItType(itEnd.CopyPtr()),
+			size
+		);
 	}
 
 	static ReceiptMgr FromBytes(
-		const Internal::Obj::Bytes& rlpBytes
+		const Internal::Obj::BytesBaseObj& rlpBytes
 	)
 	{
-		Internal::Obj::Object receiptObj;
-		receiptObj = ParseReceipt(rlpBytes);
-
-		return ReceiptMgr(receiptObj);
-	}
-
-	std::tuple<bool, Internal::Obj::Bytes> IsEventEmitted(
-		const Internal::Obj::Bytes& contractAddress,
-		const Internal::Obj::Bytes& eventHash
-	)
-	{
-		// iterate over the logs to see if any event is emitted by the contract
-		auto it = m_receiptLogs.begin();
-		for (; it != m_receiptLogs.end(); it++)
-		{
-			Internal::Obj::ListBaseObj& logEntry = it->AsList();
-
-			Internal::Obj::BytesBaseObj& logAddress = logEntry[0].AsBytes();
-			if(contractAddress == logAddress)
-			{
-				Internal::Obj::ListBaseObj& logTopics = logEntry[1].AsList();
-				Internal::Obj::BytesBaseObj& logEventHash =
-					logTopics[0].AsBytes();
-
-				if(eventHash == logEventHash)
-				{
-					Internal::Obj::BytesBaseObj& logDataRef =
-						logEntry[2].AsBytes();
-
-					Internal::Obj::Bytes logData = {
-						logDataRef.data(),
-						logDataRef.data() + logDataRef.size()
-					};
-					return std::make_tuple(true, logData);
-				}
-			}
-		}
-
-		return std::make_tuple(false, Internal::Obj::Bytes());
-	}
-
-	Internal::Obj::BytesBaseObj& GetEventParams()
-	{
-		Internal::Obj::BytesBaseObj& eventData = m_receiptLogs[2].AsBytes();
-
-		return eventData;
+		return ReceiptMgr(ParseReceipt(rlpBytes));
 	}
 
 public:
-	ReceiptMgr(
-		const Internal::Obj::Object& receiptObj
-	) :
-		m_receiptObj(receiptObj),
+
+	explicit ReceiptMgr(Internal::Obj::Object receiptObj) :
+		m_receiptObj(std::move(receiptObj)),
 		m_receiptBody(m_receiptObj.AsList()),
 		m_receiptLogs(m_receiptBody[3].AsList())
 	{};
@@ -150,6 +106,46 @@ public:
 	const Internal::Obj::ListBaseObj& GetReceiptLogs() const
 	{
 		return m_receiptLogs;
+	}
+
+	std::tuple<bool, Internal::Obj::Bytes> IsEventEmitted(
+		const Internal::Obj::BytesBaseObj& contractAddress,
+		const Internal::Obj::BytesBaseObj& eventHash
+	)
+	{
+		// iterate over the logs to see if any event is emitted by the contract
+		for (const auto& logEntryObj : m_receiptLogs)
+		{
+			const Internal::Obj::ListBaseObj& logEntry = logEntryObj.AsList();
+
+			const Internal::Obj::BytesBaseObj& logAddress =
+				logEntry[0].AsBytes();
+
+			if(contractAddress == logAddress)
+			{
+				const Internal::Obj::ListBaseObj& logTopics =
+					logEntry[1].AsList();
+				const Internal::Obj::BytesBaseObj& logEventHash =
+					logTopics[0].AsBytes();
+
+				if(eventHash == logEventHash)
+				{
+					const Internal::Obj::BytesBaseObj& logDataRef =
+						logEntry[2].AsBytes();
+
+					// TODO: indexed data?
+					// TODO: consider only returning true/false here
+
+					Internal::Obj::Bytes logData = {
+						logDataRef.data(),
+						logDataRef.data() + logDataRef.size()
+					};
+					return std::make_tuple(true, logData);
+				}
+			}
+		}
+
+		return std::make_tuple(false, Internal::Obj::Bytes());
 	}
 
 private:

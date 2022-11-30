@@ -3,9 +3,9 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-#pragma  once
+#pragma once
 
-#include "EclipseMonitor/Internal/SimpleObj.hpp"
+#include <SimpleObjects/SimpleObjects.hpp>
 
 namespace EclipseMonitor_Test
 {

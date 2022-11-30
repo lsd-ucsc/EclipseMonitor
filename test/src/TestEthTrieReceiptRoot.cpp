@@ -15,7 +15,6 @@ namespace EclipseMonitor_Test
 }
 
 using namespace EclipseMonitor_Test;
-
 using namespace EclipseMonitor::Eth::Trie;
 
 // converts a uint64_t to byte vector
@@ -27,8 +26,8 @@ using IntWriter = SimpleRlp::EncodePrimitiveIntValue<
 
 GTEST_TEST(TestEthTrieReceiptRoot, CountTestFile)
 {
-static auto tmp = ++g_numOfTestFile;
-(void)tmp;
+	static auto tmp = ++g_numOfTestFile;
+	(void)tmp;
 }
 
 GTEST_TEST(TestEthTrieReceiptRoot, TestReceiptsRootBlock15415840)

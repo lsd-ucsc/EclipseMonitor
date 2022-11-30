@@ -49,21 +49,21 @@ FetchContent_MakeAvailable(git_googletest)
 FetchContent_Declare(
 	git_simpleutf
 	GIT_REPOSITORY https://github.com/zhenghaven/SimpleUtf.git
-	GIT_TAG        origin/main
+	GIT_TAG        main
 )
 FetchContent_MakeAvailable(git_simpleutf)
 
 FetchContent_Declare(
 	git_simpleobjects
 	GIT_REPOSITORY https://github.com/zhenghaven/SimpleObjects.git
-	GIT_TAG        origin/main
+	GIT_TAG        main
 )
 FetchContent_MakeAvailable(git_simpleobjects)
 
 FetchContent_Declare(
 	git_simplerlp
 	GIT_REPOSITORY https://github.com/zhenghaven/SimpleRlp.git
-	GIT_TAG        origin/main
+	GIT_TAG        dev
 )
 FetchContent_MakeAvailable(git_simplerlp)
 

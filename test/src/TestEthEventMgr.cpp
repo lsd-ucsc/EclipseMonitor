@@ -3,10 +3,11 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-#include <gtest/gtest.h>
 #include <string>
 
-#include "EclipseMonitor/Eth/EventMgr.hpp"
+#include <gtest/gtest.h>
+
+#include <EclipseMonitor/Eth/EventMgr.hpp>
 
 #include "EthTransaction.hpp"
 #include "EthReceipt.hpp"
