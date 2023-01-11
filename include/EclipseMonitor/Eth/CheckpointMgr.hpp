@@ -162,14 +162,11 @@ public:
 	typename DiffTypeTrait::value_type GetDiffMedian() const
 	{
 		std::vector<typename DiffTypeTrait::value_type> diffs;
-		for (const auto& header : m_currWindow)
-		{
-			diffs.push_back(header->GetDiff());
-		}
-		if ((m_lastNode != nullptr) && !m_isLastNodeCandidate)
-		{
-			diffs.push_back(m_lastNode->GetHeader().GetDiff());
-		}
+		IterateCurrWindow(
+			[&diffs](const HeaderMgr& header) {
+				diffs.push_back(header.GetDiff());
+			}
+		);
 
 		// reference: https://en.cppreference.com/w/cpp/algorithm/nth_element
 		// When the size of the checkpoint is a even number, to get the
@@ -258,6 +255,19 @@ public:
 			begin,
 			begin + m_chkptSize - 1
 		);
+	}
+
+	template<typename _CallBackFuncType>
+	void IterateCurrWindow(_CallBackFuncType callback) const
+	{
+		for (const auto& header : m_currWindow)
+		{
+			callback(*header);
+		}
+		if ((m_lastNode != nullptr) && !m_isLastNodeCandidate)
+		{
+			callback(m_lastNode->GetHeader());
+		}
 	}
 
 private:
