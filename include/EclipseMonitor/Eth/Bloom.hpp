@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include <iostream>
 #include <vector>
 
 #include "../Internal/SimpleObj.hpp"
@@ -50,14 +49,20 @@ public:
 		return inBloom;
 	}
 
-	bool IsEventInBloom(
-		const std::array<uint8_t, 32>& hashedAddr,
-		const std::array<uint8_t, 32>& hashedTopic
-	)
+	template< typename... Arguments >
+	bool IsEventInBloom(const Arguments&... eventData)
 	{
-		return  CheckBloomBits(hashedAddr) &&
-				CheckBloomBits(hashedTopic);
+		for (const auto& data : { eventData... })
+		{
+			if (!CheckBloomBits(data))
+			{
+				return false;
+			}
+		}
+
+		return true;
 	}
+
 
 public:
 	BloomFilter(const std::vector<uint8_t>& headerRlp) :

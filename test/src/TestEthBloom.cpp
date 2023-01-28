@@ -19,22 +19,13 @@ namespace EclipseMonitor_Test
 
 using namespace EclipseMonitor::Eth;
 using namespace EclipseMonitor_Test;
+using namespace SimpleObjects;
 using namespace SimpleRlp;
 
 GTEST_TEST(TestEthBloom, CountTestFile)
 {
 	static auto tmp = ++g_numOfTestFile;
 	(void)tmp;
-}
-
-void PrintBytes(const SimpleObjects::Bytes& bytes)
-{
-	for (auto b : bytes)
-	{
-		std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)b << " ";
-	}
-	std::cout << std::endl;
-	std::cout << (uint)bytes[254] << std::endl;
 }
 
 GTEST_TEST(TestEthBloom, EthBloom_15001871)
@@ -73,6 +64,7 @@ GTEST_TEST(TestEthBloom, EthBloom_TestBlock_1)
 		0x5CU, 0x80U, 0x84U, 0x61U
 	};
 	std::array<uint8_t, 32> hashedAddr = Keccak256(address);
+	EXPECT_TRUE(bloom.IsEventInBloom(hashedAddr));
 
 	std::vector<uint8_t> topic = {
 		0x6EU, 0x76U, 0xFBU, 0x4CU, 0x77U, 0x25U, 0x60U, 0x06U,
@@ -94,4 +86,38 @@ GTEST_TEST(TestEthBloom, EthBloom_TestBlock_1)
 
 	hashedTopic = Keccak256(topic);
 	EXPECT_FALSE(bloom.IsEventInBloom(hashedAddr, hashedTopic));
+}
+
+GTEST_TEST(TestEthBloom, EthBloom_TestBlock_2)
+{
+	std::vector<uint8_t> headerRlp = GetEthHeader_TestBlock_2();
+	BloomFilter bloom(headerRlp);
+
+	std::vector<uint8_t> address = {
+		0xE8U, 0xD0U, 0xACU, 0xA8U, 0x9AU, 0x7AU, 0xFDU, 0x77U,
+		0xF7U, 0x64U, 0x47U, 0xCEU, 0x62U, 0x0DU, 0x79U, 0x29U,
+		0x24U, 0x72U, 0x0CU, 0x91U
+	};
+	std::array<uint8_t, 32> hashedAddr = Keccak256(address);
+	EXPECT_TRUE(bloom.IsEventInBloom(hashedAddr));
+
+	//event signature, requires double hash
+	auto eventStr = String("EventAddress(address)");
+	SimpleObjects::Bytes eventBytes(eventStr.begin(), eventStr.end());
+	std::array<uint8_t, 32> hashedEvent = Keccak256(eventBytes.GetVal());
+
+	std::vector<uint8_t> toHash(hashedEvent.begin(), hashedEvent.end());
+	hashedEvent = Keccak256(toHash);
+	EXPECT_TRUE(bloom.IsEventInBloom(hashedAddr, hashedEvent));
+
+	// event parameter
+	std::vector<uint8_t> eventParam = {
+		0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+		0x00U, 0x00U, 0x00U, 0x00U, 0xE4U, 0xA0U, 0x2CU, 0xC0U,
+		0xF2U, 0xC8U, 0x8EU, 0xFDU, 0xEDU, 0xA1U, 0xACU, 0x9CU,
+		0x5BU, 0x70U, 0x92U, 0x83U, 0xE4U, 0x04U, 0xA2U, 0x65U
+	};
+
+	std::array<uint8_t, 32> hashedParam = Keccak256(eventParam);
+	EXPECT_TRUE(bloom.IsEventInBloom(hashedAddr, hashedEvent, hashedParam));
 }
