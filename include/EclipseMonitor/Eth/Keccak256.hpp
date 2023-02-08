@@ -255,10 +255,14 @@ namespace Eth
 /**
  * @brief Compute the Ethereum Keccak-256 hash of a given input.
  *
- * @param _input input data
+ * @param input     pointer to the input data
+ * @param inputSize size of the input data
  * @return Keccak-256 hash of the input
  */
-inline std::array<uint8_t, 32> Keccak256(const std::vector<uint8_t>& _input)
+inline std::array<uint8_t, 32> Keccak256(
+	const uint8_t* input,
+	size_t inputSize
+)
 {
 	std::array<uint8_t, 32> output;
 	// Parameters used:
@@ -269,10 +273,29 @@ inline std::array<uint8_t, 32> Keccak256(const std::vector<uint8_t>& _input)
 
 	Internal::EthKeccak256::Hash(
 		output.data(), output.size(),
-		_input.data(), _input.size(),
+		input, inputSize,
 		200 - (256 / 4),
 		padding);
 	return output;
+}
+
+/**
+ * @brief Compute the Ethereum Keccak-256 hash of a given input.
+ *
+ * @tparam _ContainerT type of the container holding the input data
+ * @param _input       input data
+ * @return Keccak-256 hash of the input
+ */
+template<typename _ContainerT>
+inline std::array<uint8_t, 32> Keccak256(const _ContainerT& _input)
+{
+	static constexpr size_t sk_valueSize =
+		sizeof(typename _ContainerT::value_type);
+
+	const uint8_t* inputPtr = reinterpret_cast<const uint8_t*>(_input.data());
+	size_t inputSize = _input.size() * sk_valueSize;
+
+	return Keccak256(inputPtr, inputSize);
 }
 
 

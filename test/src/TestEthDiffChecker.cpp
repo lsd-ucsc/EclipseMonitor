@@ -5,6 +5,7 @@
 
 #include <gtest/gtest.h>
 
+#include <EclipseMonitor/Eth/BloomFilter.hpp>
 #include <EclipseMonitor/Eth/DAA.hpp>
 #include <EclipseMonitor/Eth/DiffChecker.hpp>
 
@@ -59,6 +60,7 @@ static std::vector<uint8_t> BuildHeader(
 	rlpHdr.get_Number() = blkNumBytes;
 	rlpHdr.get_Difficulty() = diffBytes;
 	rlpHdr.get_Sha3Uncles() = HeaderMgr::GetEmptyUncleHash();
+	rlpHdr.get_LogsBloom().resize(BloomFilter::sk_bloomByteSize);
 
 	return SimpleRlp::WriteRlp(rlpHdr);
 }

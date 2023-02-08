@@ -5,13 +5,16 @@
 
 #pragma once
 
+
 #include <algorithm>
 
 #include "../Internal/SimpleObj.hpp"
 #include "../Internal/SimpleRlp.hpp"
 
+#include "BloomFilter.hpp"
 #include "DataTypes.hpp"
 #include "Keccak256.hpp"
+
 
 namespace EclipseMonitor
 {
@@ -47,6 +50,7 @@ public:
 	HeaderMgr(const std::vector<uint8_t>& rawBinary, uint64_t trustedTime) :
 		m_rawHeader(RawHeaderParser().Parse(rawBinary)),
 		m_trustedTime(trustedTime),
+		m_bloomFilter(m_rawHeader.get_LogsBloom()),
 		m_hash(Keccak256(rawBinary)),
 		m_hashObj(m_hash.begin(), m_hash.end()),
 		m_blkNum(BlkNumTypeTrait::FromBytes(m_rawHeader.get_Number())),
@@ -99,10 +103,16 @@ public:
 		return m_hasUncle;
 	}
 
+	const BloomFilter& GetBloomFilter() const
+	{
+		return m_bloomFilter;
+	}
+
 private:
 
 	RawHeaderType m_rawHeader;
 	uint64_t m_trustedTime;
+	BloomFilter m_bloomFilter;
 	std::array<uint8_t, 32> m_hash;
 	Internal::Obj::Bytes m_hashObj;
 	BlkNumType m_blkNum;
