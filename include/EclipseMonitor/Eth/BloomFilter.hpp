@@ -6,6 +6,9 @@
 #pragma once
 
 
+#include <functional>
+#include <initializer_list>
+#include <type_traits>
 #include <vector>
 
 #include "../Exceptions.hpp"
@@ -15,12 +18,43 @@
 
 namespace EclipseMonitor
 {
+
+
+namespace Internal
+{
+
+// From: https://en.cppreference.com/w/cpp/types/conjunction
+template<bool _C, typename _TType, typename _FType>
+using conditional_t =
+	typename std::conditional<_C, _TType, _FType>::type;
+
+template<class...>
+struct conjunction :
+	std::true_type
+{};
+
+template<class B1>
+struct conjunction<B1> :
+	B1
+{};
+
+template<class B1, class... Bn>
+struct conjunction<B1, Bn...> :
+	conditional_t<bool(B1::value), conjunction<Bn...>, B1>
+{};
+
+} // namespace Internal
+
+
 namespace Eth
 {
 
 class BloomFilter
 {
 public: // static members:
+
+	using EventHash = std::array<uint8_t, 32>;
+	using EventHashKRef = std::reference_wrapper<const EventHash>;
 
 	static constexpr size_t sk_bloomBitSize = 2048;
 	static constexpr size_t sk_bloomByteSize = sk_bloomBitSize / 8;
@@ -66,18 +100,37 @@ public:
 	}
 
 
-	template< typename... _ArgTs >
-	bool IsHashInBloom(const _ArgTs&... hashes) const
+	template<typename _It>
+	bool AreHashesInBloom(_It begin, _It end) const
 	{
-		for (const auto& hash : { hashes... })
+		for (auto it = begin; it != end; ++it)
 		{
-			if (!CheckBloomBits(hash))
+			if (!CheckBloomBits(*it))
 			{
 				return false;
 			}
 		}
-
 		return true;
+	}
+
+
+	bool AreHashesInBloom(
+		std::initializer_list<EventHashKRef> hashes
+	) const
+	{
+		return AreHashesInBloom(hashes.begin(), hashes.end());
+	}
+
+
+	template< typename... _ArgTs >
+	bool IsHashInBloom(const _ArgTs&... hashes) const
+	{
+		static_assert(
+			Internal::conjunction<std::is_same<_ArgTs, EventHash>...>::value,
+			"Invalid hash type"
+		);
+
+		return AreHashesInBloom({ hashes... });
 	}
 
 
