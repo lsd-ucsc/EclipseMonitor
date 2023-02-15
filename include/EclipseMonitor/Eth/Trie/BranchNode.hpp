@@ -7,10 +7,6 @@
 
 #include <SimpleObjects/Internal/make_unique.hpp>
 
-#include "../../Internal/SimpleObj.hpp"
-
-#include "../Keccak256.hpp"
-
 #include "Nibbles.hpp"
 #include "TrieNode.hpp"
 
@@ -31,7 +27,7 @@ public:
 
 	BranchNode() :
 		m_nodeHasValue(false),
-		m_branches(sk_numNodes), // TODO[Tuan]: where does this number come from?
+		m_branches(sk_numNodes),
 		m_value()
 	{}
 
@@ -49,26 +45,23 @@ public:
 		std::unique_ptr<Node> other
 	)
 	{
-		int nibbleInt = static_cast<int>(nibble);
-		m_branches[nibbleInt] = std::move(other);
+		m_branches[nibble] = std::move(other);
 	}
 
 	std::unique_ptr<Node>& GetBranch(Nibble nibble)
 	{
-		int nibbleInt = static_cast<int>(nibble);
-		return m_branches[nibbleInt];
+		return m_branches[nibble];
 	}
 
 	void RemoveBranch(const Nibble& nibble)
 	{
-		int nibbleInt = static_cast<int>(nibble);
-		m_branches[nibbleInt].reset();
+		m_branches[nibble].reset();
 	}
 
-	void SetValue(Internal::Obj::Bytes otherValue)
+	void SetValue(const Internal::Obj::Bytes& otherValue)
 	{
 		m_nodeHasValue = true;
-		m_value = std::move(otherValue);
+		m_value = otherValue;
 	}
 
 	void RemoveValue()
@@ -78,26 +71,12 @@ public:
 
 	}
 
-	std::vector <uint8_t> Serialize()
-	{
-		NodeBase* BasePtr = static_cast<NodeBase*>(this);
-		return NodeHelper::Serialize(BasePtr);
-	}
-
 	virtual NodeType GetNodeType() const override
 	{
 		return NodeType::Branch;
 	}
 
-	virtual Internal::Obj::Bytes Hash() override
-	{
-		std::vector<uint8_t> serialized = Serialize();
-		std::array<uint8_t, 32> hashed = Keccak256(serialized);
-
-		return Internal::Obj::Bytes(hashed.begin(), hashed.end());
-	}
-
-	virtual Internal::Obj::List Raw() override
+	virtual Internal::Obj::List Raw() const override
 	{
 		Internal::Obj::List hashes;
 		hashes.resize(sk_numNodes + 1);
@@ -110,18 +89,17 @@ public:
 			}
 			else
 			{
-				// Node* NodePtr = m_branches[i].get();
-				std::unique_ptr<NodeBase>& NodeBasePtr = m_branches[i]->GetNodeBase();
-				NodeBase* NodePtr = NodeBasePtr.get();
-				std::vector<uint8_t> serialized = NodeHelper::Serialize(NodePtr);
+				const auto& nodeBase = m_branches[i]->GetNodeBase();
+				auto nodeBaseRaw = nodeBase.Raw();
+				auto nodeBaseSerialized = NodeBase::GenSerialized(nodeBaseRaw);
 
-				if (serialized.size() >= 32)
+				if (nodeBaseSerialized.size() >= 32)
 				{
-					hashes[i] = NodePtr->Hash();
+					hashes[i] = NodeBase::CalcHash(nodeBaseSerialized);
 				}
 				else
 				{
-					hashes[i] = NodePtr->Raw();
+					hashes[i] = nodeBaseRaw;
 				}
 			}
 		}

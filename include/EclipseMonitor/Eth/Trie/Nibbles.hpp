@@ -36,52 +36,7 @@ struct NibbleHelper
 {
 	static bool IsNibble(const uint8_t& n)
 	{
-		return n <= 15;
-	}
-
-	static Nibble FromNibbleByte(const uint8_t& n)
-	{
-		return
-			IsNibble(n) ?
-				Nibble(n) :
-				throw NibblesConversionException(
-					"non-nibble byte " + std::to_string(n)
-				);
-	}
-
-	static std::vector<Nibble> FromNibbleBytes(
-		const std::vector<uint8_t>& nibbleBytes
-	)
-	{
-		std::vector<Nibble> nibbles;
-		nibbles.reserve(nibbleBytes.size());
-
-		for (const auto& nibbleByte: nibbleBytes)
-		{
-			try
-			{
-				Nibble nibble = FromNibbleByte(nibbleByte);
-				nibbles.push_back(nibble);
-			}
-			catch (const NibblesConversionException&)
-			{
-				throw NibblesConversionException(
-					"contains non-nibble byte " +
-					std::to_string(nibbleByte)
-				);
-			}
-		}
-
-		return nibbles;
-	}
-
-	static std::vector<Nibble> FromByte(const uint8_t& byte)
-	{
-		std::vector<Nibble> nibbles = {
-			FromNibbleByte(byte >> 4),
-			FromNibbleByte(byte % 16)
-		};
-		return nibbles;
+		return (n <= 15);
 	}
 
 	static std::vector<Nibble> FromBytes(const std::vector<uint8_t>& bytes)
@@ -89,14 +44,10 @@ struct NibbleHelper
 		std::vector<Nibble> nibbles;
 		nibbles.reserve(bytes.size() * 2);
 
-		for (const auto& byte: bytes)
+		for (const uint8_t& byte: bytes)
 		{
-			std::vector <Nibble> nibblesFromByte = FromByte(byte);
-			nibbles.insert(
-				nibbles.end(),
-				nibblesFromByte.begin(),
-				nibblesFromByte.end()
-			);
+			nibbles.push_back(static_cast<uint8_t>((byte >> 4) & 0x0F));
+			nibbles.push_back(static_cast<uint8_t>(byte & 0x0F));
 		}
 
 		return nibbles;
@@ -123,32 +74,20 @@ struct NibbleHelper
 		bool isLeafNode
 	)
 	{
-		std::vector<Nibble> prefixBytes;
+		std::vector<Nibble> prefixed;
+		prefixed.reserve(2 + nibbles.size());
 
 		if (nibbles.size() % 2 == 1)
 		{
-			prefixBytes = {1};
+			prefixed = {1};
 		}
 		else
 		{
-			prefixBytes = {0, 0};
+			prefixed = {0, 0};
 		}
 
-		std::vector <Nibble> prefixed;
-
-		// first append the prefix then the Nibbles
-		prefixed.reserve(prefixBytes.size() + nibbles.size());
-		prefixed.insert(
-			prefixed.end(),
-			prefixBytes.begin(),
-			prefixBytes.end()
-		);
-
-		prefixed.insert(
-			prefixed.end(),
-			nibbles.begin(),
-			nibbles.end()
-		);
+		// then the Nibbles
+		prefixed.insert(prefixed.end(), nibbles.begin(), nibbles.end());
 
 		if (isLeafNode)
 		{
@@ -165,17 +104,15 @@ struct NibbleHelper
 	{
 		uint8_t matchedLen = 0;
 
-		for (size_t i = 0; i < nibbles1.size() && i < nibbles2.size(); i++)
-		{
-			if (nibbles1[i] == nibbles2[i])
-			{
-				matchedLen++;
-			}
-			else
-			{
-				break;
-			}
-		}
+		for (
+				size_t i = 0;
+				(
+					(i < nibbles1.size() && i < nibbles2.size()) &&
+					(nibbles1[i] == nibbles2[i])
+				);
+				++i, ++matchedLen
+			)
+		{}
 		return matchedLen;
 	}
 

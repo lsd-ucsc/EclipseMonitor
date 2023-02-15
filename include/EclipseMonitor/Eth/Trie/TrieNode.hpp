@@ -5,7 +5,9 @@
 
 #pragma once
 
+#include "../../Internal/SimpleObj.hpp"
 #include "../../Internal/SimpleRlp.hpp"
+#include "../Keccak256.hpp"
 
 namespace EclipseMonitor
 {
@@ -29,6 +31,12 @@ enum class NodeType
 
 class NodeBase
 {
+public: // static members:
+
+	using RawRetType = SimpleObjects::List;
+	using HashRetType = SimpleObjects::Bytes;
+	using SerializedRetType = std::vector<uint8_t>;
+
 public:
 
 	NodeBase() = default;
@@ -39,9 +47,31 @@ public:
 
 	virtual NodeType GetNodeType() const = 0;
 
-	virtual SimpleObjects::Bytes Hash() = 0;
+	virtual RawRetType Raw() const = 0;
 
-	virtual SimpleObjects::List Raw() = 0;
+	SerializedRetType Serialize() const
+	{
+		return GenSerialized(Raw());
+	}
+
+	HashRetType Hash() const
+	{
+		return CalcHash(Serialize());
+	}
+
+protected:
+
+	static SerializedRetType GenSerialized(const RawRetType& raw)
+	{
+		return Internal::Rlp::WriteRlp(raw);
+	}
+
+	static HashRetType CalcHash(const SerializedRetType& serialized)
+	{
+		std::array<uint8_t, 32> hashed = Keccak256(serialized);
+		return Internal::Obj::Bytes(hashed.begin(), hashed.end());
+	}
+
 }; // class NodeBase
 
 
@@ -78,9 +108,14 @@ public:
 		}
 	}
 
-	std::unique_ptr<NodeBase>& GetNodeBase()
+	std::unique_ptr<NodeBase>& GetNodeBasePtr()
 	{
 		return m_node;
+	}
+
+	const NodeBase& GetNodeBase() const
+	{
+		return *m_node;
 	}
 
 private:
@@ -114,26 +149,6 @@ struct EmptyNode
 	}
 
 }; // struct EmptyNode
-
-
-struct NodeHelper
-{
-	static std::vector<uint8_t> Serialize(NodeBase* node)
-	{
-		SimpleObjects::Object raw;
-		if (EmptyNode::IsEmptyNode(node))
-		{
-			raw = EmptyNode::EmptyNodeRaw();
-		}
-		else
-		{
-			raw = node->Raw();
-		}
-
-		Internal::Rlp::OutputContainerType rlp = Internal::Rlp::WriteRlp(raw);
-		return rlp;
-	}
-}; // struct NodeHelper
 
 } // namespace Trie
 } // namespace Eth

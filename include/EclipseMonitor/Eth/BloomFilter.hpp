@@ -130,7 +130,7 @@ public:
 			"Invalid hash type"
 		);
 
-		return AreHashesInBloom({ hashes... });
+		return AreHashesInBloom({ EventHashKRef(hashes)... });
 	}
 
 

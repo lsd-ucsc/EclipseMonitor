@@ -8,10 +8,6 @@
 
 #include <SimpleObjects/Internal/make_unique.hpp>
 
-#include "../../Internal/SimpleObj.hpp"
-
-#include "../Keccak256.hpp"
-
 #include "Nibbles.hpp"
 #include "TrieNode.hpp"
 
@@ -57,41 +53,32 @@ public:
 	virtual ~LeafNode() = default;
 	// LCOV_EXCL_STOP
 
-	std::vector<uint8_t> Serialize()
-	{
-		NodeBase* BasePtr = static_cast<NodeBase*>(this);
-		return NodeHelper::Serialize(BasePtr);
-	}
-
 	virtual NodeType GetNodeType() const override
 	{
 		return NodeType::Leaf;
 	}
 
-	virtual Internal::Obj::Bytes Hash() override
+	virtual Internal::Obj::List Raw() const override
 	{
-		std::vector<uint8_t> serialized = Serialize();
-		std::array<uint8_t, 32> hashed = Keccak256(serialized);
-		return Internal::Obj::Bytes(hashed.begin(), hashed.end());
-	}
+		Internal::Obj::Bytes pathBytes(
+			NibbleHelper::ToBytes(
+				NibbleHelper::ToPrefixed(m_path, true)
+			)
+		);
 
-	virtual Internal::Obj::List Raw() override
-	{
-		std::vector<Nibble> prefixedPath =
-			NibbleHelper::ToPrefixed(m_path, true);
-		std::vector<uint8_t> pathBytes = NibbleHelper::ToBytes(prefixedPath);
-
-		Internal::Obj::Bytes pathBytesObject(std::move(pathBytes));
-		Internal::Obj::List raw = {pathBytesObject, m_value};
+		Internal::Obj::List raw;
+		raw.reserve(2);
+		raw.push_back(pathBytes);
+		raw.push_back(m_value);
 		return raw;
 	}
 
-	std::vector<Nibble> const& GetPath()
+	const std::vector<Nibble>& GetPath() const
 	{
 		return m_path;
 	}
 
-	Internal::Obj::Bytes& GetValue()
+	const Internal::Obj::Bytes& GetValue() const
 	{
 		return m_value;
 	}

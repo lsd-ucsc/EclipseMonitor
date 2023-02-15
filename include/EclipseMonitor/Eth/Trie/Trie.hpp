@@ -56,8 +56,7 @@ public:
 		{
 			return EmptyNode::EmptyNodeHash();
 		}
-		std::unique_ptr<NodeBase>& rootBase = m_root->GetNodeBase();
-		return rootBase->Hash();
+		return m_root->GetNodeBase().Hash();
 	}
 
 	void Put(
@@ -69,7 +68,9 @@ public:
 		PutKey(m_root, nibbles, value);
 	}
 
-	void PutKey(
+private:
+
+	static void PutKey(
 		std::unique_ptr<Node>& node,
 		std::vector<Nibble> nibbles,
 		const Internal::Obj::Bytes& value
@@ -87,14 +88,13 @@ public:
 			return;
 		}
 
-		// std::unique_ptr<NodeBase>& nodeBase = node->GetNodeBase();
 		NodeType nodeType = node->GetNodeType();
 
 		// leaf node, convert to Extension node, add new branch with new leaf
 		if (nodeType == NodeType::Leaf)
 		{
-			LeafNode* leaf =
-				static_cast<LeafNode*>(node->GetNodeBase().get());
+			const LeafNode* leaf =
+				static_cast<const LeafNode*>(&(node->GetNodeBase()));
 
 			const std::vector<Nibble>& leafPath = leaf->GetPath();
 
@@ -121,8 +121,7 @@ public:
 			// set the branch value
 			if (matched == leafPath.size())
 			{
-				Internal::Obj::Bytes leafValue = leaf->GetValue();
-				branchBase->SetValue(leafValue);
+				branchBase->SetValue(leaf->GetValue());
 			}
 
 			if (matched == nibbles.size())
@@ -204,7 +203,7 @@ public:
 		if (nodeType == NodeType::Branch)
 		{
 			BranchNode* branch =
-				static_cast<BranchNode*>(node->GetNodeBase().get());
+				static_cast<BranchNode*>(node->GetNodeBasePtr().get());
 
 			if (nibbles.size() == 0)
 			{
@@ -226,7 +225,7 @@ public:
 		if (nodeType == NodeType::Extension)
 		{
 			ExtensionNode* extension =
-				static_cast<ExtensionNode*>(node->GetNodeBase().get());
+				static_cast<ExtensionNode*>(node->GetNodeBasePtr().get());
 
 			std::vector<Nibble> extensionPath = extension->GetPath();
 			uint8_t matched =
