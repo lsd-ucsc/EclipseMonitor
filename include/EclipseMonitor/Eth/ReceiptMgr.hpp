@@ -7,8 +7,11 @@
 
 #include <cstdint>
 
-#include <tuple>
+#include <array>
+#include <functional>
+#include <vector>
 
+#include "../Exceptions.hpp"
 #include "../Internal/SimpleObj.hpp"
 #include "../Internal/SimpleRlp.hpp"
 
@@ -47,6 +50,69 @@ namespace Eth
  *
 */
 
+
+struct ReceiptLogEntry
+{
+	using ContractAddrType = std::array<uint8_t, 20>;
+	using TopicType = std::array<uint8_t, 32>;
+
+	ReceiptLogEntry(const Internal::Obj::ListBaseObj& logEntry) :
+		m_contractAddr(),
+		m_topics(),
+		m_logData()
+	{
+		// Get contract address from entry
+		const auto& addrBytes = logEntry[0].AsBytes();
+		if (addrBytes.size() != m_contractAddr.size())
+		{
+			throw Exception(
+				"The contract address found in log entry has "
+				"invalid length"
+			);
+		}
+		std::copy(
+			addrBytes.data(),
+			addrBytes.data() + addrBytes.size(),
+			m_contractAddr.begin()
+		);
+
+		// Get log topics from entry
+		const auto& logTopics = logEntry[1].AsList();
+		m_topics.resize(logTopics.size());
+		size_t currTopicIdx = 0;
+		for (const auto& topic : logTopics)
+		{
+			const auto& topicBytes = topic.AsBytes();
+			if (topicBytes.size() != m_topics[currTopicIdx].size())
+			{
+				throw Exception(
+					"The topic found in log entry has invalid length"
+				);
+			}
+			std::copy(
+				topicBytes.data(),
+				topicBytes.data() + topicBytes.size(),
+				m_topics[currTopicIdx].begin()
+			);
+			++currTopicIdx;
+		}
+
+		// Get log data
+		const auto& logDataBytes = logEntry[2].AsBytes();
+		m_logData.assign(
+			logDataBytes.data(),
+			logDataBytes.data() + logDataBytes.size()
+		);
+	}
+
+	~ReceiptLogEntry() = default;
+
+	ContractAddrType m_contractAddr;
+	std::vector<TopicType> m_topics;
+	std::vector<uint8_t> m_logData;
+}; // struct ReceiptLogEntry
+
+
 class ReceiptMgr
 {
 public: // static members:
@@ -81,77 +147,77 @@ public: // static members:
 		return ReceiptMgr(ParseReceipt(rlpBytes));
 	}
 
+	using LogEntriesType = std::vector<ReceiptLogEntry>;
+	using LogEntriesKItType = typename LogEntriesType::const_iterator;
+	using LogEntriesKRefType = std::reference_wrapper<const ReceiptLogEntry>;
+	using ContractAddrType = typename ReceiptLogEntry::ContractAddrType;
+
 public:
 
 	explicit ReceiptMgr(Internal::Obj::Object receiptObj) :
-		m_receiptObj(std::move(receiptObj)),
-		m_receiptBody(m_receiptObj.AsList()),
-		m_receiptLogs(m_receiptBody[3].AsList())
-	{};
+		m_logEntries()
+	{
+		const auto& receiptBody = receiptObj.AsList();
+		const auto& receiptLogs = receiptBody[3].AsList();
+		for (const auto& logEntry : receiptLogs)
+		{
+			m_logEntries.emplace_back(logEntry.AsList());
+		}
+	};
 
 	// LCOV_EXCL_START
 	~ReceiptMgr() = default;
 	// LCOV_EXCL_STOP
 
-	const Internal::Obj::Object& GetReceiptObj() const
+	template<typename _TopicsIt>
+	std::vector<LogEntriesKRefType> SearchEvents(
+		const ContractAddrType& addr,
+		_TopicsIt topicsBegin,
+		_TopicsIt topicsEnd
+	) const
 	{
-		return m_receiptObj;
-	}
+		std::vector<LogEntriesKRefType> res;
 
-	const Internal::Obj::ListBaseObj& GetReceiptBody() const
-	{
-		return m_receiptBody;
-	}
-
-	const Internal::Obj::ListBaseObj& GetReceiptLogs() const
-	{
-		return m_receiptLogs;
-	}
-
-	std::tuple<bool, Internal::Obj::Bytes> IsEventEmitted(
-		const Internal::Obj::BytesBaseObj& contractAddress,
-		const Internal::Obj::BytesBaseObj& eventHash
-	)
-	{
-		// iterate over the logs to see if any event is emitted by the contract
-		for (const auto& logEntryObj : m_receiptLogs)
+		for (const auto& logEntry: m_logEntries)
 		{
-			const Internal::Obj::ListBaseObj& logEntry = logEntryObj.AsList();
-
-			const Internal::Obj::BytesBaseObj& logAddress =
-				logEntry[0].AsBytes();
-
-			if(contractAddress == logAddress)
+			if (logEntry.m_contractAddr == addr)
 			{
-				const Internal::Obj::ListBaseObj& logTopics =
-					logEntry[1].AsList();
-				const Internal::Obj::BytesBaseObj& logEventHash =
-					logTopics[0].AsBytes();
+				// found a contract with matching addr
 
-				if(eventHash == logEventHash)
+				// check if topics are match
+				auto inTpBegin = topicsBegin;
+				auto inTpEnd = topicsEnd;
+				auto srcTpBegin = logEntry.m_topics.cbegin();
+				auto srcTpEnd = logEntry.m_topics.cend();
+				while (
+					inTpBegin != inTpEnd && // input topics is not ended
+					srcTpBegin != srcTpEnd &&   // src topics is not ended
+					*inTpBegin == *srcTpBegin // their values match
+				)
 				{
-					const Internal::Obj::BytesBaseObj& logDataRef =
-						logEntry[2].AsBytes();
-
-					// TODO: indexed data?
-					// TODO: consider only returning true/false here
-
-					Internal::Obj::Bytes logData = {
-						logDataRef.data(),
-						logDataRef.data() + logDataRef.size()
-					};
-					return std::make_tuple(true, logData);
+					// check next one
+					++inTpBegin, ++srcTpBegin;
 				}
+
+				if (inTpBegin == inTpEnd)
+				{
+					// we've matched through all the topics
+					res.emplace_back(logEntry);
+				}
+				// else, some topics do match - skip
 			}
 		}
 
-		return std::make_tuple(false, Internal::Obj::Bytes());
+		return res;
+	}
+
+	const LogEntriesType& GetLogEntries() const
+	{
+		return m_logEntries;
 	}
 
 private:
-	Internal::Obj::Object m_receiptObj;
-	Internal::Obj::ListBaseObj& m_receiptBody;
-	Internal::Obj::ListBaseObj& m_receiptLogs;
+	LogEntriesType m_logEntries;
 
 }; // class ReceiptMgr
 
