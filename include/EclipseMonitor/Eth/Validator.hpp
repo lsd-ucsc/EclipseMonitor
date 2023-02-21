@@ -76,10 +76,7 @@ public:
 		}
 
 		// 3. check difficulty value
-		auto expDiff = (*m_diffCalculator)(
-			parent.GetNumber(), parent.GetTime(),
-			parent.GetDiff(), parent.HasUncle(),
-			current.GetNumber(), current.GetTime());
+		auto expDiff = (*m_diffCalculator)(parent, current);
 		if (current.GetDiff() != expDiff)
 		{
 			return false;

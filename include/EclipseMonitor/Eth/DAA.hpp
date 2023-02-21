@@ -8,6 +8,7 @@
 #include "../Exceptions.hpp"
 
 #include "DataTypes.hpp"
+#include "HeaderMgr.hpp"
 #include "Params.hpp"
 
 namespace EclipseMonitor
@@ -36,12 +37,9 @@ public:
 	// LCOV_EXCL_STOP
 
 	virtual DiffType operator()(
-		const BlkNumType& parentBlkNum,
-		const TimeType& parentTime,
-		const DiffType& parentDiff,
-		bool parentHasUncle,
-		const BlkNumType& currBlkNum,
-		const TimeType& currTime) const = 0;
+		const HeaderMgr& parent,
+		const HeaderMgr& current
+	) const = 0;
 
 protected:
 
@@ -70,18 +68,19 @@ protected:
 }; // class DAABase
 
 
-class DAACalculator : public DAABase
+class EthashDAACalculator : public DAABase
 {
 public: // static members:
+	using Self = EthashDAACalculator;
 	using Base = DAABase;
 
 	using BlkNumType = typename Base::BlkNumType;
 	using TimeType   = typename Base::TimeType;
 	using DiffType   = typename Base::DiffType;
 
-	static const DAACalculator& GetEip5133()
+	static const EthashDAACalculator& GetEip5133()
 	{
-		static const DAACalculator inst(
+		static const EthashDAACalculator inst(
 			/* considerUncle */     true,
 			/* deltaDivisor */      DiffType(9),
 			/* hasMaxCheck */       true,
@@ -90,9 +89,9 @@ public: // static members:
 		return inst;
 	}
 
-	static const DAACalculator& GetEip5133Estimated()
+	static const EthashDAACalculator& GetEip5133Estimated()
 	{
-		static const DAACalculator inst(
+		static const EthashDAACalculator inst(
 			/* considerUncle */     true,
 			/* deltaDivisor */      DiffType(9),
 			/* hasMaxCheck */       false,
@@ -101,9 +100,9 @@ public: // static members:
 		return inst;
 	}
 
-	static const DAACalculator& GetEip4345()
+	static const EthashDAACalculator& GetEip4345()
 	{
-		static const DAACalculator inst(
+		static const EthashDAACalculator inst(
 			/* considerUncle */     true,
 			/* deltaDivisor */      DiffType(9),
 			/* hasMaxCheck */       true,
@@ -112,9 +111,9 @@ public: // static members:
 		return inst;
 	}
 
-	static const DAACalculator& GetEip3554()
+	static const EthashDAACalculator& GetEip3554()
 	{
-		static const DAACalculator inst(
+		static const EthashDAACalculator inst(
 			/* considerUncle */     true,
 			/* deltaDivisor */      DiffType(9),
 			/* hasMaxCheck */       true,
@@ -123,9 +122,9 @@ public: // static members:
 		return inst;
 	}
 
-	static const DAACalculator& GetEip2384()
+	static const EthashDAACalculator& GetEip2384()
 	{
-		static const DAACalculator inst(
+		static const EthashDAACalculator inst(
 			/* considerUncle */     true,
 			/* deltaDivisor */      DiffType(9),
 			/* hasMaxCheck */       true,
@@ -134,9 +133,9 @@ public: // static members:
 		return inst;
 	}
 
-	static const DAACalculator& GetConstantinople()
+	static const EthashDAACalculator& GetConstantinople()
 	{
-		static const DAACalculator inst(
+		static const EthashDAACalculator inst(
 			/* considerUncle */     true,
 			/* deltaDivisor */      DiffType(9),
 			/* hasMaxCheck */       true,
@@ -145,9 +144,9 @@ public: // static members:
 		return inst;
 	}
 
-	static const DAACalculator& GetByzantium()
+	static const EthashDAACalculator& GetByzantium()
 	{
-		static const DAACalculator inst(
+		static const EthashDAACalculator inst(
 			/* considerUncle */     true,
 			/* deltaDivisor */      DiffType(9),
 			/* hasMaxCheck */       true,
@@ -156,9 +155,9 @@ public: // static members:
 		return inst;
 	}
 
-	static const DAACalculator& GetHomestead()
+	static const EthashDAACalculator& GetHomestead()
 	{
-		static const DAACalculator inst(
+		static const EthashDAACalculator inst(
 			/* considerUncle */     false,
 			/* deltaDivisor */      DiffType(10),
 			/* hasMaxCheck */       true,
@@ -168,7 +167,7 @@ public: // static members:
 	}
 
 public:
-	DAACalculator(
+	EthashDAACalculator(
 		bool considerUncle,
 		const DiffType& deltaDivisor,
 		bool hasMaxCheck,
@@ -184,16 +183,31 @@ public:
 	{}
 
 	// LCOV_EXCL_START
-	virtual ~DAACalculator() = default;
+	virtual ~EthashDAACalculator() = default;
 	// LCOV_EXCL_STOP
 
 	virtual DiffType operator()(
+		const HeaderMgr& parent,
+		const HeaderMgr& current
+	) const override
+	{
+		return Self::operator()(
+			parent.GetNumber(),
+			parent.GetTime(),
+			parent.GetDiff(),
+			parent.HasUncle(),
+			current.GetNumber(),
+			current.GetTime()
+		);
+	}
+
+	DiffType operator()(
 		const BlkNumType& parentBlkNum,
 		const TimeType& parentTime,
 		const DiffType& parentDiff,
 		bool parentHasUncle,
 		const BlkNumType& /* currBlkNum */,
-		const TimeType& currTime) const override
+		const TimeType& currTime) const
 	{
 		// Reference: https://github.com/ethereum/go-ethereum/blob/master/consensus/ethash/consensus.go
 
@@ -323,38 +337,55 @@ private:
 	bool m_hasBombDelay;
 	BlkNumType m_bombDelay;
 	BlkNumType m_bombDelayFromParent;
-}; // class DAACalculator
+}; // class EthashDAACalculator
 
 
-class DAACalculatorFrontier : public DAABase
+class EthashDAACalculatorFrontier : public DAABase
 {
 public: // static members:
+	using Self = EthashDAACalculatorFrontier;
 	using Base = DAABase;
 
 	using BlkNumType = typename Base::BlkNumType;
 	using TimeType   = typename Base::TimeType;
 	using DiffType   = typename Base::DiffType;
 
-	static const DAACalculatorFrontier& GetInstance()
+	static const EthashDAACalculatorFrontier& GetInstance()
 	{
-		static const DAACalculatorFrontier inst;
+		static const EthashDAACalculatorFrontier inst;
 		return inst;
 	}
 
 public:
-	DAACalculatorFrontier() = default;
+	EthashDAACalculatorFrontier() = default;
 
 	// LCOV_EXCL_START
-	virtual ~DAACalculatorFrontier() = default;
+	virtual ~EthashDAACalculatorFrontier() = default;
 	// LCOV_EXCL_STOP
 
 	virtual DiffType operator()(
+		const HeaderMgr& parent,
+		const HeaderMgr& current
+	) const override
+	{
+		return Self::operator()(
+			parent.GetNumber(),
+			parent.GetTime(),
+			parent.GetDiff(),
+			parent.HasUncle(),
+			current.GetNumber(),
+			current.GetTime()
+		);
+	}
+
+	DiffType operator()(
 		const BlkNumType& parentBlkNum,
 		const TimeType& parentTime,
 		const DiffType& parentDiff,
 		bool /* parentHasUncle */,
 		const BlkNumType& /* currBlkNum */,
-		const TimeType& currTime) const override
+		const TimeType& currTime
+	) const
 	{
 		static const DiffType sk_diffBig1  = DiffType(1);
 		static const DiffType sk_diffBig2  = DiffType(2);
@@ -404,14 +435,14 @@ public:
 		return diff;
 	}
 
-}; // class DAACalculatorFrontier
+}; // class EthashDAACalculatorFrontier
 
 
 template<typename _ChainConfig>
-class GenericDAAImpl : public DAABase
+class EthashDAAImpl : public DAABase
 {
 public: // static members:
-	using Self = GenericDAAImpl<_ChainConfig>;
+	using Self = EthashDAAImpl<_ChainConfig>;
 	using Base = DAABase;
 
 	using ChainConfig = _ChainConfig;
@@ -422,70 +453,69 @@ public: // static members:
 
 	static const Base& GetCalculator(const BlkNumType& blkNum)
 	{
-		if (blkNum >= ChainConfig::GetGrayGlacierBlkNum())
+		if (ChainConfig::IsBlockOfParis(blkNum))
 		{
-			return DAACalculator::GetEip5133();
+			throw Exception("Blocks since Paris fork no longer use DAA");
 		}
-		else if (blkNum >= ChainConfig::GetArrowGlacierBlkNum())
+		else if (ChainConfig::IsBlockOfGrayGlacier(blkNum))
 		{
-			return DAACalculator::GetEip4345();
+			return EthashDAACalculator::GetEip5133();
 		}
-		else if (blkNum >= ChainConfig::GetLondonBlkNum())
+		else if (ChainConfig::IsBlockOfArrowGlacier(blkNum))
 		{
-			return DAACalculator::GetEip3554();
+			return EthashDAACalculator::GetEip4345();
 		}
-		else if (blkNum >= ChainConfig::GetMuirGlacierBlkNum())
+		else if (ChainConfig::IsBlockOfLondon(blkNum))
 		{
-			return DAACalculator::GetEip2384();
+			return EthashDAACalculator::GetEip3554();
 		}
-		else if (blkNum >= ChainConfig::GetConstantinopleBlkNum())
+		else if (ChainConfig::IsBlockOfMuirGlacier(blkNum))
 		{
-			return DAACalculator::GetConstantinople();
+			return EthashDAACalculator::GetEip2384();
 		}
-		else if (blkNum >= ChainConfig::GetByzantiumBlkNum())
+		else if (ChainConfig::IsBlockOfConstantinople(blkNum))
 		{
-			return DAACalculator::GetByzantium();
+			return EthashDAACalculator::GetConstantinople();
 		}
-		else if (blkNum >= ChainConfig::GetHomesteadBlkNum())
+		else if (ChainConfig::IsBlockOfByzantium(blkNum))
 		{
-			return DAACalculator::GetHomestead();
+			return EthashDAACalculator::GetByzantium();
+		}
+		else if (ChainConfig::IsBlockOfHomestead(blkNum))
+		{
+			return EthashDAACalculator::GetHomestead();
 		}
 		else
 		{
-			return DAACalculatorFrontier::GetInstance();
+			return EthashDAACalculatorFrontier::GetInstance();
 		}
 	}
 
 public:
 
-	GenericDAAImpl() = default;
+	EthashDAAImpl() = default;
 
 	// LCOV_EXCL_START
-	virtual ~GenericDAAImpl() = default;
+	virtual ~EthashDAAImpl() = default;
 	// LCOV_EXCL_STOP
 
 	virtual DiffType operator()(
-		const BlkNumType& parentBlkNum,
-		const TimeType& parentTime,
-		const DiffType& parentDiff,
-		bool parentHasUncle,
-		const BlkNumType& currBlkNum,
-		const TimeType& currTime) const override
+		const HeaderMgr& parent,
+		const HeaderMgr& current
+	) const override
 	{
-		const DAABase& calculator = GetCalculator(currBlkNum);
-		return calculator(
-			parentBlkNum, parentTime, parentDiff, parentHasUncle,
-			currBlkNum, currTime);
+		const DAABase& calculator = GetCalculator(current.GetNumber());
+		return calculator(parent, current);
 	}
 
-}; // class GenericDAAImpl
+}; // class EthashDAAImpl
 
 
 template<typename _ChainConfig>
-class GenericDAAEstImpl : public DAABase
+class EthashDAAEstImpl : public DAABase
 {
 public: // static members:
-	using Self = GenericDAAEstImpl<_ChainConfig>;
+	using Self = EthashDAAEstImpl<_ChainConfig>;
 	using Base = DAABase;
 
 	using ChainConfig = _ChainConfig;
@@ -496,9 +526,13 @@ public: // static members:
 
 	static const Base& GetCalculator(const BlkNumType& blkNum)
 	{
-		if (blkNum >= ChainConfig::GetGrayGlacierBlkNum())
+		if (ChainConfig::IsBlockOfParis(blkNum))
 		{
-			return DAACalculator::GetEip5133Estimated();
+			throw Exception("Blocks since Paris fork no longer use DAA");
+		}
+		else if (ChainConfig::IsBlockOfGrayGlacier(blkNum))
+		{
+			return EthashDAACalculator::GetEip5133Estimated();
 		}
 		else
 		{
@@ -509,31 +543,108 @@ public: // static members:
 
 public:
 
-	GenericDAAEstImpl() = default;
+	EthashDAAEstImpl() = default;
 
 	// LCOV_EXCL_START
-	virtual ~GenericDAAEstImpl() = default;
+	virtual ~EthashDAAEstImpl() = default;
 	// LCOV_EXCL_STOP
 
 	virtual DiffType operator()(
-		const BlkNumType& parentBlkNum,
-		const TimeType& parentTime,
-		const DiffType& parentDiff,
-		bool parentHasUncle,
-		const BlkNumType& currBlkNum,
-		const TimeType& currTime) const override
+		const HeaderMgr& parent,
+		const HeaderMgr& current
+	) const override
 	{
-		const DAABase& calculator = GetCalculator(currBlkNum);
-		return calculator(
-			parentBlkNum, parentTime, parentDiff, parentHasUncle,
-			currBlkNum, currTime);
+		const DAABase& calculator = GetCalculator(current.GetNumber());
+		return calculator(parent, current);
 	}
 
-}; // class GenericDAAEstImpl
+}; // class EthashDAAEstImpl
 
 
-using MainnetDAA = GenericDAAImpl<MainnetConfig>;
-using MainnetDAAEstimator = GenericDAAEstImpl<MainnetConfig>;
+template<typename _ChainConfig>
+class TestnetDAACalculator : public DAABase
+{
+public: // static members:
+	using Self = TestnetDAACalculator;
+	using Base = DAABase;
+
+	using ChainConfig = _ChainConfig;
+
+	using DiffType   = typename Base::DiffType;
+
+public:
+	TestnetDAACalculator() = default;
+
+	// LCOV_EXCL_START
+	virtual ~TestnetDAACalculator() = default;
+	// LCOV_EXCL_STOP
+
+	virtual DiffType operator()(
+		const HeaderMgr&,
+		const HeaderMgr& current
+	) const override
+	{
+		if (ChainConfig::IsBlockOfParis(current.GetNumber()))
+		{
+			throw Exception("Blocks since Paris fork no longer use DAA");
+		}
+		else
+		{
+			// The testnet is using the Clique consensus protocol, where
+			// the difficulty is calculated differently.
+			// At the moment, we don't have a plan to calculate the actual value
+			return current.GetDiff();
+		}
+	}
+}; // class TestnetDAACalculator
+
+
+template<typename _ChainConfig>
+class TestnetDAAEstCalculator : public DAABase
+{
+public: // static members:
+	using Self = TestnetDAAEstCalculator;
+	using Base = DAABase;
+
+	using ChainConfig = _ChainConfig;
+
+	using DiffType   = typename Base::DiffType;
+
+public:
+	TestnetDAAEstCalculator() = default;
+
+	// LCOV_EXCL_START
+	virtual ~TestnetDAAEstCalculator() = default;
+	// LCOV_EXCL_STOP
+
+	virtual DiffType operator()(
+		const HeaderMgr&,
+		const HeaderMgr& current
+	) const override
+	{
+		if (ChainConfig::IsBlockOfParis(current.GetNumber()))
+		{
+			throw Exception("Blocks since Paris fork no longer use DAA");
+		}
+		else
+		{
+			// The testnet is using the Clique consensus protocol, where
+			// the difficulty is calculated differently.
+			// At the moment, we don't have a plan to calculate the actual value
+			// The possible values are either 1 or 2.
+			// cite: `diffInTurn` or `diffNoTurn`
+			//     from github.com/ethereum/go-ethereum/consensus/clique/clique.go
+			return 2;
+		}
+	}
+}; // class TestnetDAAEstCalculator
+
+
+using MainnetDAA = EthashDAAImpl<MainnetConfig>;
+using MainnetDAAEstimator = EthashDAAEstImpl<MainnetConfig>;
+
+using GoerliDAA = TestnetDAACalculator<GoerliConfig>;
+using GoerliDAAEstimator = TestnetDAAEstCalculator<GoerliConfig>;
 
 } // namespace Eth
 } // namespace EclipseMonitor

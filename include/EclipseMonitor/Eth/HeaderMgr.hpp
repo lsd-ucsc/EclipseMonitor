@@ -47,6 +47,21 @@ public: // static member
 
 public:
 
+	HeaderMgr() :
+		m_rawHeader(),
+		m_trustedTime(0),
+		m_bloomFilter(
+			m_rawHeader.get_LogsBloom() =
+				BytesObjType(std::vector<uint8_t>(BloomFilter::sk_bloomByteSize, 0))
+		),
+		m_hash(),
+		m_hashObj(m_hash.begin(), m_hash.end()),
+		m_blkNum(0),
+		m_time(0),
+		m_diff(0),
+		m_hasUncle(false)
+	{}
+
 	HeaderMgr(const std::vector<uint8_t>& rawBinary, uint64_t trustedTime) :
 		m_rawHeader(RawHeaderParser().Parse(rawBinary)),
 		m_trustedTime(trustedTime),
@@ -62,6 +77,30 @@ public:
 	// LCOV_EXCL_START
 	~HeaderMgr() = default;
 	// LCOV_EXCL_STOP
+
+	void SetNumber(const BlkNumType& blkNum)
+	{
+		m_rawHeader.get_Number() = BlkNumTypeTrait::ToBytes(blkNum);
+		m_blkNum = blkNum;
+	}
+
+	void SetTime(const TimeType& time)
+	{
+		m_rawHeader.get_Timestamp() = TimeTypeTrait::ToBytes(time);
+		m_time = time;
+	}
+
+	void SetDiff(const DiffType& diff)
+	{
+		m_rawHeader.get_Difficulty() = DiffTypeTrait::ToBytes(diff);
+		m_diff = diff;
+	}
+
+	void SetUncleHash(const BytesObjType& uncleHash)
+	{
+		m_rawHeader.get_Sha3Uncles() = uncleHash;
+		m_hasUncle = (uncleHash != GetEmptyUncleHash());
+	}
 
 	const RawHeaderType& GetRawHeader() const
 	{

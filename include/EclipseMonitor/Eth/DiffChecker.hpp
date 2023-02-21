@@ -105,15 +105,14 @@ public:
 		const HeaderMgr& parentHdr,
 		uint64_t currentTime) const override
 	{
+		HeaderMgr estNextHdr;
+		estNextHdr.SetNumber(parentHdr.GetNumber() + 1);
+		estNextHdr.SetTime(currentTime);
+
+		auto estDiff = (*m_diffEstimator)(parentHdr, estNextHdr);
+
 		auto deltaTime = currentTime - parentHdr.GetTrustedTime();
-		auto estDiff = (*m_diffEstimator)(
-			parentHdr.GetNumber(),
-			parentHdr.GetTime(),
-			parentHdr.GetDiff(),
-			parentHdr.HasUncle(),
-			parentHdr.GetNumber() + 1,
-			currentTime
-		);
+
 		return
 			// current header is received within the max wait time
 			(deltaTime <= m_maxWaitTime) &&
@@ -157,13 +156,13 @@ public:
 	virtual void UpdateDiffMin(const CheckpointMgr& chkpt) override
 	{
 		auto blkNumRange = chkpt.GetCheckpointBlkNumRange();
-		if (blkNumRange.second < _NetConfig::GetParisBlkNum())
+		if (_NetConfig::IsBlockOfParis(blkNumRange.second))
 		{
-			return m_powChecker.UpdateDiffMin(chkpt);
+			throw Exception("Not implemented yet");
 		}
 		else
 		{
-			throw Exception("Not implemented yet");
+			return m_powChecker.UpdateDiffMin(chkpt);
 		}
 	}
 
@@ -171,13 +170,13 @@ public:
 		const HeaderMgr& parentHdr,
 		const HeaderMgr& currentHdr) const override
 	{
-		if (currentHdr.GetNumber() < _NetConfig::GetParisBlkNum())
+		if (_NetConfig::IsBlockOfParis(currentHdr.GetNumber()))
 		{
-			return m_powChecker.CheckDifficulty(parentHdr, currentHdr);
+			throw Exception("Not implemented yet");
 		}
 		else
 		{
-			throw Exception("Not implemented yet");
+			return m_powChecker.CheckDifficulty(parentHdr, currentHdr);
 		}
 	}
 
@@ -185,13 +184,13 @@ public:
 		const HeaderMgr& parentHdr,
 		uint64_t currentTime) const override
 	{
-		if (parentHdr.GetNumber() + 1 < _NetConfig::GetParisBlkNum())
+		if (_NetConfig::IsBlockOfParis(parentHdr.GetNumber() + 1))
 		{
-			return m_powChecker.CheckEstDifficulty(parentHdr, currentTime);
+			throw Exception("Not implemented yet");
 		}
 		else
 		{
-			throw Exception("Not implemented yet");
+			return m_powChecker.CheckEstDifficulty(parentHdr, currentTime);
 		}
 	}
 

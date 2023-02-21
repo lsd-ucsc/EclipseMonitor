@@ -42,7 +42,8 @@ struct TestBlkHeader
 		const BlkNumType& blkNum,
 		const TimeType&   time,
 		const DiffType    diff,
-		bool              hasUncle) :
+		bool              hasUncle
+	) :
 		m_blkNum(blkNum),
 		m_time(time),
 		m_diff(diff),
@@ -50,15 +51,36 @@ struct TestBlkHeader
 	{}
 }; // struct TestBlkHeader
 
+template<typename _DAA>
 static void TestDiffCalcResult(
 	const TestBlkHeader& parent,
-	const TestBlkHeader& curr)
+	const TestBlkHeader& curr
+)
 {
+	HeaderMgr parentHeaderMgr;
+	parentHeaderMgr.SetNumber(parent.m_blkNum);
+	parentHeaderMgr.SetTime(parent.m_time);
+	parentHeaderMgr.SetDiff(parent.m_diff);
+	parentHeaderMgr.SetUncleHash(
+		parent.m_hasUncle ?
+			HeaderMgr::BytesObjType({ 0x00U }) :
+			HeaderMgr::GetEmptyUncleHash()
+	);
+
+	HeaderMgr currHeaderMgr;
+	currHeaderMgr.SetNumber(curr.m_blkNum);
+	currHeaderMgr.SetTime(curr.m_time);
+	currHeaderMgr.SetDiff(curr.m_diff);
+	currHeaderMgr.SetUncleHash(
+		curr.m_hasUncle ?
+			HeaderMgr::BytesObjType({ 0x00U }) :
+			HeaderMgr::GetEmptyUncleHash()
+	);
+
 	EXPECT_EQ(
-		MainnetDAA()(
-			parent.m_blkNum, parent.m_time, parent.m_diff, parent.m_hasUncle,
-			curr.m_blkNum, curr.m_time),
-		curr.m_diff);
+		_DAA()(parentHeaderMgr, currHeaderMgr),
+		curr.m_diff
+	);
 }
 
 // python script to get history data from GethDBReader:
@@ -70,7 +92,7 @@ static void TestDiffCalcResult(
 
 } // namespace
 
-GTEST_TEST(TestEthDAA, HardforkTest_Homestead)
+GTEST_TEST(TestEthDAA, HardforkTest_Mainnet_Homestead)
 {
 	// Homestead - 1150000
 
@@ -87,13 +109,13 @@ GTEST_TEST(TestEthDAA, HardforkTest_Homestead)
 		TestBlkHeader(1150002UL, 1457981409UL, 20493098233175ULL, false),
 	};
 
-	TestDiffCalcResult(testChain[0], testChain[1]);
-	TestDiffCalcResult(testChain[1], testChain[2]);
-	TestDiffCalcResult(testChain[2], testChain[3]);
-	TestDiffCalcResult(testChain[3], testChain[4]);
+	TestDiffCalcResult<MainnetDAA>(testChain[0], testChain[1]);
+	TestDiffCalcResult<MainnetDAA>(testChain[1], testChain[2]);
+	TestDiffCalcResult<MainnetDAA>(testChain[2], testChain[3]);
+	TestDiffCalcResult<MainnetDAA>(testChain[3], testChain[4]);
 }
 
-GTEST_TEST(TestEthDAA, HardforkTest_Byzantium)
+GTEST_TEST(TestEthDAA, HardforkTest_Mainnet_Byzantium)
 {
 	// Byzantium - 4370000
 
@@ -110,13 +132,13 @@ GTEST_TEST(TestEthDAA, HardforkTest_Byzantium)
 		TestBlkHeader(4370002UL, 1508131367UL, 2992883559276884ULL, false),
 	};
 
-	TestDiffCalcResult(testChain[0], testChain[1]);
-	TestDiffCalcResult(testChain[1], testChain[2]);
-	TestDiffCalcResult(testChain[2], testChain[3]);
-	TestDiffCalcResult(testChain[3], testChain[4]);
+	TestDiffCalcResult<MainnetDAA>(testChain[0], testChain[1]);
+	TestDiffCalcResult<MainnetDAA>(testChain[1], testChain[2]);
+	TestDiffCalcResult<MainnetDAA>(testChain[2], testChain[3]);
+	TestDiffCalcResult<MainnetDAA>(testChain[3], testChain[4]);
 }
 
-GTEST_TEST(TestEthDAA, HardforkTest_Constantinople)
+GTEST_TEST(TestEthDAA, HardforkTest_Mainnet_Constantinople)
 {
 	// Byzantium - 7280000
 
@@ -133,13 +155,13 @@ GTEST_TEST(TestEthDAA, HardforkTest_Constantinople)
 		TestBlkHeader(7280002UL, 1551383549UL, 2957101197433702ULL, false),
 	};
 
-	TestDiffCalcResult(testChain[0], testChain[1]);
-	TestDiffCalcResult(testChain[1], testChain[2]);
-	TestDiffCalcResult(testChain[2], testChain[3]);
-	TestDiffCalcResult(testChain[3], testChain[4]);
+	TestDiffCalcResult<MainnetDAA>(testChain[0], testChain[1]);
+	TestDiffCalcResult<MainnetDAA>(testChain[1], testChain[2]);
+	TestDiffCalcResult<MainnetDAA>(testChain[2], testChain[3]);
+	TestDiffCalcResult<MainnetDAA>(testChain[3], testChain[4]);
 }
 
-GTEST_TEST(TestEthDAA, HardforkTest_MuirGlacier)
+GTEST_TEST(TestEthDAA, HardforkTest_Mainnet_MuirGlacier)
 {
 	// MuirGlacier - 9200000
 
@@ -156,13 +178,13 @@ GTEST_TEST(TestEthDAA, HardforkTest_MuirGlacier)
 		TestBlkHeader(9200002UL, 1577953880UL, 2457389282807578ULL, false),
 	};
 
-	TestDiffCalcResult(testChain[0], testChain[1]);
-	TestDiffCalcResult(testChain[1], testChain[2]);
-	TestDiffCalcResult(testChain[2], testChain[3]);
-	TestDiffCalcResult(testChain[3], testChain[4]);
+	TestDiffCalcResult<MainnetDAA>(testChain[0], testChain[1]);
+	TestDiffCalcResult<MainnetDAA>(testChain[1], testChain[2]);
+	TestDiffCalcResult<MainnetDAA>(testChain[2], testChain[3]);
+	TestDiffCalcResult<MainnetDAA>(testChain[3], testChain[4]);
 }
 
-GTEST_TEST(TestEthDAA, HardforkTest_London)
+GTEST_TEST(TestEthDAA, HardforkTest_Mainnet_London)
 {
 	// London - 12965000
 
@@ -179,13 +201,13 @@ GTEST_TEST(TestEthDAA, HardforkTest_London)
 		TestBlkHeader(12965002UL, 1628166854UL, 7738716193681762ULL, false),
 	};
 
-	TestDiffCalcResult(testChain[0], testChain[1]);
-	TestDiffCalcResult(testChain[1], testChain[2]);
-	TestDiffCalcResult(testChain[2], testChain[3]);
-	TestDiffCalcResult(testChain[3], testChain[4]);
+	TestDiffCalcResult<MainnetDAA>(testChain[0], testChain[1]);
+	TestDiffCalcResult<MainnetDAA>(testChain[1], testChain[2]);
+	TestDiffCalcResult<MainnetDAA>(testChain[2], testChain[3]);
+	TestDiffCalcResult<MainnetDAA>(testChain[3], testChain[4]);
 }
 
-GTEST_TEST(TestEthDAA, HardforkTest_ArrowGlacier)
+GTEST_TEST(TestEthDAA, HardforkTest_Mainnet_ArrowGlacier)
 {
 	// ArrowGlacier - 13773000
 
@@ -202,13 +224,13 @@ GTEST_TEST(TestEthDAA, HardforkTest_ArrowGlacier)
 		TestBlkHeader(13773002UL, 1639079781UL, 11852429500178464ULL, false),
 	};
 
-	TestDiffCalcResult(testChain[0], testChain[1]);
-	TestDiffCalcResult(testChain[1], testChain[2]);
-	TestDiffCalcResult(testChain[2], testChain[3]);
-	TestDiffCalcResult(testChain[3], testChain[4]);
+	TestDiffCalcResult<MainnetDAA>(testChain[0], testChain[1]);
+	TestDiffCalcResult<MainnetDAA>(testChain[1], testChain[2]);
+	TestDiffCalcResult<MainnetDAA>(testChain[2], testChain[3]);
+	TestDiffCalcResult<MainnetDAA>(testChain[3], testChain[4]);
 }
 
-GTEST_TEST(TestEthDAA, HardforkTest_GrayGlacier)
+GTEST_TEST(TestEthDAA, HardforkTest_Mainnet_GrayGlacier)
 {
 	// GrayGlacier - 15050000
 
@@ -225,8 +247,103 @@ GTEST_TEST(TestEthDAA, HardforkTest_GrayGlacier)
 		TestBlkHeader(15050002UL, 1656586459UL, 14310541803445188ULL, false),
 	};
 
-	TestDiffCalcResult(testChain[0], testChain[1]);
-	TestDiffCalcResult(testChain[1], testChain[2]);
-	TestDiffCalcResult(testChain[2], testChain[3]);
-	TestDiffCalcResult(testChain[3], testChain[4]);
+	TestDiffCalcResult<MainnetDAA>(testChain[0], testChain[1]);
+	TestDiffCalcResult<MainnetDAA>(testChain[1], testChain[2]);
+	TestDiffCalcResult<MainnetDAA>(testChain[2], testChain[3]);
+	TestDiffCalcResult<MainnetDAA>(testChain[3], testChain[4]);
+}
+
+GTEST_TEST(TestEthDAA, HardforkTest_Mainnet_Paris)
+{
+	// Paris - 15537394
+
+	std::array<TestBlkHeader, 5> testChain = {
+		// 15537392
+		TestBlkHeader(15537392UL, 1663224156UL, 11049842297455506ULL, false),
+		// 15537393
+		TestBlkHeader(15537393UL, 1663224162UL, 11055787484078698ULL, false),
+		// 15537394
+		TestBlkHeader(15537394UL, 1663224179UL, 0ULL, false),
+		// 15537395
+		TestBlkHeader(15537395UL, 1663224191UL, 0ULL, false),
+		// 15537396
+		TestBlkHeader(15537396UL, 1663224203UL, 0ULL, false),
+	};
+
+	TestDiffCalcResult<MainnetDAA>(testChain[0], testChain[1]);
+
+	auto test1 = [&](){
+		TestDiffCalcResult<MainnetDAA>(testChain[1], testChain[2]);
+	};
+	EXPECT_THROW(test1(), EclipseMonitor::Exception);
+
+	auto test2 = [&](){
+		TestDiffCalcResult<MainnetDAA>(testChain[2], testChain[3]);
+	};
+	EXPECT_THROW(test2(), EclipseMonitor::Exception);
+
+	auto test3 = [&](){
+		TestDiffCalcResult<MainnetDAA>(testChain[3], testChain[4]);
+	};
+	EXPECT_THROW(test3(), EclipseMonitor::Exception);
+}
+
+
+GTEST_TEST(TestEthDAA, HardforkTest_Goerli_London)
+{
+	// London - 5062605
+
+	std::array<TestBlkHeader, 5> testChain = {
+		// 5062603
+		TestBlkHeader(5062603UL, 1625109549UL, 2ULL, false),
+		// 5062604
+		TestBlkHeader(5062604UL, 1625109564UL, 2ULL, false),
+		// 5062605
+		TestBlkHeader(5062605UL, 1625109579UL, 1ULL, false),
+		// 5062606
+		TestBlkHeader(5062606UL, 1625109594UL, 2ULL, false),
+		// 5062607
+		TestBlkHeader(5062607UL, 1625109609UL, 1ULL, false),
+	};
+
+	TestDiffCalcResult<GoerliDAA>(testChain[0], testChain[1]);
+	TestDiffCalcResult<GoerliDAA>(testChain[1], testChain[2]);
+	TestDiffCalcResult<GoerliDAA>(testChain[2], testChain[3]);
+	TestDiffCalcResult<GoerliDAA>(testChain[3], testChain[4]);
+}
+
+
+GTEST_TEST(TestEthDAA, HardforkTest_Goerli_Paris)
+{
+	// Paris - 7382819
+
+	std::array<TestBlkHeader, 5> testChain = {
+		// 7382817
+		TestBlkHeader(7382817UL, 1660182283UL, 1ULL, false),
+		// 7382818
+		TestBlkHeader(7382818UL, 1660182298UL, 1ULL, false),
+		// 7382819
+		TestBlkHeader(7382819UL, 1660182324UL, 0ULL, false),
+		// 7382820
+		TestBlkHeader(7382820UL, 1660182348UL, 0ULL, false),
+		// 7382821
+		TestBlkHeader(7382821UL, 1660182360UL, 0ULL, false),
+	};
+
+	TestDiffCalcResult<GoerliDAA>(testChain[0], testChain[1]);
+
+	auto test1 = [&](){
+		TestDiffCalcResult<GoerliDAA>(testChain[1], testChain[2]);
+	};
+	EXPECT_THROW(test1(), EclipseMonitor::Exception);
+
+	auto test2 = [&](){
+		TestDiffCalcResult<GoerliDAA>(testChain[2], testChain[3]);
+	};
+	EXPECT_THROW(test2(), EclipseMonitor::Exception);
+
+	auto test3 = [&](){
+		TestDiffCalcResult<GoerliDAA>(testChain[3], testChain[4]);
+	};
+	EXPECT_THROW(test3(), EclipseMonitor::Exception);
 }

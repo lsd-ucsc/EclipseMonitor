@@ -24,12 +24,9 @@ namespace EclipseMonitor_Test
 		virtual ~FixedDiffEstimator() = default;
 
 		virtual DiffType operator()(
-		const BlkNumType&,
-		const TimeType&,
-		const DiffType&,
-		bool,
-		const BlkNumType&,
-		const TimeType&) const override
+			const EclipseMonitor::Eth::HeaderMgr&,
+			const EclipseMonitor::Eth::HeaderMgr&
+		) const override
 		{
 			return 0;
 		}
