@@ -94,8 +94,8 @@ GTEST_TEST(TestEthDiffChecker, TestHistBlocks)
 	chkptMgr = SimpleObjects::Internal::make_unique<CheckpointMgr>(
 		mConf,
 		[&diffMedian, &diffChecker, &diffCheckerFixedEst, &chkptMgr](){
-			diffChecker.UpdateDiffMin(*chkptMgr);
-			diffCheckerFixedEst.UpdateDiffMin(*chkptMgr);
+			diffChecker.OnChkptUpd(*chkptMgr);
+			diffCheckerFixedEst.OnChkptUpd(*chkptMgr);
 			diffMedian = chkptMgr->GetDiffMedian();
 		}
 	);

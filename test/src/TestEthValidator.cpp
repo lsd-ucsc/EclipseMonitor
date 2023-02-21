@@ -34,7 +34,7 @@ GTEST_TEST(TestEthValidator, Block0_1)
 	HeaderMgr header1(input1, 0);
 
 	std::unique_ptr<MainnetDAA> daa(new MainnetDAA());
-	Validator validator(std::move(daa));
+	Validator<MainnetConfig> validator(std::move(daa));
 	EXPECT_TRUE(validator.CommonValidate(header0, false, header1, false));
 }
 
@@ -47,7 +47,7 @@ GTEST_TEST(TestEthValidator, Block0_1_ErrNum)
 	HeaderMgr header1(input1, 0);
 
 	std::unique_ptr<MainnetDAA> daa(new MainnetDAA());
-	Validator validator(std::move(daa));
+	Validator<MainnetConfig> validator(std::move(daa));
 	EXPECT_FALSE(validator.CommonValidate(header0, false, header1, false));
 }
 
@@ -60,7 +60,7 @@ GTEST_TEST(TestEthValidator, Block0_1_ErrParentHash)
 	HeaderMgr header1(input1, 0);
 
 	std::unique_ptr<MainnetDAA> daa(new MainnetDAA());
-	Validator validator(std::move(daa));
+	Validator<MainnetConfig> validator(std::move(daa));
 	EXPECT_FALSE(validator.CommonValidate(header0, false, header1, false));
 }
 
@@ -73,6 +73,6 @@ GTEST_TEST(TestEthValidator, Block0_1_ErrDiffVal)
 	HeaderMgr header1(input1, 0);
 
 	std::unique_ptr<MainnetDAA> daa(new MainnetDAA());
-	Validator validator(std::move(daa));
+	Validator<MainnetConfig> validator(std::move(daa));
 	EXPECT_FALSE(validator.CommonValidate(header0, false, header1, false));
 }

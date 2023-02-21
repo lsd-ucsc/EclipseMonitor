@@ -272,7 +272,7 @@ private:
 			lastHeader.GetHashObj();
 
 		// 2. update the difficulty checker
-		m_diffChecker->UpdateDiffMin(m_checkpoint);
+		m_diffChecker->OnChkptUpd(m_checkpoint);
 
 		// on confirmed header callback
 		m_checkpoint->IterateCurrWindow(

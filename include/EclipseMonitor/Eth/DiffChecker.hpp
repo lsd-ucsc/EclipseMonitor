@@ -30,7 +30,7 @@ public:
 	virtual ~DiffCheckerBase() = default;
 	// LCOV_EXCL_STOP
 
-	virtual void UpdateDiffMin(const CheckpointMgr& chkpt) = 0;
+	virtual void OnChkptUpd(const CheckpointMgr& chkpt) = 0;
 
 	/**
 	 * @brief Check the difficulty value (or anything equivalent) of the
@@ -82,14 +82,15 @@ public:
 	virtual ~PoWDiffChecker() = default;
 	// LCOV_EXCL_STOP
 
-	virtual void UpdateDiffMin(const CheckpointMgr& chkpt) override
+	virtual void OnChkptUpd(const CheckpointMgr& chkpt) override
 	{
 		m_minDiff = (chkpt.GetDiffMedian() >> 7) * m_minDiffPercent;
 	}
 
 	virtual bool CheckDifficulty(
 		const HeaderMgr& parentHdr,
-		const HeaderMgr& currentHdr) const override
+		const HeaderMgr& currentHdr
+	) const override
 	{
 		return
 			// current header is received after the parent header
@@ -103,7 +104,8 @@ public:
 
 	virtual bool CheckEstDifficulty(
 		const HeaderMgr& parentHdr,
-		uint64_t currentTime) const override
+		uint64_t currentTime
+	) const override
 	{
 		HeaderMgr estNextHdr;
 		estNextHdr.SetNumber(parentHdr.GetNumber() + 1);
@@ -131,6 +133,54 @@ private:
 }; // class PoWDiffChecker
 
 
+class PoSDiffChecker : public DiffCheckerBase
+{
+public: // static members:
+	using Self = PoSDiffChecker;
+	using Base = DiffCheckerBase;
+
+	using DiffType = typename DiffTypeTrait::value_type;
+
+public:
+	PoSDiffChecker(
+		const MonitorConfig& /* mConf */
+	) :
+		Base()
+	{}
+
+	// LCOV_EXCL_START
+	virtual ~PoSDiffChecker() = default;
+	// LCOV_EXCL_STOP
+
+	virtual void OnChkptUpd(
+		const CheckpointMgr& /* chkpt */
+	) override
+	{}
+
+	virtual bool CheckDifficulty(
+		const HeaderMgr& /* parentHdr */,
+		const HeaderMgr& /* currentHdr */
+	) const override
+	{
+		// At this moment, we don't check anything for Proof-of-Stake
+		return true;
+	}
+
+	virtual bool CheckEstDifficulty(
+		const HeaderMgr& /* parentHdr */,
+		uint64_t         /* currentTime */
+	) const override
+	{
+		// At this moment, we don't check anything for Proof-of-Stake
+		return true;
+	}
+
+
+private:
+
+}; // class PoSDiffChecker
+
+
 template<typename _NetConfig>
 class GenericDiffCheckerImpl : public DiffCheckerBase
 {
@@ -146,33 +196,35 @@ public:
 		std::unique_ptr<DAABase> diffEstimator
 	) :
 		Base(),
-		m_powChecker(mConf, std::move(diffEstimator))
+		m_powChecker(mConf, std::move(diffEstimator)),
+		m_posChecker(mConf)
 	{}
 
 	// LCOV_EXCL_START
 	virtual ~GenericDiffCheckerImpl() = default;
 	// LCOV_EXCL_STOP
 
-	virtual void UpdateDiffMin(const CheckpointMgr& chkpt) override
+	virtual void OnChkptUpd(const CheckpointMgr& chkpt) override
 	{
 		auto blkNumRange = chkpt.GetCheckpointBlkNumRange();
 		if (_NetConfig::IsBlockOfParis(blkNumRange.second))
 		{
-			throw Exception("Not implemented yet");
+			return m_posChecker.OnChkptUpd(chkpt);
 		}
 		else
 		{
-			return m_powChecker.UpdateDiffMin(chkpt);
+			return m_powChecker.OnChkptUpd(chkpt);
 		}
 	}
 
 	virtual bool CheckDifficulty(
 		const HeaderMgr& parentHdr,
-		const HeaderMgr& currentHdr) const override
+		const HeaderMgr& currentHdr
+	) const override
 	{
 		if (_NetConfig::IsBlockOfParis(currentHdr.GetNumber()))
 		{
-			throw Exception("Not implemented yet");
+			return m_posChecker.CheckDifficulty(parentHdr, currentHdr);
 		}
 		else
 		{
@@ -182,11 +234,12 @@ public:
 
 	virtual bool CheckEstDifficulty(
 		const HeaderMgr& parentHdr,
-		uint64_t currentTime) const override
+		uint64_t currentTime
+	) const override
 	{
 		if (_NetConfig::IsBlockOfParis(parentHdr.GetNumber() + 1))
 		{
-			throw Exception("Not implemented yet");
+			return m_posChecker.CheckEstDifficulty(parentHdr, currentTime);
 		}
 		else
 		{
@@ -197,6 +250,7 @@ public:
 private:
 
 	PoWDiffChecker m_powChecker;
+	PoSDiffChecker m_posChecker;
 }; // class GenericDiffCheckerImpl
 
 
