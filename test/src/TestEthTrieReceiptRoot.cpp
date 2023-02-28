@@ -20,7 +20,7 @@ using namespace EclipseMonitor::Eth::Trie;
 // converts a uint64_t to byte vector
 using IntWriter = SimpleRlp::EncodePrimitiveIntValue<
 	uint64_t,
-	SimpleRlp::Endian::little,
+	SimpleRlp::Endian::native,
 	false
 >;
 

@@ -52,6 +52,9 @@ GTEST_TEST(TestEthBloomFilter, EthBloom_15001871)
 	EXPECT_TRUE(
 		header.GetBloomFilter().IsEventInBloom(address, topic)
 	);
+
+	EXPECT_EQ(header.GetBloomFilter().Count1Bits(), 48);
+	EXPECT_EQ(header.GetBloomFilter().Count0Bits(), 2000);
 }
 
 
@@ -85,6 +88,9 @@ GTEST_TEST(TestEthBloomFilter, EthBloom_TestBlock_1)
 		0x28U, 0xF5U, 0x5AU, 0x4DU, 0xF5U, 0x23U, 0xB3U, 0xEFU
 	};
 	EXPECT_FALSE(header.GetBloomFilter().IsEventInBloom(address, topic));
+
+	EXPECT_EQ(header.GetBloomFilter().Count1Bits(), 6);
+	EXPECT_EQ(header.GetBloomFilter().Count0Bits(), 2042);
 }
 
 

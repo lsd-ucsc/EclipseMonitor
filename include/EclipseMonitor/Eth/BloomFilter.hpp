@@ -143,8 +143,38 @@ public:
 	}
 
 
+	size_t Count1Bits() const
+	{
+		size_t count = 0;
+		for (size_t i = 0; i < sk_bloomByteSize; ++i)
+		{
+			count += Count1BitsInByte(m_bloomBeginPtr[i]);
+		}
+		return count;
+	}
+
+
+	size_t Count0Bits() const
+	{
+		return sk_bloomBitSize - Count1Bits();
+	}
+
+
 private:
 
+	static size_t Count1BitsInByte(uint8_t byte)
+	{
+		size_t count = 0;
+		count += (byte & 0x01);
+		count += (byte & 0x02) >> 1;
+		count += (byte & 0x04) >> 2;
+		count += (byte & 0x08) >> 3;
+		count += (byte & 0x10) >> 4;
+		count += (byte & 0x20) >> 5;
+		count += (byte & 0x40) >> 6;
+		count += (byte & 0x80) >> 7;
+		return count;
+	}
 
 	static const uint8_t* CheckBloomBytes(
 		const Internal::Obj::Bytes& bloomBytes
