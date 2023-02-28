@@ -9,36 +9,39 @@
 #include <memory>
 #include <unordered_map>
 
-#include "EclipseMonitorBase.hpp"
+#include "../EclipseMonitorBase.hpp"
 
-#include "EthCheckpointMgr.hpp"
-#include "EthDiffChecker.hpp"
-#include "EthHeaderMgr.hpp"
-#include "EthValidator.hpp"
+#include "CheckpointMgr.hpp"
+#include "DiffChecker.hpp"
+#include "HeaderMgr.hpp"
+#include "Validator.hpp"
 
 namespace EclipseMonitor
 {
+namespace Eth
+{
 
-class EthEclipseMonitor : public EclipseMonitorBase
+
+class EclipseMonitor : public EclipseMonitorBase
 {
 public: // Static members
 
-	using Self = EthEclipseMonitor;
+	using Self = EclipseMonitor;
 	using Base = EclipseMonitorBase;
 
-	using OnHeaderConfCallback = std::function<void(const EthHeaderMgr&)>;
+	using OnHeaderConfCallback = std::function<void(const HeaderMgr&)>;
 	using NodeLookUpMap =
-		std::unordered_map<Internal::Obj::Bytes, EthHeaderNode*>;
+		std::unordered_map<Internal::Obj::Bytes, HeaderNode*>;
 
 public:
 
-	EthEclipseMonitor(
+	EclipseMonitor(
 		const MonitorConfig& conf,
 		const std::string& chainName,
 		TimestamperType timestamper,
 		OnHeaderConfCallback onHeaderConfirmed,
-		std::unique_ptr<EthValidatorBase> validator,
-		std::unique_ptr<EthDiffCheckerBase> diffChecker
+		std::unique_ptr<ValidatorBase> validator,
+		std::unique_ptr<DiffCheckerBase> diffChecker
 	) :
 		EclipseMonitorBase(conf, chainName, std::move(timestamper)),
 		m_onHeaderConfirmed(onHeaderConfirmed),
@@ -49,7 +52,7 @@ public:
 		m_diffChecker(std::move(diffChecker))
 	{}
 
-	virtual ~EthEclipseMonitor()
+	virtual ~EclipseMonitor()
 	{}
 
 	virtual void Update(const std::vector<uint8_t>& hdrBinary) override
@@ -93,8 +96,8 @@ protected:
 	{
 		// We're loading blocks before the latest checkpoint
 
-		std::unique_ptr<EthHeaderMgr> header =
-			Internal::Obj::Internal::make_unique<EthHeaderMgr>(
+		std::unique_ptr<HeaderMgr> header =
+			Internal::Obj::Internal::make_unique<HeaderMgr>(
 				hdrBinary, 0);
 
 		// 1 check if this is the genesis (very first) block
@@ -128,8 +131,8 @@ protected:
 
 	void UpdateOnRuntime(const std::vector<uint8_t>& hdrBinary)
 	{
-		std::unique_ptr<EthHeaderMgr> header =
-			Internal::Obj::Internal::make_unique<EthHeaderMgr>(
+		std::unique_ptr<HeaderMgr> header =
+			Internal::Obj::Internal::make_unique<HeaderMgr>(
 				hdrBinary,
 				Base::GetTimestamper().NowInSec()
 			);
@@ -143,7 +146,7 @@ protected:
 			if (offNoIt != m_offlineNodes.end())
 			{
 				// we found the parent node
-				EthHeaderNode* parentNode = offNoIt->second;
+				HeaderNode* parentNode = offNoIt->second;
 				UpdateOnRuntimeAddChild(
 					parentNode,
 					false,
@@ -163,7 +166,7 @@ protected:
 			if (actNoIt != m_activeNodes.end())
 			{
 				// we found the parent node
-				EthHeaderNode* parentNode = actNoIt->second;
+				HeaderNode* parentNode = actNoIt->second;
 				UpdateOnRuntimeAddChild(
 					parentNode,
 					true,
@@ -177,9 +180,11 @@ protected:
 	void RuntimeMaintenance()
 	{
 		// 1. check for new checkpoint candidates
-		EthHeaderNode* lastChptNode = m_checkpoint.GetLastNodePtr();
+		HeaderNode* lastChptNode = m_checkpoint.GetLastNodePtr();
 		auto confirmedChild = lastChptNode->ReleaseChildHasNDesc(
-			Base::GetMonitorConfig().get_checkpointSize()
+			static_cast<size_t>(
+				Base::GetMonitorConfig().get_checkpointSize().GetVal()
+			)
 		);
 		if (confirmedChild != nullptr)
 		{
@@ -218,9 +223,9 @@ protected:
 private:
 
 	void UpdateOnRuntimeAddChild(
-		EthHeaderNode* parentNode,
+		HeaderNode* parentNode,
 		bool isParentNodeLive,
-		std::unique_ptr<EthHeaderMgr> header
+		std::unique_ptr<HeaderMgr> header
 	)
 	{
 		// common validation
@@ -248,7 +253,7 @@ private:
 			auto hashObj = header->GetHashObj();
 
 			// add the header to the parent node
-			EthHeaderNode* node =
+			HeaderNode* node =
 				parentNode->AddChild(std::move(header));
 			// !!! NOTE: header is invalid after this point !!!
 
@@ -275,8 +280,8 @@ private:
 		m_diffChecker->OnChkptUpd(m_checkpoint);
 
 		// on confirmed header callback
-		m_checkpoint->IterateCurrWindow(
-			[this](const EthHeaderMgr& header)
+		m_checkpoint.IterateCurrWindow(
+			[this](const HeaderMgr& header)
 			{
 				m_onHeaderConfirmed(header);
 			}
@@ -287,9 +292,9 @@ private:
 
 	OnHeaderConfCallback m_onHeaderConfirmed;
 
-	EthCheckpointMgr m_checkpoint;
-	std::unique_ptr<EthValidatorBase> m_validator;
-	std::unique_ptr<EthDiffCheckerBase> m_diffChecker;
+	CheckpointMgr m_checkpoint;
+	std::unique_ptr<ValidatorBase> m_validator;
+	std::unique_ptr<DiffCheckerBase> m_diffChecker;
 
 	// runtime & forks
 	// TODO sync manager
@@ -297,6 +302,8 @@ private:
 	NodeLookUpMap m_activeNodes;
 
 
-}; // class EthEclipseMonitor
+}; // class EclipseMonitor
 
+
+} // namespace Eth
 } // namespace EclipseMonitor

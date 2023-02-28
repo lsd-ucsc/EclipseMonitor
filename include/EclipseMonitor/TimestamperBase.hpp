@@ -16,7 +16,9 @@ public:
 
 	TimestamperBase() = default;
 
+	// LCOV_EXCL_START
 	virtual ~TimestamperBase() = default;
+	// LCOV_EXCL_STOP
 
 	virtual uint64_t NowInSec() const = 0;
 

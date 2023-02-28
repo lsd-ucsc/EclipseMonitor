@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "MonitorReport.hpp"
-#include "Timestamper.hpp"
+#include "TimestamperBase.hpp"
 
 namespace EclipseMonitor
 {

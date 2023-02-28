@@ -640,11 +640,30 @@ public:
 }; // class TestnetDAAEstCalculator
 
 
-using MainnetDAA = EthashDAAImpl<MainnetConfig>;
-using MainnetDAAEstimator = EthashDAAEstImpl<MainnetConfig>;
+template<typename _ChainConfig>
+struct DAASelector;
 
-using GoerliDAA = TestnetDAACalculator<GoerliConfig>;
-using GoerliDAAEstimator = TestnetDAAEstCalculator<GoerliConfig>;
+template<>
+struct DAASelector<MainnetConfig>
+{
+	using Calculator = EthashDAAImpl<MainnetConfig>;
+	using Estimator  = EthashDAAEstImpl<MainnetConfig>;
+}; // struct DAASelector<MainnetConfig>
+
+template<>
+struct DAASelector<GoerliConfig>
+{
+	using Calculator = TestnetDAACalculator<GoerliConfig>;
+	using Estimator  = TestnetDAAEstCalculator<GoerliConfig>;
+}; // struct DAASelector<GoerliConfig>
+
+
+using MainnetDAA          = typename DAASelector<MainnetConfig>::Calculator;
+using MainnetDAAEstimator = typename DAASelector<MainnetConfig>::Estimator;
+
+using GoerliDAA           = typename DAASelector<GoerliConfig>::Calculator;
+using GoerliDAAEstimator  = typename DAASelector<GoerliConfig>::Estimator;
+
 
 } // namespace Eth
 } // namespace EclipseMonitor
