@@ -107,6 +107,47 @@ struct ReceiptLogEntry
 
 	~ReceiptLogEntry() = default;
 
+
+	template<typename _TopicsIt>
+	bool IsEventEmitted(
+		const ContractAddrType& addr,
+		_TopicsIt inTpBegin,
+		_TopicsIt inTpEnd
+	) const
+	{
+		// Check contract address
+		if (m_contractAddr != addr)
+		{
+			return false;
+		}
+
+		// Check topics
+		// in case the desired event is emitted,
+		// [inTpBegin, inTpEnd) should be a subset of m_topics
+		auto tpIt = m_topics.begin();
+		for (auto it = inTpBegin; it != inTpEnd; ++it, ++tpIt)
+		{
+			if (tpIt == m_topics.end())
+			{
+				// more topics in [inTpBegin, inTpEnd) than in m_topics
+				return false;
+			}
+			else if (*it != *tpIt)
+			{
+				// topic mismatch
+				return false;
+			}
+			// else, *it == *tpIt, continue
+		}
+
+		// everything in [inTpBegin, inTpEnd) is found
+		// from m_topics.begin() to tpIt
+		// In case inTpBegin == inTpEnd, caller doesn't care about topics
+		// we also should return true
+
+		return true;
+	}
+
 	ContractAddrType m_contractAddr;
 	std::vector<TopicType> m_topics;
 	std::vector<uint8_t> m_logData;
@@ -180,31 +221,9 @@ public:
 
 		for (const auto& logEntry: m_logEntries)
 		{
-			if (logEntry.m_contractAddr == addr)
+			if (logEntry.IsEventEmitted(addr, topicsBegin, topicsEnd))
 			{
-				// found a contract with matching addr
-
-				// check if topics are match
-				auto inTpBegin = topicsBegin;
-				auto inTpEnd = topicsEnd;
-				auto srcTpBegin = logEntry.m_topics.cbegin();
-				auto srcTpEnd = logEntry.m_topics.cend();
-				while (
-					inTpBegin != inTpEnd && // input topics is not ended
-					srcTpBegin != srcTpEnd &&   // src topics is not ended
-					*inTpBegin == *srcTpBegin // their values match
-				)
-				{
-					// check next one
-					++inTpBegin, ++srcTpBegin;
-				}
-
-				if (inTpBegin == inTpEnd)
-				{
-					// we've matched through all the topics
-					res.emplace_back(logEntry);
-				}
-				// else, some topics do match - skip
+				res.emplace_back(logEntry);
 			}
 		}
 
