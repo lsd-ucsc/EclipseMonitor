@@ -72,7 +72,7 @@ private:
 
 	static void PutKey(
 		std::unique_ptr<Node>& node,
-		std::vector<Nibble> nibbles,
+		const std::vector<Nibble>& nibbles,
 		const Internal::Obj::Bytes& value
 	)
 	{

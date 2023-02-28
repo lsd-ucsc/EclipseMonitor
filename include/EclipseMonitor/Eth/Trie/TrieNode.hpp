@@ -66,6 +66,11 @@ protected:
 		return Internal::Rlp::WriteRlp(raw);
 	}
 
+	static size_t CalcSerializedSize(const RawRetType& raw)
+	{
+		return Internal::Rlp::CalcRlpSize(raw);
+	}
+
 	static HashRetType CalcHash(const SerializedRetType& serialized)
 	{
 		std::array<uint8_t, 32> hashed = Keccak256(serialized);
@@ -131,9 +136,10 @@ struct EmptyNode
 		return node == nullptr;
 	}
 
-	static SimpleObjects::Bytes EmptyNodeRaw()
+	static const SimpleObjects::Bytes& EmptyNodeRaw()
 	{
-		return SimpleObjects::Bytes();
+		static SimpleObjects::Bytes inst;
+		return inst;
 	}
 
 	static SimpleObjects::Bytes EmptyNodeHash()

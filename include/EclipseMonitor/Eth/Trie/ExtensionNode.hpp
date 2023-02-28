@@ -51,11 +51,14 @@ public:
 
 		const auto& nextBase = m_next->GetNodeBase();
 		auto nextBaseRaw = nextBase.Raw();
-		auto nextBaseSerialized = NodeBase::GenSerialized(nextBaseRaw);
+		size_t serializedSize =
+			NodeBase::CalcSerializedSize(nextBaseRaw);
 
-		if (nextBaseSerialized.size() >= 32)
+		if (serializedSize >= 32)
 		{
-			hashes[1] = NodeBase::CalcHash(nextBaseSerialized);
+			hashes[1] = NodeBase::CalcHash(
+				NodeBase::GenSerialized(nextBaseRaw)
+			);
 		}
 		else
 		{

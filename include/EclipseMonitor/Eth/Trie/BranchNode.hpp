@@ -91,11 +91,14 @@ public:
 			{
 				const auto& nodeBase = m_branches[i]->GetNodeBase();
 				auto nodeBaseRaw = nodeBase.Raw();
-				auto nodeBaseSerialized = NodeBase::GenSerialized(nodeBaseRaw);
+				size_t serializedSize =
+					NodeBase::CalcSerializedSize(nodeBaseRaw);
 
-				if (nodeBaseSerialized.size() >= 32)
+				if (serializedSize >= 32)
 				{
-					hashes[i] = NodeBase::CalcHash(nodeBaseSerialized);
+					hashes[i] = NodeBase::CalcHash(
+						NodeBase::GenSerialized(nodeBaseRaw)
+					);
 				}
 				else
 				{
