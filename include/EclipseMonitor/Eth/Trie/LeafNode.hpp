@@ -24,7 +24,7 @@ public: // static members:
 
 	static std::unique_ptr<LeafNode> NewLeafNodeFromNibbles(
 		const std::vector<Nibble>& nibbles,
-		const Internal::Obj::Bytes& value
+		const Internal::Obj::BytesBaseObj& value
 	)
 	{
 		return Internal::Obj::Internal::make_unique<LeafNode>(nibbles, value);
@@ -32,7 +32,7 @@ public: // static members:
 
 	static std::unique_ptr<LeafNode> NewLeafNodeFromBytes(
 		const std::vector <uint8_t>& key,
-		const Internal::Obj::Bytes& value
+		const Internal::Obj::BytesBaseObj& value
 	)
 	{
 		std::vector<Nibble> nibbles = NibbleHelper::FromBytes(key);
@@ -47,6 +47,19 @@ public:
 	) :
 		m_path(otherPath),
 		m_value(std::move(otherValue))
+	{}
+
+	LeafNode(
+		const std::vector<Nibble>& otherPath,
+		const Internal::Obj::BytesBaseObj& otherValue
+	) :
+		LeafNode(
+			otherPath,
+			Internal::Obj::Bytes(
+				otherValue.data(),
+				otherValue.data() + otherValue.size()
+			)
+		)
 	{}
 
 	// LCOV_EXCL_START

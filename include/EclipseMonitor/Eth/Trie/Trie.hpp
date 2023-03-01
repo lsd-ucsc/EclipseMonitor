@@ -61,7 +61,7 @@ public:
 
 	void Put(
 		const Internal::Obj::Bytes& key,
-		const Internal::Obj::Bytes& value
+		const Internal::Obj::BytesBaseObj& value
 	)
 	{
 		std::vector<Nibble> nibbles = NibbleHelper::FromBytes(key.GetVal());
@@ -73,7 +73,7 @@ private:
 	static void PutKeyEmptyNode(
 		std::unique_ptr<Node>& node,
 		const std::vector<Nibble>& nibbles,
-		const Internal::Obj::Bytes& value
+		const Internal::Obj::BytesBaseObj& value
 	)
 	{
 		std::unique_ptr<NodeBase> leafBase =
@@ -93,7 +93,7 @@ private:
 	static void PutKeyLeafNode(
 		std::unique_ptr<Node>& node,
 		const std::vector<Nibble>& nibbles,
-		const Internal::Obj::Bytes& value
+		const Internal::Obj::BytesBaseObj& value
 	)
 	{
 		const LeafNode* leaf =
@@ -212,7 +212,7 @@ private:
 	static void PutKeyBranchNode(
 		std::unique_ptr<Node>& node,
 		const std::vector<Nibble>& nibbles,
-		const Internal::Obj::Bytes& value
+		const Internal::Obj::BytesBaseObj& value
 	)
 	{
 		BranchNode* branch =
@@ -243,7 +243,7 @@ private:
 	static void PutKeyExtensionNode(
 		std::unique_ptr<Node>& node,
 		const std::vector<Nibble>& nibbles,
-		const Internal::Obj::Bytes& value
+		const Internal::Obj::BytesBaseObj& value
 	)
 	{
 		ExtensionNode* extension =
@@ -340,7 +340,7 @@ private:
 	static void PutKey(
 		std::unique_ptr<Node>& node,
 		const std::vector<Nibble>& nibbles,
-		const Internal::Obj::Bytes& value
+		const Internal::Obj::BytesBaseObj& value
 	)
 	{
 		// empty node, create a new leaf

@@ -58,10 +58,13 @@ public:
 		m_branches[nibble].reset();
 	}
 
-	void SetValue(const Internal::Obj::Bytes& otherValue)
+	void SetValue(const Internal::Obj::BytesBaseObj& otherValue)
 	{
 		m_nodeHasValue = true;
-		m_value = otherValue;
+		m_value = Internal::Obj::Bytes(
+				otherValue.data(),
+				otherValue.data() + otherValue.size()
+			);
 	}
 
 	void RemoveValue()
