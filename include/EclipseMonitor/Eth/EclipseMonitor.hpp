@@ -39,11 +39,13 @@ public:
 		const MonitorConfig& conf,
 		const std::string& chainName,
 		TimestamperType timestamper,
+		OnHeaderConfCallback onHeaderValidated,
 		OnHeaderConfCallback onHeaderConfirmed,
 		std::unique_ptr<ValidatorBase> validator,
 		std::unique_ptr<DiffCheckerBase> diffChecker
 	) :
 		EclipseMonitorBase(conf, chainName, std::move(timestamper)),
+		m_onHeaderValidated(onHeaderValidated),
 		m_onHeaderConfirmed(onHeaderConfirmed),
 		m_checkpoint(conf, [this](){
 			this->OnCheckpointComplete();
@@ -123,6 +125,9 @@ protected:
 					"The given block failed common validation");
 			}
 		}
+
+		// Callback for validated headers
+		m_onHeaderValidated(*header);
 
 		// Add the header to the checkpoint
 		m_checkpoint.AddHeader(std::move(header));
@@ -250,6 +255,9 @@ private:
 		// if both check passed, add it to the parent node
 		if (validateRes && diffRes)
 		{
+			// Callback for validated headers
+			m_onHeaderValidated(*header);
+
 			auto hashObj = header->GetHashObj();
 
 			// add the header to the parent node
@@ -290,6 +298,7 @@ private:
 
 private:
 
+	OnHeaderConfCallback m_onHeaderValidated;
 	OnHeaderConfCallback m_onHeaderConfirmed;
 
 	CheckpointMgr m_checkpoint;
