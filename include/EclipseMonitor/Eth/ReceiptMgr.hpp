@@ -21,7 +21,7 @@ namespace Eth
 {
 
 /*
- * ReceiptMgr parses an rlp-encoded Ethereum receipt, and can determine whether
+ * Receipt parses an rlp-encoded Ethereum receipt, and can determine whether
  * an event has been emitted by a smart contract
  *
  * The structure of an Ethereum receipt can be found in the following link:
@@ -154,7 +154,7 @@ struct ReceiptLogEntry
 }; // struct ReceiptLogEntry
 
 
-class ReceiptMgr
+class Receipt
 {
 public: // static members:
 
@@ -181,11 +181,11 @@ public: // static members:
 		);
 	}
 
-	static ReceiptMgr FromBytes(
+	static Receipt FromBytes(
 		const Internal::Obj::BytesBaseObj& rlpBytes
 	)
 	{
-		return ReceiptMgr(ParseReceipt(rlpBytes));
+		return Receipt(ParseReceipt(rlpBytes));
 	}
 
 	using LogEntriesType = std::vector<ReceiptLogEntry>;
@@ -195,7 +195,7 @@ public: // static members:
 
 public:
 
-	explicit ReceiptMgr(Internal::Obj::Object receiptObj) :
+	explicit Receipt(Internal::Obj::Object receiptObj) :
 		m_logEntries()
 	{
 		const auto& receiptBody = receiptObj.AsList();
@@ -206,8 +206,12 @@ public:
 		}
 	};
 
+	Receipt(Receipt&& other) :
+		m_logEntries(std::move(other.m_logEntries))
+	{}
+
 	// LCOV_EXCL_START
-	~ReceiptMgr() = default;
+	~Receipt() = default;
 	// LCOV_EXCL_STOP
 
 	template<typename _TopicsIt>
@@ -238,7 +242,7 @@ public:
 private:
 	LogEntriesType m_logEntries;
 
-}; // class ReceiptMgr
+}; // class Receipt
 
 } // namespace Eth
 } // namespace EclipseMonitor

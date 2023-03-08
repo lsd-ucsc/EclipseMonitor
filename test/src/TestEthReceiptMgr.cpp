@@ -28,7 +28,7 @@ GTEST_TEST(TestEthReceiptMgr, CountTestFile)
 GTEST_TEST(TestEthReceiptMgr, LegacyReceipt_15415840)
 {
 	const SimpleObjects::Bytes& receiptBytes = LegacyReceipt_15415840();
-	ReceiptMgr mgr = ReceiptMgr::FromBytes(receiptBytes);
+	Receipt mgr = Receipt::FromBytes(receiptBytes);
 
 	const auto& receiptLogs = mgr.GetLogEntries();
 
@@ -40,7 +40,7 @@ GTEST_TEST(TestEthReceiptMgr, AccessListReceipt_15415840)
 	using ContractAddrType = typename ReceiptLogEntry::ContractAddrType;
 
 	const SimpleObjects::Bytes& receiptBytes = AccessListReceipt_15415840();
-	ReceiptMgr mgr = ReceiptMgr::FromBytes(receiptBytes);
+	Receipt mgr = Receipt::FromBytes(receiptBytes);
 
 	const auto& receiptLogs = mgr.GetLogEntries();
 	EXPECT_EQ(receiptLogs.size(), 12);
@@ -84,7 +84,7 @@ GTEST_TEST(TestEthReceiptMgr, DynamicFeeReceipt_15415840)
 	using ContractAddrType = typename ReceiptLogEntry::ContractAddrType;
 
 	const SimpleObjects::Bytes& receiptBytes = DynamicFeeReceipt_15415840();
-	ReceiptMgr mgr = ReceiptMgr::FromBytes(receiptBytes);
+	Receipt mgr = Receipt::FromBytes(receiptBytes);
 
 	const auto& receiptLogs = mgr.GetLogEntries();
 	EXPECT_EQ(receiptLogs.size(), 1);
@@ -128,7 +128,7 @@ GTEST_TEST(TestEthReceiptMgr, EventTest1)
 	using ContractAddrType = typename ReceiptLogEntry::ContractAddrType;
 
 	const SimpleObjects::Bytes& receiptBytes = TestReceipt1();
-	ReceiptMgr mgr = ReceiptMgr::FromBytes(receiptBytes);
+	Receipt mgr = Receipt::FromBytes(receiptBytes);
 
 	std::vector<std::array<uint8_t, 32> > topics(1);
 	std::string event("Revoke(bytes32)");
@@ -161,7 +161,7 @@ GTEST_TEST(TestEthReceiptMgr, EventTest2)
 	using ContractAddrType = typename ReceiptLogEntry::ContractAddrType;
 
 	const SimpleObjects::Bytes& receiptBytes = TestReceipt2();
-	ReceiptMgr mgr = ReceiptMgr::FromBytes(receiptBytes);
+	Receipt mgr = Receipt::FromBytes(receiptBytes);
 
 	std::vector<std::array<uint8_t, 32> > topics(1);
 	std::string event("Revoke(bytes32,uint64,bool)");
@@ -198,7 +198,7 @@ GTEST_TEST(TestEthReceiptMgr, EventTest3)
 	using ContractAddrType = typename ReceiptLogEntry::ContractAddrType;
 
 	const SimpleObjects::Bytes& receiptBytes = TestReceipt3();
-	ReceiptMgr mgr = ReceiptMgr::FromBytes(receiptBytes);
+	Receipt mgr = Receipt::FromBytes(receiptBytes);
 
 	std::vector<std::array<uint8_t, 32> > topics(1);
 	std::string event("Revoke(bytes[])");
