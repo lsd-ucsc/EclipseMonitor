@@ -5,18 +5,16 @@
 
 #pragma once
 
-#include <vector>
-
 #include <SimpleObjects/SimpleObjects.hpp>
 
 namespace EclipseMonitor_Test
 {
 
-const std::vector<SimpleObjects::Bytes>& GetEthReceipts_15415840();
+const SimpleObjects::ListT<SimpleObjects::Bytes>& GetEthReceipts_15415840();
 
 const SimpleObjects::Bytes& GetReceiptsRoot_15415840();
 
-const std::vector<SimpleObjects::Bytes>& GetEthReceipts_15209997();
+const SimpleObjects::ListT<SimpleObjects::Bytes>& GetEthReceipts_15209997();
 
 const SimpleObjects::Bytes& GetReceiptsRoot_15209997();
 

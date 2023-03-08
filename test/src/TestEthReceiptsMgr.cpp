@@ -6,10 +6,11 @@
 #include <gtest/gtest.h>
 
 #include <EclipseMonitor/Eth/Keccak256.hpp>
-#include <EclipseMonitor/Eth/ReceiptMgr.hpp>
+#include <EclipseMonitor/Eth/ReceiptsMgr.hpp>
 #include <SimpleObjects/SimpleObjects.hpp>
 
 #include "EthReceipt.hpp"
+#include "EthReceipts.hpp"
 
 namespace EclipseMonitor_Test
 {
@@ -19,13 +20,13 @@ namespace EclipseMonitor_Test
 using namespace EclipseMonitor_Test;
 using namespace EclipseMonitor::Eth;
 
-GTEST_TEST(TestEthReceiptMgr, CountTestFile)
+GTEST_TEST(TestEthReceiptsMgr, CountTestFile)
 {
 	static auto tmp = ++g_numOfTestFile;
 	(void)tmp;
 }
 
-GTEST_TEST(TestEthReceiptMgr, LegacyReceipt_15415840)
+GTEST_TEST(TestEthReceiptsMgr, LegacyReceipt_15415840)
 {
 	const SimpleObjects::Bytes& receiptBytes = LegacyReceipt_15415840();
 	Receipt mgr = Receipt::FromBytes(receiptBytes);
@@ -35,7 +36,7 @@ GTEST_TEST(TestEthReceiptMgr, LegacyReceipt_15415840)
 	EXPECT_EQ(receiptLogs.size(), 0);
 }
 
-GTEST_TEST(TestEthReceiptMgr, AccessListReceipt_15415840)
+GTEST_TEST(TestEthReceiptsMgr, AccessListReceipt_15415840)
 {
 	using ContractAddrType = typename ReceiptLogEntry::ContractAddrType;
 
@@ -79,7 +80,7 @@ GTEST_TEST(TestEthReceiptMgr, AccessListReceipt_15415840)
 	EXPECT_EQ(receiptLogs[11].m_logData, expectedLogIndex11Data);
 }
 
-GTEST_TEST(TestEthReceiptMgr, DynamicFeeReceipt_15415840)
+GTEST_TEST(TestEthReceiptsMgr, DynamicFeeReceipt_15415840)
 {
 	using ContractAddrType = typename ReceiptLogEntry::ContractAddrType;
 
@@ -108,7 +109,7 @@ GTEST_TEST(TestEthReceiptMgr, DynamicFeeReceipt_15415840)
 	EXPECT_EQ(receiptLogs[0].m_logData, expectedData);
 }
 
-GTEST_TEST(TestEthReceiptMgr, TopicTest)
+GTEST_TEST(TestEthReceiptsMgr, TopicTest)
 {
 	std::string event("Revoke(bytes32)");
 	std::array<uint8_t, 32> hashedEvent = Keccak256(event);
@@ -123,7 +124,7 @@ GTEST_TEST(TestEthReceiptMgr, TopicTest)
 	EXPECT_EQ(hashedEvent, expected);
 }
 
-GTEST_TEST(TestEthReceiptMgr, EventTest1)
+GTEST_TEST(TestEthReceiptsMgr, EventTest1)
 {
 	using ContractAddrType = typename ReceiptLogEntry::ContractAddrType;
 
@@ -156,7 +157,7 @@ GTEST_TEST(TestEthReceiptMgr, EventTest1)
 	EXPECT_EQ(logEntiresRefs[0].get().m_logData, expectedEventData);
 }
 
-GTEST_TEST(TestEthReceiptMgr, EventTest2)
+GTEST_TEST(TestEthReceiptsMgr, EventTest2)
 {
 	using ContractAddrType = typename ReceiptLogEntry::ContractAddrType;
 
@@ -193,7 +194,7 @@ GTEST_TEST(TestEthReceiptMgr, EventTest2)
 	ASSERT_EQ(logEntiresRefs.size(), 0);
 }
 
-GTEST_TEST(TestEthReceiptMgr, EventTest3)
+GTEST_TEST(TestEthReceiptsMgr, EventTest3)
 {
 	using ContractAddrType = typename ReceiptLogEntry::ContractAddrType;
 
@@ -216,4 +217,26 @@ GTEST_TEST(TestEthReceiptMgr, EventTest3)
 	);
 
 	ASSERT_GT(logEntiresRefs.size(), 0);
+}
+
+
+GTEST_TEST(TestEthReceiptsMgr, ReceiptsMgr_B15415840)
+{
+	const SimpleObjects::Bytes& expected = GetReceiptsRoot_15415840();
+	const SimpleObjects::ListBaseObj& receipts = GetEthReceipts_15415840();
+
+	ReceiptsMgr mgr(receipts);
+
+	EXPECT_EQ(mgr.GetRootHashBytes(), expected);
+}
+
+
+GTEST_TEST(TestEthReceiptsMgr, ReceiptsMgr_B15209997)
+{
+	const SimpleObjects::Bytes& expected = GetReceiptsRoot_15209997();
+	const SimpleObjects::ListBaseObj& receipts = GetEthReceipts_15209997();
+
+	ReceiptsMgr mgr(receipts);
+
+	EXPECT_EQ(mgr.GetRootHashBytes(), expected);
 }

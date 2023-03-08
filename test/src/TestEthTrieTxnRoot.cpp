@@ -33,9 +33,7 @@ GTEST_TEST(TestEthTrieTxnRoot, CountTestFile)
 
 GTEST_TEST(TestEthTrieTxnRoot, TestTransactionsRootBlock15415840)
 {
-	std::vector<uint8_t> key;
 	SimpleObjects::Bytes keyBytes;
-	SimpleObjects::Bytes encodedKey;
 	SimpleObjects::Bytes value;
 	PatriciaTrie trie;
 
@@ -45,14 +43,11 @@ GTEST_TEST(TestEthTrieTxnRoot, TestTransactionsRootBlock15415840)
 	// insert transactions
 	for(uint64_t i = 0; i < txns.size(); i++)
 	{
-		key.clear();
+		keyBytes.resize(0);
 
-		IntWriter::Encode(key, i);
-		keyBytes = SimpleObjects::Bytes(key);
-		encodedKey = SimpleObjects::Bytes(SimpleRlp::WriteRlp(keyBytes));
+		IntWriter::Encode(i, std::back_inserter(keyBytes));
 
-		value = txns[i];
-		trie.Put(encodedKey, value);
+		trie.Put(SimpleRlp::WriteRlp(keyBytes), txns[i].AsBytes());
 	}
 
 	EXPECT_EQ(expected, trie.Hash());
@@ -61,9 +56,7 @@ GTEST_TEST(TestEthTrieTxnRoot, TestTransactionsRootBlock15415840)
 
 GTEST_TEST(TestEthTrieTxnRoot, TestTransactionsRootBlock15209997)
 {
-	std::vector<uint8_t> key;
 	SimpleObjects::Bytes keyBytes;
-	SimpleObjects::Bytes encodedKey;
 	SimpleObjects::Bytes value;
 	PatriciaTrie trie;
 
@@ -73,14 +66,11 @@ GTEST_TEST(TestEthTrieTxnRoot, TestTransactionsRootBlock15209997)
 	// insert transactions
 	for(uint64_t i = 0; i < txns.size(); i++)
 	{
-		key.clear();
+		keyBytes.resize(0);
 
-		IntWriter::Encode(key, i);
-		keyBytes = SimpleObjects::Bytes(key);
-		encodedKey = SimpleObjects::Bytes(SimpleRlp::WriteRlp(keyBytes));
+		IntWriter::Encode(i, std::back_inserter(keyBytes));
 
-		value = txns[i];
-		trie.Put(encodedKey, value);
+		trie.Put(SimpleRlp::WriteRlp(keyBytes), txns[i].AsBytes());
 	}
 	EXPECT_EQ(expected, trie.Hash());
 }

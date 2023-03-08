@@ -60,11 +60,11 @@ public:
 	}
 
 	void Put(
-		const Internal::Obj::Bytes& key,
+		const std::vector<uint8_t>& keyRlp,
 		const Internal::Obj::BytesBaseObj& value
 	)
 	{
-		std::vector<Nibble> nibbles = NibbleHelper::FromBytes(key.GetVal());
+		std::vector<Nibble> nibbles = NibbleHelper::FromBytes(keyRlp);
 		PutKey(m_root, nibbles, value);
 	}
 

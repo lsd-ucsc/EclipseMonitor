@@ -5,9 +5,9 @@
 
 #include "EthReceipts.hpp"
 
-const std::vector<SimpleObjects::Bytes>& EclipseMonitor_Test::GetEthReceipts_15415840()
+const SimpleObjects::ListT<SimpleObjects::Bytes>& EclipseMonitor_Test::GetEthReceipts_15415840()
 {
-	static const std::vector<SimpleObjects::Bytes> inst{
+	static const SimpleObjects::ListT<SimpleObjects::Bytes> inst{
 		SimpleObjects::Bytes({
 			0x02U, 0xf9U, 0x15U, 0x65U, 0x01U, 0x83U, 0x12U, 0x7cU,
 			0xc8U, 0xb9U, 0x01U, 0x00U, 0x00U, 0xa0U, 0x08U, 0x40U,
@@ -18727,9 +18727,9 @@ const SimpleObjects::Bytes& EclipseMonitor_Test::GetReceiptsRoot_15415840()
 }
 
 
-const std::vector<SimpleObjects::Bytes>& EclipseMonitor_Test::GetEthReceipts_15209997()
+const SimpleObjects::ListT<SimpleObjects::Bytes>& EclipseMonitor_Test::GetEthReceipts_15209997()
 {
-	static const std::vector <SimpleObjects::Bytes> inst{
+	static const SimpleObjects::ListT<SimpleObjects::Bytes> inst{
 		SimpleObjects::Bytes({
 			0x02U, 0xf9U, 0x03U, 0x64U, 0x01U, 0x83U, 0x01U, 0xe2U,
 			0x3dU, 0xb9U, 0x01U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
