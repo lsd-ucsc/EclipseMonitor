@@ -38,8 +38,6 @@ GTEST_TEST(TestEthReceiptsMgr, LegacyReceipt_15415840)
 
 GTEST_TEST(TestEthReceiptsMgr, AccessListReceipt_15415840)
 {
-	using ContractAddrType = typename ReceiptLogEntry::ContractAddrType;
-
 	const SimpleObjects::Bytes& receiptBytes = AccessListReceipt_15415840();
 	Receipt mgr = Receipt::FromBytes(receiptBytes);
 
@@ -82,8 +80,6 @@ GTEST_TEST(TestEthReceiptsMgr, AccessListReceipt_15415840)
 
 GTEST_TEST(TestEthReceiptsMgr, DynamicFeeReceipt_15415840)
 {
-	using ContractAddrType = typename ReceiptLogEntry::ContractAddrType;
-
 	const SimpleObjects::Bytes& receiptBytes = DynamicFeeReceipt_15415840();
 	Receipt mgr = Receipt::FromBytes(receiptBytes);
 
@@ -126,8 +122,6 @@ GTEST_TEST(TestEthReceiptsMgr, TopicTest)
 
 GTEST_TEST(TestEthReceiptsMgr, EventTest1)
 {
-	using ContractAddrType = typename ReceiptLogEntry::ContractAddrType;
-
 	const SimpleObjects::Bytes& receiptBytes = TestReceipt1();
 	Receipt mgr = Receipt::FromBytes(receiptBytes);
 
@@ -159,8 +153,6 @@ GTEST_TEST(TestEthReceiptsMgr, EventTest1)
 
 GTEST_TEST(TestEthReceiptsMgr, EventTest2)
 {
-	using ContractAddrType = typename ReceiptLogEntry::ContractAddrType;
-
 	const SimpleObjects::Bytes& receiptBytes = TestReceipt2();
 	Receipt mgr = Receipt::FromBytes(receiptBytes);
 
@@ -196,8 +188,6 @@ GTEST_TEST(TestEthReceiptsMgr, EventTest2)
 
 GTEST_TEST(TestEthReceiptsMgr, EventTest3)
 {
-	using ContractAddrType = typename ReceiptLogEntry::ContractAddrType;
-
 	const SimpleObjects::Bytes& receiptBytes = TestReceipt3();
 	Receipt mgr = Receipt::FromBytes(receiptBytes);
 
