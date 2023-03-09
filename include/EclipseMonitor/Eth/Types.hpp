@@ -17,8 +17,11 @@ namespace Eth
 {
 
 
-using ContractAddrType = std::array<uint8_t, 20>;
-using EventTopicType = std::array<uint8_t, 32>;
+using ContractAddr = std::array<uint8_t, 20>;
+
+using EventTopic = std::array<uint8_t, 32>;
+
+using EventCallbackId = std::uintptr_t;
 
 
 } // namespace Eth

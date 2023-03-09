@@ -107,7 +107,7 @@ struct ReceiptLogEntry
 
 	template<typename _TopicsIt>
 	bool IsEventEmitted(
-		const ContractAddrType& addr,
+		const ContractAddr& addr,
 		_TopicsIt inTpBegin,
 		_TopicsIt inTpEnd
 	) const
@@ -145,8 +145,8 @@ struct ReceiptLogEntry
 		return true;
 	}
 
-	ContractAddrType m_contractAddr;
-	std::vector<EventTopicType> m_topics;
+	ContractAddr m_contractAddr;
+	std::vector<EventTopic> m_topics;
 	std::vector<uint8_t> m_logData;
 }; // struct ReceiptLogEntry
 
@@ -212,7 +212,7 @@ public:
 
 	template<typename _TopicsIt>
 	std::vector<LogEntriesKRefType> SearchEvents(
-		const ContractAddrType& addr,
+		const ContractAddr& addr,
 		_TopicsIt topicsBegin,
 		_TopicsIt topicsEnd
 	) const

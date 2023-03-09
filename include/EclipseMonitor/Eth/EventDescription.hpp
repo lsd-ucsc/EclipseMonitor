@@ -30,11 +30,15 @@ struct EventDescription
 	using HashType = std::array<uint8_t, 32>;
 
 	using NotifyCallbackType =
-		std::function<void(const HeaderMgr&, const ReceiptLogEntry&)>;
+		std::function<void(
+			const HeaderMgr&,
+			const ReceiptLogEntry&,
+			EventCallbackId
+		)>;
 
 	EventDescription(
-		ContractAddrType       contractAddr,
-		std::vector<EventTopicType> topics,
+		ContractAddr       contractAddr,
+		std::vector<EventTopic> topics,
 		NotifyCallbackType     notifyCallback
 	) :
 		m_contractAddr(std::move(contractAddr)),
@@ -59,10 +63,10 @@ struct EventDescription
 
 	~EventDescription() = default;
 
-	ContractAddrType       m_contractAddr;
-	std::vector<EventTopicType> m_topics;
-	std::vector<HashType>  m_hashes;
-	NotifyCallbackType     m_notifyCallback;
+	ContractAddr            m_contractAddr;
+	std::vector<EventTopic> m_topics;
+	std::vector<HashType>   m_hashes;
+	NotifyCallbackType      m_notifyCallback;
 }; // struct SubDescription
 
 

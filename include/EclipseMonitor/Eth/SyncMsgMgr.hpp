@@ -11,6 +11,7 @@
 #include "../SyncMsgMgrBase.hpp"
 
 #include "HeaderMgr.hpp"
+#include "Types.hpp"
 
 namespace EclipseMonitor
 {
@@ -24,8 +25,6 @@ public: // static member
 
 	using Self = SyncMsgMgr;
 	using Base = SyncMsgMgrBase;
-
-	using ContractAddrType = std::array<uint8_t, 32>;
 
 public:
 	/**
@@ -41,7 +40,7 @@ public:
 		const MonitorId& mId,
 		const MonitorConfig& mConf,
 		uint64_t time,
-		ContractAddrType contractAddr
+		ContractAddr contractAddr
 	) :
 		Base(mId, mConf, time),
 		m_contractAddr(contractAddr)
@@ -97,13 +96,13 @@ public:
 		return false;
 	}
 
-	const ContractAddrType& GetContractAddr() const
+	const ContractAddr& GetContractAddr() const
 	{
 		return m_contractAddr;
 	}
 
 private:
-	ContractAddrType m_contractAddr;
+	ContractAddr m_contractAddr;
 }; // class SyncMsgMgr
 
 
