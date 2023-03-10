@@ -87,6 +87,11 @@ target_link_libraries(EclipseMonitor_test
 	SimpleObjects
 	SimpleUtf
 	gtest)
+target_compile_definitions(
+	EclipseMonitor_test
+	PRIVATE
+		ECLIPSEMONITOR_TEST_DIR="${CMAKE_CURRENT_LIST_DIR}"
+)
 
 add_test(NAME EclipseMonitor_test
 	COMMAND EclipseMonitor_test)

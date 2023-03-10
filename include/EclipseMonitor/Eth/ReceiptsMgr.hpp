@@ -31,6 +31,7 @@ public: // static members
 
 
 	using ReceiptListType = std::vector<Receipt>;
+	using LogEntriesKRefType = typename Receipt::LogEntriesKRefType;
 
 
 public:
@@ -71,9 +72,34 @@ public:
 	}
 
 
+	ReceiptsMgr(ReceiptsMgr&& other) :
+		m_receipts(std::move(other.m_receipts)),
+		m_rootHashBytes(std::move(other.m_rootHashBytes))
+	{}
+
+
 	const Internal::Obj::Bytes& GetRootHashBytes() const
 	{
 		return m_rootHashBytes;
+	}
+
+
+	template<typename _TopicsIt>
+	std::vector<LogEntriesKRefType> SearchEvents(
+		const ContractAddr& addr,
+		_TopicsIt topicsBegin,
+		_TopicsIt topicsEnd
+	) const
+	{
+		std::vector<LogEntriesKRefType> res;
+
+		for (const auto& receipt : m_receipts)
+		{
+			auto logEntries = receipt.SearchEvents(addr, topicsBegin, topicsEnd);
+			res.insert(res.end(), logEntries.begin(), logEntries.end());
+		}
+
+		return res;
 	}
 
 
