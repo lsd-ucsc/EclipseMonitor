@@ -58,40 +58,66 @@ GTEST_TEST(TestEthEventManager, TestSyncMsg)
 	};
 	ASSERT_EQ(eventSignatureTopic, eventSignatureTopicExp);
 	// sessionID = 0x52fdfc072182654f163f5f0f9a621d72
-	// const EventTopic sessionID = {
-	// 	0X52U, 0XFDU, 0XFCU, 0X07U, 0X21U, 0X82U, 0X65U, 0X4FU,
-	// 	0X16U, 0X3FU, 0X5FU, 0X0FU, 0X9AU, 0X62U, 0X1DU, 0X72U,
-	// 	0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U,
-	// 	0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U,
-	// };
+	const EventTopic sessionID = {
+		0X52U, 0XFDU, 0XFCU, 0X07U, 0X21U, 0X82U, 0X65U, 0X4FU,
+		0X16U, 0X3FU, 0X5FU, 0X0FU, 0X9AU, 0X62U, 0X1DU, 0X72U,
+		0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U,
+		0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U,
+	};
 	// // nonce = 0x9566c74d10037c4d7bbb0407d1e2c64981855ad8681d0d86d1e91e00167939cb
-	// const EventTopic nonce = {
-	// 	0X95U, 0X66U, 0XC7U, 0X4DU, 0X10U, 0X03U, 0X7CU, 0X4DU,
-	// 	0X7BU, 0XBBU, 0X04U, 0X07U, 0XD1U, 0XE2U, 0XC6U, 0X49U,
-	// 	0X81U, 0X85U, 0X5AU, 0XD8U, 0X68U, 0X1DU, 0X0DU, 0X86U,
-	// 	0XD1U, 0XE9U, 0X1EU, 0X00U, 0X16U, 0X79U, 0X39U, 0XCBU,
-	// };
+	const EventTopic nonce = {
+		0X95U, 0X66U, 0XC7U, 0X4DU, 0X10U, 0X03U, 0X7CU, 0X4DU,
+		0X7BU, 0XBBU, 0X04U, 0X07U, 0XD1U, 0XE2U, 0XC6U, 0X49U,
+		0X81U, 0X85U, 0X5AU, 0XD8U, 0X68U, 0X1DU, 0X0DU, 0X86U,
+		0XD1U, 0XE9U, 0X1EU, 0X00U, 0X16U, 0X79U, 0X39U, 0XCBU,
+	};
 
 	bool isEventFound = false;
-	EventCallbackId eventCallbackIdInCB = 0;
+	EventCallbackId eventCallbackIdRet = 0;
 	EventDescription eventDesc(
 		decentSyncV1Addr,
-		std::vector<EventTopic>({ eventSignatureTopic, }), //{  nonce, sessionID, }
+		std::vector<EventTopic>({ eventSignatureTopic, }), //{ sessionID, nonce,  }
 		[&](
 			const HeaderMgr&,
-			const ReceiptLogEntry&,
+			const ReceiptLogEntry& logEntry,
 			EventCallbackId eventCallbackId
 		) -> void
 		{
-			eventCallbackIdInCB = eventCallbackId;
+			std::vector<uint8_t> sessIDandNonce;
+			sessIDandNonce.reserve(sessionID.size() + nonce.size());
+			sessIDandNonce.insert(
+				sessIDandNonce.end(), sessionID.begin(), sessionID.end()
+			);
+			sessIDandNonce.insert(
+				sessIDandNonce.end(), nonce.begin(), nonce.end()
+			);
+
+			ASSERT_EQ(logEntry.m_topics.size(), 1);
+			EXPECT_EQ(logEntry.m_topics[0], eventSignatureTopic);
+			EXPECT_EQ(logEntry.m_logData, sessIDandNonce);
+			EXPECT_EQ(eventCallbackIdRet, eventCallbackId);
 			isEventFound = true;
+
+			// std::string hex = "eventSignatureTopic: ";
+			// SimpleObjects::Internal::BytesToHEX<true, char>(
+			// 	std::back_inserter(hex),
+			// 	logEntry.m_topics[0].begin(),
+			// 	logEntry.m_topics[0].end()
+			// );
+			// hex += ", LogData: ";
+			// SimpleObjects::Internal::BytesToHEX<true, char>(
+			// 	std::back_inserter(hex),
+			// 	logEntry.m_logData.begin(),
+			// 	logEntry.m_logData.end()
+			// );
+			// std::cout << hex << std::endl;
 		}
 	);
 
 	ReceiptsMgr receiptsMgr(receiptsB8569169.AsList());
 
 	EventManager eventMgr;
-	auto eventCallbackIdLit = eventMgr.Listen(std::move(eventDesc));
+	eventCallbackIdRet = eventMgr.Listen(std::move(eventDesc));
 
 	auto receiptsMgrGetter =
 		[&](_BlockNum) -> ReceiptsMgr
@@ -105,5 +131,4 @@ GTEST_TEST(TestEthEventManager, TestSyncMsg)
 	);
 
 	EXPECT_TRUE(isEventFound);
-	EXPECT_EQ(eventCallbackIdLit, eventCallbackIdInCB);
 }

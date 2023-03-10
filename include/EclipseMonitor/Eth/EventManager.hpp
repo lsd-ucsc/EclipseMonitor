@@ -80,6 +80,11 @@ public:
 	{
 		std::vector<CallbackPlan> callbackPlans;
 
+		// !!NOTE!!: Must make sure the receiptsMgr is still alive when we make
+		// callbacks, since the callback plan has references to the
+		// data owned by the receiptsMgr.
+		std::unique_ptr<ReceiptsMgr> receiptsMgr;
+
 		{
 			std::lock_guard<std::mutex> lock(m_eventDescMapMutex);
 
@@ -100,9 +105,12 @@ public:
 			// we must verify the receipt root first, because we also want to
 			// ensure if the event is not found in the receipt, it is really
 			// not there.
-			ReceiptsMgr receiptsMgr = receiptsMgrGetter(headerMgr.GetNumber());
+			receiptsMgr =
+				Internal::Obj::Internal::make_unique<ReceiptsMgr>(
+					receiptsMgrGetter(headerMgr.GetNumber())
+				);
 			if (
-				receiptsMgr.GetRootHashBytes() !=
+				receiptsMgr->GetRootHashBytes() !=
 				headerMgr.GetRawHeader().get_ReceiptsRoot()
 			)
 			{
@@ -112,7 +120,7 @@ public:
 
 			// search through the receipt managers
 			callbackPlans = GenCallbackPlan_Locked(
-				receiptsMgr,
+				*receiptsMgr,
 				bloomedEvents
 			);
 		}
