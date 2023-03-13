@@ -57,6 +57,12 @@ struct TimeTypeTrait : PrimitiveTypeTrait<uint64_t>
 struct DiffTypeTrait : PrimitiveTypeTrait<uint64_t>
 {}; // struct DiffTypeTrait
 
+using BlockNumber = typename BlkNumTypeTrait::value_type;
+
+using Timestamp = typename TimeTypeTrait::value_type;
+
+using Difficulty = typename DiffTypeTrait::value_type;
+
 
 
 using ContractAddr = std::array<uint8_t, 20>;

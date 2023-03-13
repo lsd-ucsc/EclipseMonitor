@@ -28,9 +28,6 @@ public: // static member
 
 	using RawHeaderType = Internal::Rlp::EthHeader;
 	using RawHeaderParser = Internal::Rlp::EthHeaderParser;
-	using BlkNumType = typename BlkNumTypeTrait::value_type;
-	using TimeType = typename TimeTypeTrait::value_type;
-	using DiffType = typename DiffTypeTrait::value_type;
 
 	using BytesObjType = Internal::Rlp::BytesObjType;
 
@@ -78,19 +75,19 @@ public:
 	~HeaderMgr() = default;
 	// LCOV_EXCL_STOP
 
-	void SetNumber(const BlkNumType& blkNum)
+	void SetNumber(const BlockNumber& blkNum)
 	{
 		m_rawHeader.get_Number() = BlkNumTypeTrait::ToBytes(blkNum);
 		m_blkNum = blkNum;
 	}
 
-	void SetTime(const TimeType& time)
+	void SetTime(const Timestamp& time)
 	{
 		m_rawHeader.get_Timestamp() = TimeTypeTrait::ToBytes(time);
 		m_time = time;
 	}
 
-	void SetDiff(const DiffType& diff)
+	void SetDiff(const Difficulty& diff)
 	{
 		m_rawHeader.get_Difficulty() = DiffTypeTrait::ToBytes(diff);
 		m_diff = diff;
@@ -122,17 +119,17 @@ public:
 		return m_hashObj;
 	}
 
-	const BlkNumType& GetNumber() const
+	const BlockNumber& GetNumber() const
 	{
 		return m_blkNum;
 	}
 
-	const TimeType& GetTime() const
+	const Timestamp& GetTime() const
 	{
 		return m_time;
 	}
 
-	const DiffType& GetDiff() const
+	const Difficulty& GetDiff() const
 	{
 		return m_diff;
 	}
@@ -154,9 +151,9 @@ private:
 	BloomFilter m_bloomFilter;
 	std::array<uint8_t, 32> m_hash;
 	Internal::Obj::Bytes m_hashObj;
-	BlkNumType m_blkNum;
-	TimeType m_time;
-	DiffType m_diff;
+	BlockNumber m_blkNum;
+	Timestamp m_time;
+	Difficulty m_diff;
 	bool m_hasUncle;
 }; // class HeaderMgr
 

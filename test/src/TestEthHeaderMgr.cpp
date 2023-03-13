@@ -63,15 +63,15 @@ GTEST_TEST(TestEthHeaderMgr, Header_0)
 	// Block number
 	EXPECT_EQ(
 		header.GetNumber(),
-		typename HeaderMgr::BlkNumType(0));
+		BlockNumber(0));
 
 	// Timestamp
 	EXPECT_EQ(
 		header.GetTime(),
-		typename HeaderMgr::TimeType(0));
+		Timestamp(0));
 
 	// Difficulty
 	EXPECT_EQ(
 		header.GetDiff(),
-		typename HeaderMgr::DiffType(17179869184ULL));
+		Difficulty(17179869184ULL));
 }

@@ -65,8 +65,6 @@ public: // static members:
 	using Self = PoWDiffChecker;
 	using Base = DiffCheckerBase;
 
-	using DiffType = typename DiffTypeTrait::value_type;
-
 public:
 	PoWDiffChecker(
 		const MonitorConfig& mConf,
@@ -125,7 +123,7 @@ public:
 
 private:
 	uint8_t m_minDiffPercent;
-	DiffType m_minDiff;
+	Difficulty m_minDiff;
 	uint64_t m_maxWaitTime;
 
 	std::unique_ptr<DAABase> m_diffEstimator;
@@ -138,8 +136,6 @@ class PoSDiffChecker : public DiffCheckerBase
 public: // static members:
 	using Self = PoSDiffChecker;
 	using Base = DiffCheckerBase;
-
-	using DiffType = typename DiffTypeTrait::value_type;
 
 public:
 	PoSDiffChecker(
@@ -187,8 +183,6 @@ class GenericDiffCheckerImpl : public DiffCheckerBase
 public: // static members:
 	using Self = GenericDiffCheckerImpl<_NetConfig>;
 	using Base = DiffCheckerBase;
-
-	using DiffType = typename DiffTypeTrait::value_type;
 
 public:
 	GenericDiffCheckerImpl(

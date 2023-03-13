@@ -101,7 +101,7 @@ struct MainnetConfigDetails
 	// numbers are generally retrieved from:
 	// https://github.com/ethereum/go-ethereum/blob/5ccc99b258461457955fc523839fd373b33186af/params/config.go#L59
 
-	using BlkNumType = typename BlkNumTypeTrait::value_type;
+	using BlkNumType = BlockNumber;
 
 	static const BlkNumType* ParisBlkNum()
 	{
@@ -159,7 +159,7 @@ struct GoerliConfigDetails
 	// numbers are generally retrieved from:
 	// https://github.com/ethereum/go-ethereum/blob/5ccc99b258461457955fc523839fd373b33186af/params/config.go#L179
 
-	using BlkNumType = typename BlkNumTypeTrait::value_type;
+	using BlkNumType = BlockNumber;
 
 	static const BlkNumType* ParisBlkNum()
 	{

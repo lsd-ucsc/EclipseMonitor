@@ -24,9 +24,9 @@ class DAABase
 {
 public: // static members:
 
-	using BlkNumType = typename BlkNumTypeTrait::value_type;
-	using TimeType   = typename TimeTypeTrait::value_type;
-	using DiffType   = typename DiffTypeTrait::value_type;
+	using BlkNumType = BlockNumber;
+	using TimeType   = Timestamp;
+	using DiffType   = Difficulty;
 
 public:
 

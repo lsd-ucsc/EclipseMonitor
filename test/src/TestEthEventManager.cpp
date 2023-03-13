@@ -30,8 +30,6 @@ GTEST_TEST(TestEthEventManager, CountTestFile)
 
 GTEST_TEST(TestEthEventManager, TestDecentSyncMsgV1)
 {
-	using _BlockNum = typename HeaderMgr::BlkNumType;
-
 	const auto headerB8569169 =
 		BlockData::ReadBinary(
 			BlockData::GetRlpFilePath("testnet_b_8569169.header")
@@ -120,7 +118,7 @@ GTEST_TEST(TestEthEventManager, TestDecentSyncMsgV1)
 	eventCallbackIdRet = eventMgr.Listen(std::move(eventDesc));
 
 	auto receiptsMgrGetter =
-		[&](_BlockNum) -> ReceiptsMgr
+		[&](BlockNumber) -> ReceiptsMgr
 		{
 			return std::move(receiptsMgr);
 		};
@@ -136,8 +134,6 @@ GTEST_TEST(TestEthEventManager, TestDecentSyncMsgV1)
 
 GTEST_TEST(TestEthEventManager, TestDecentSyncMsgV2)
 {
-	using _BlockNum = typename HeaderMgr::BlkNumType;
-
 	const auto headerB8628615 =
 		BlockData::ReadBinary(
 			BlockData::GetRlpFilePath("testnet_b_8628615.header")
@@ -204,7 +200,7 @@ GTEST_TEST(TestEthEventManager, TestDecentSyncMsgV2)
 	eventCallbackIdRet = eventMgr.Listen(std::move(eventDesc));
 
 	auto receiptsMgrGetter =
-		[&](_BlockNum) -> ReceiptsMgr
+		[&](BlockNumber) -> ReceiptsMgr
 		{
 			return std::move(receiptsMgr);
 		};

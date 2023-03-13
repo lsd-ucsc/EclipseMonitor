@@ -29,19 +29,15 @@ namespace
 
 struct TestBlkHeader
 {
-	using BlkNumType = typename BlkNumTypeTrait::value_type;
-	using TimeType   = typename TimeTypeTrait::value_type;
-	using DiffType   = typename DiffTypeTrait::value_type;
-
-	BlkNumType m_blkNum;
-	TimeType   m_time;
-	DiffType   m_diff;
-	bool       m_hasUncle;
+	BlockNumber m_blkNum;
+	Timestamp   m_time;
+	Difficulty  m_diff;
+	bool        m_hasUncle;
 
 	TestBlkHeader(
-		const BlkNumType& blkNum,
-		const TimeType&   time,
-		const DiffType    diff,
+		const BlockNumber& blkNum,
+		const Timestamp&   time,
+		const Difficulty    diff,
 		bool              hasUncle
 	) :
 		m_blkNum(blkNum),

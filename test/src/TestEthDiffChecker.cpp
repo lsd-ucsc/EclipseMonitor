@@ -46,8 +46,8 @@ GTEST_TEST(TestEthDiffChecker, CountTestFile)
 
 
 static std::vector<uint8_t> BuildHeader(
-	typename BlkNumTypeTrait::value_type blkNum,
-	typename DiffTypeTrait::value_type diffVal
+	BlockNumber blkNum,
+	Difficulty diffVal
 )
 {
 	auto diffBytes = DiffTypeTrait::ToBytes(diffVal);
@@ -89,7 +89,7 @@ GTEST_TEST(TestEthDiffChecker, TestHistBlocks)
 		mConf,
 		std::move(fixedDiffEstimator)
 	);
-	typename DiffTypeTrait::value_type diffMedian = 0;
+	Difficulty diffMedian = 0;
 	std::unique_ptr<CheckpointMgr> chkptMgr;
 	chkptMgr = SimpleObjects::Internal::make_unique<CheckpointMgr>(
 		mConf,

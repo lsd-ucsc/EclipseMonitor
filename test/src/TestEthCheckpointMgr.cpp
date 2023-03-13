@@ -31,10 +31,10 @@ GTEST_TEST(TestEthCheckpointMgr, Normal_BootstrapI_Add)
 	static constexpr size_t testingNumChkpt = 5;
 
 	// Expected results
-	std::vector<typename DiffTypeTrait::value_type> expDiffMedian;
+	std::vector<Difficulty> expDiffMedian;
 	for (size_t i = 0; i < testingNumChkpt; ++i)
 	{
-		std::vector<typename DiffTypeTrait::value_type> diffs;
+		std::vector<Difficulty> diffs;
 		for (size_t j = 0; j < testingChkptSize; ++j)
 		{
 			HeaderMgr header(
@@ -119,10 +119,10 @@ GTEST_TEST(TestEthCheckpointMgr, Normal_Runtime_Add)
 	static constexpr size_t testingChkptEnd = 7;
 
 	// Expected results
-	std::vector<typename DiffTypeTrait::value_type> expDiffMedian;
+	std::vector<Difficulty> expDiffMedian;
 	for (size_t i = testingChkptStart; i < testingChkptEnd; ++i)
 	{
-		std::vector<typename DiffTypeTrait::value_type> diffs;
+		std::vector<Difficulty> diffs;
 		for (size_t j = 0; j < testingChkptSize; ++j)
 		{
 			HeaderMgr header(
