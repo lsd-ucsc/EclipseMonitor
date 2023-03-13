@@ -28,7 +28,7 @@ GTEST_TEST(TestEthEventManager, CountTestFile)
 }
 
 
-GTEST_TEST(TestEthEventManager, TestSyncMsg)
+GTEST_TEST(TestEthEventManager, TestDecentSyncMsgV1)
 {
 	using _BlockNum = typename HeaderMgr::BlkNumType;
 
@@ -115,6 +115,90 @@ GTEST_TEST(TestEthEventManager, TestSyncMsg)
 	);
 
 	ReceiptsMgr receiptsMgr(receiptsB8569169.AsList());
+
+	EventManager eventMgr;
+	eventCallbackIdRet = eventMgr.Listen(std::move(eventDesc));
+
+	auto receiptsMgrGetter =
+		[&](_BlockNum) -> ReceiptsMgr
+		{
+			return std::move(receiptsMgr);
+		};
+
+	eventMgr.CheckEvents(
+		headerMgr,
+		receiptsMgrGetter
+	);
+
+	EXPECT_TRUE(isEventFound);
+}
+
+
+GTEST_TEST(TestEthEventManager, TestDecentSyncMsgV2)
+{
+	using _BlockNum = typename HeaderMgr::BlkNumType;
+
+	const auto headerB8628615 =
+		BlockData::ReadBinary(
+			BlockData::GetRlpFilePath("testnet_b_8628615.header")
+		);
+	const auto receiptsB8628615 =
+		BlockData::ReadRlp("testnet_b_8628615.receipts");
+
+	const HeaderMgr headerMgr(headerB8628615, 0);
+
+	// DecentSyncMsgV2 address = 0x74Be867FBD89bC3507F145b36ba76cd0B1bF4f1A
+	const ContractAddr decentSyncV2Addr = {
+		0X74U, 0XBEU, 0X86U, 0X7FU, 0XBDU, 0X89U, 0XBCU, 0X35U,
+		0X07U, 0XF1U, 0X45U, 0XB3U, 0X6BU, 0XA7U, 0X6CU, 0XD0U,
+		0XB1U, 0XBFU, 0X4FU, 0X1AU,
+	};
+	const std::string eventSignature = "SyncMsg(bytes16,bytes32)";
+	const EventTopic eventSignatureTopic = Keccak256(eventSignature);
+	// expected signature topic is c237b918200c043ce93bb9d4b7674b0a476e905ab54e0c20d0287547305c3a98
+	const EventTopic eventSignatureTopicExp = {
+		0XC2U, 0X37U, 0XB9U, 0X18U, 0X20U, 0X0CU, 0X04U, 0X3CU,
+		0XE9U, 0X3BU, 0XB9U, 0XD4U, 0XB7U, 0X67U, 0X4BU, 0X0AU,
+		0X47U, 0X6EU, 0X90U, 0X5AU, 0XB5U, 0X4EU, 0X0CU, 0X20U,
+		0XD0U, 0X28U, 0X75U, 0X47U, 0X30U, 0X5CU, 0X3AU, 0X98U,
+	};
+	ASSERT_EQ(eventSignatureTopic, eventSignatureTopicExp);
+	// sessionID = 0x52fdfc072182654f163f5f0f9a621d72
+	const EventTopic sessionID = {
+		0X52U, 0XFDU, 0XFCU, 0X07U, 0X21U, 0X82U, 0X65U, 0X4FU,
+		0X16U, 0X3FU, 0X5FU, 0X0FU, 0X9AU, 0X62U, 0X1DU, 0X72U,
+		0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U,
+		0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U,
+	};
+	// // nonce = 0x9566c74d10037c4d7bbb0407d1e2c64981855ad8681d0d86d1e91e00167939cb
+	const EventTopic nonce = {
+		0X95U, 0X66U, 0XC7U, 0X4DU, 0X10U, 0X03U, 0X7CU, 0X4DU,
+		0X7BU, 0XBBU, 0X04U, 0X07U, 0XD1U, 0XE2U, 0XC6U, 0X49U,
+		0X81U, 0X85U, 0X5AU, 0XD8U, 0X68U, 0X1DU, 0X0DU, 0X86U,
+		0XD1U, 0XE9U, 0X1EU, 0X00U, 0X16U, 0X79U, 0X39U, 0XCBU,
+	};
+
+	bool isEventFound = false;
+	EventCallbackId eventCallbackIdRet = 0;
+	EventDescription eventDesc(
+		decentSyncV2Addr,
+		std::vector<EventTopic>({ eventSignatureTopic, sessionID, nonce, }),
+		[&](
+			const HeaderMgr&,
+			const ReceiptLogEntry& logEntry,
+			EventCallbackId eventCallbackId
+		) -> void
+		{
+			ASSERT_EQ(logEntry.m_topics.size(), 3);
+			EXPECT_EQ(logEntry.m_topics[0], eventSignatureTopic);
+			EXPECT_EQ(logEntry.m_topics[1], sessionID);
+			EXPECT_EQ(logEntry.m_topics[2], nonce);
+			EXPECT_EQ(eventCallbackIdRet, eventCallbackId);
+			isEventFound = true;
+		}
+	);
+
+	ReceiptsMgr receiptsMgr(receiptsB8628615.AsList());
 
 	EventManager eventMgr;
 	eventCallbackIdRet = eventMgr.Listen(std::move(eventDesc));
