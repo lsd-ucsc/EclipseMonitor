@@ -13,10 +13,10 @@
 
 #include "../Internal/SimpleObj.hpp"
 
+#include "DataTypes.hpp"
 #include "EventDescription.hpp"
 #include "Receipt.hpp"
 #include "ReceiptsMgr.hpp"
-#include "Types.hpp"
 
 
 namespace EclipseMonitor

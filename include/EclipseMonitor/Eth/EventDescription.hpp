@@ -12,10 +12,10 @@
 #include <functional>
 #include <vector>
 
+#include "DataTypes.hpp"
 #include "HeaderMgr.hpp"
 #include "Keccak256.hpp"
 #include "Receipt.hpp"
-#include "Types.hpp"
 
 
 namespace EclipseMonitor

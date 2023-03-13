@@ -12,7 +12,7 @@
 #include "../Exceptions.hpp"
 #include "../Internal/SimpleObj.hpp"
 #include "../Internal/SimpleRlp.hpp"
-#include "Types.hpp"
+#include "DataTypes.hpp"
 
 namespace EclipseMonitor
 {

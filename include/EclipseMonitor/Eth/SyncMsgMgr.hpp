@@ -10,8 +10,8 @@
 #include "../Internal/SimpleObj.hpp"
 #include "../SyncMsgMgrBase.hpp"
 
+#include "DataTypes.hpp"
 #include "HeaderMgr.hpp"
-#include "Types.hpp"
 
 namespace EclipseMonitor
 {
