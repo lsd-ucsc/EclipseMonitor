@@ -8,77 +8,173 @@
 #include <cstdint>
 
 #include <array>
+#include <atomic>
+#include <memory>
 
+#include "DataTypes.hpp"
+#include "Exceptions.hpp"
 #include "MonitorReport.hpp"
+#include "PlatformInterfaces.hpp"
 
 namespace EclipseMonitor
 {
 
+class SyncState
+{
+public:
+
+	SyncState(
+		TrustedTimestamp maxWaitTime,
+		const TimestamperBase& timestamper,
+		const RandomGeneratorBase& randGen
+	) :
+		m_maxWaitTime(maxWaitTime),
+		m_genTime(),
+		m_nonce(),
+		m_isSynced(false)
+	{
+		// generate a timestamp for this nonce
+		m_genTime = timestamper.NowInSec();
+		// generate a random nonce
+		randGen.GenerateRandomBytes(m_nonce.data(), m_nonce.size());
+	}
+
+	~SyncState() = default;
+
+	void SetSynced(TrustedTimestamp recvTime)
+	{
+		TrustedTimestamp deltaT = recvTime - m_genTime;
+		// ensure the sync msg is received within the max wait time
+		if (deltaT <= m_maxWaitTime)
+		{
+			m_isSynced.store(true);
+		}
+	}
+
+	bool IsSynced() const
+	{
+		return m_isSynced.load();
+	}
+
+	const SyncNonce& GetNonce() const
+	{
+		return m_nonce;
+	}
+
+private:
+
+	TrustedTimestamp m_maxWaitTime;
+	TrustedTimestamp m_genTime;
+	SyncNonce m_nonce;
+	std::atomic_bool m_isSynced;
+}; // class SyncState
+
 class SyncMsgMgrBase
 {
 public: // static members:
-	using NonceType = std::array<uint8_t, 32>;
-	using sesIdType = Internal::Obj::Bytes;
+
+#if __cplusplus < 202002L
+	using AtomicSyncStateType = std::shared_ptr<SyncState>;
+#else
+	using AtomicSyncStateType = std::atomic<std::shared_ptr<SyncState> >;
+#endif // __cplusplus < 202002L
 
 public:
+
 	/**
 	 * @brief Construct a new sync message manager object
 	 *
-	 * @param mId reference to the monitor ID
-	 * @param mConf Configuration of the monitor
-	 * @param time current timestamp, used to mark the time when the nonce
-	 *             is generated
+	 * @param mId    reference to the monitor ID
+	 * @param mConf  Configuration of the monitor
+	 * @param timestamper reference to the timestamper
+	 * @param randGen     reference to the random generator
 	 */
-	SyncMsgMgrBase(const MonitorId& mId, const MonitorConfig& mConf, uint64_t time) :
-		m_mId(mId),
-		m_mConf(mConf),
-		m_nonce(), // TODO - Haofan: generate random nonce
-		m_time(time)
+	SyncMsgMgrBase(
+		const MonitorId& mId,
+		const MonitorConfig& mConf,
+		const TimestamperBase& timestamper,
+		const RandomGeneratorBase& randGen
+	) :
+		m_maxWaitTime(mConf.get_syncMaxWaitTime().GetVal()),
+		m_sessId(GetSessIdFromVec(mId.get_sessionID().GetVal())),
+		m_lastSyncState(BuildSyncState(timestamper, randGen))
 	{}
 
 	// LCOV_EXCL_START
 	virtual ~SyncMsgMgrBase() = default;
 	// LCOV_EXCL_STOP
 
-	const sesIdType& GetSessionId() const
+	std::shared_ptr<SyncState> GetLastSyncState()
 	{
-		return m_mId.get_sessionID();
+		return AtomicGetSyncState();
 	}
 
-	const NonceType& GetNonce() const
+	const SessionID& GetSessionID() const
 	{
-		return m_nonce;
+		return m_sessId;
 	}
 
-	uint64_t GetTimestamp() const
-	{
-		return m_time;
-	}
+	virtual std::shared_ptr<SyncState> NewSyncState(
+		const TimestamperBase& timestamper,
+		const RandomGeneratorBase& randGen
+	) = 0;
 
 protected:
 
-	/**
-	 * @brief Validate the message published on chain
-	 *
-	 * @param inNonce   The nonce found in the block transaction
-	 * @param recvTime  The timestamp when the block is received
-	 * @return true if the message is validate, otherwise, false, and a re-sync
-	 *         process is needed
-	 */
-	bool ValidateMsg(const NonceType& inNonce, uint64_t recvTime) const
+	std::shared_ptr<SyncState> BuildSyncState(
+		const TimestamperBase& timestamper,
+		const RandomGeneratorBase& randGen
+	)
 	{
-		return (
-			(inNonce == m_nonce) && // Nonces are match
-			(recvTime >= m_time) && // recv time is after generate time
-			((recvTime - m_time) <= m_mConf.get_syncMaxWaitTime().GetVal()) // time elapsed within limit
+		return std::make_shared<SyncState>(
+			m_maxWaitTime,
+			timestamper,
+			randGen
 		);
 	}
 
+	std::shared_ptr<SyncState> AtomicGetSyncState()
+	{
+#if __cplusplus < 202002L
+		return std::atomic_load(&m_lastSyncState);
+#else
+		return m_lastSyncState.load();
+#endif // __cplusplus < 202002L
+	}
+
+	void AtomicSetSyncState(std::shared_ptr<SyncState> syncState)
+	{
+#if __cplusplus < 202002L
+		std::atomic_store(&m_lastSyncState, syncState);
+#else
+		m_lastSyncState.store(syncState);
+#endif // __cplusplus < 202002L
+	}
+
+private: // helper functions:
+
+	static SessionID GetSessIdFromVec(
+		const std::vector<uint8_t>& sessIdVec
+	)
+	{
+		if (sessIdVec.size() != std::tuple_size<SessionID>::value)
+		{
+			throw Exception("Invalid session ID size");
+		}
+		SessionID sessId;
+		std::copy(
+			sessIdVec.begin(),
+			sessIdVec.end(),
+			sessId.begin()
+		);
+		return sessId;
+	}
+
 private:
-	const MonitorId&        m_mId;   // <- reference to the monitor ID, containing the session ID
-	const MonitorConfig&    m_mConf; // <- reference to configuration of the monitor, containing the m_syncMaxWaitTime
-	NonceType               m_nonce; // <- 256-bit nonce
-	uint64_t                m_time;  // <- The timestamp when the nonce is generated
+
+	const TrustedTimestamp m_maxWaitTime;
+	const SessionID m_sessId;
+	AtomicSyncStateType m_lastSyncState;
 }; // class SyncMsgMgrBase
 
 } // namespace EclipseMonitor

@@ -72,6 +72,24 @@ public:
 		return id;
 	}
 
+	void Cancel(EventCallbackId id)
+	{
+		std::lock_guard<std::mutex> lock(m_eventDescMapMutex);
+
+		auto it = m_eventDescMap.find(id);
+		if (it != m_eventDescMap.end())
+		{
+			m_eventDescMap.erase(it);
+		}
+	}
+
+	size_t GetNumOfListeners() const
+	{
+		std::lock_guard<std::mutex> lock(m_eventDescMapMutex);
+
+		return m_eventDescMap.size();
+	}
+
 	template<typename _ReceiptsMgrGetter>
 	void CheckEvents(
 		const HeaderMgr& headerMgr,

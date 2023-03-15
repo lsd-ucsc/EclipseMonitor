@@ -11,8 +11,9 @@
 #include <string>
 #include <vector>
 
+#include "DataTypes.hpp"
 #include "MonitorReport.hpp"
-#include "TimestamperBase.hpp"
+#include "PlatformInterfaces.hpp"
 
 namespace EclipseMonitor
 {
@@ -31,20 +32,30 @@ class EclipseMonitorBase
 public: // Static members:
 
 	using TimestamperType = std::unique_ptr<TimestamperBase>;
+	using RandomGeneratorType = std::unique_ptr<RandomGeneratorBase>;
 
 public:
 
 	EclipseMonitorBase(
 		const MonitorConfig& conf,
 		const std::string& chainName,
-		TimestamperType timestamper
+		TimestamperType timestamper,
+		RandomGeneratorType randGen
 	) :
 		m_mConfig(conf),
+		m_mId(),
 		m_mSecState(),
 		m_phase(Phases::BootstrapI),
-		m_timestamper(std::move(timestamper))
+		m_timestamper(std::move(timestamper)),
+		m_randGen(std::move(randGen))
 	{
 		m_mSecState.get_chainName() = chainName;
+
+		// generate a random session ID
+		SessionID tmpId;
+		m_randGen->GenerateRandomBytes(tmpId.data(), tmpId.size());
+		std::vector<uint8_t> tmpIdVec(tmpId.begin(), tmpId.end());
+		m_mId.get_sessionID() = std::move(tmpIdVec);
 	}
 
 	virtual ~EclipseMonitorBase() = default;
@@ -111,10 +122,12 @@ protected:
 
 private:
 
-	MonitorConfig      m_mConfig;
-	MonitorSecState    m_mSecState;
-	Phases             m_phase;
-	TimestamperType    m_timestamper;
+	MonitorConfig       m_mConfig;
+	MonitorId           m_mId;
+	MonitorSecState     m_mSecState;
+	Phases              m_phase;
+	TimestamperType     m_timestamper;
+	RandomGeneratorType m_randGen;
 
 }; // class EclipseMonitorBase
 

@@ -5,10 +5,15 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
+
+#include "DataTypes.hpp"
+
 
 namespace EclipseMonitor
 {
+
 
 class TimestamperBase
 {
@@ -20,8 +25,25 @@ public:
 	virtual ~TimestamperBase() = default;
 	// LCOV_EXCL_STOP
 
-	virtual uint64_t NowInSec() const = 0;
+	virtual TrustedTimestamp NowInSec() const = 0;
 
 }; // class TimestamperBase
+
+
+
+class RandomGeneratorBase
+{
+public:
+
+	RandomGeneratorBase() = default;
+
+	// LCOV_EXCL_START
+	virtual ~RandomGeneratorBase() = default;
+	// LCOV_EXCL_STOP
+
+	virtual void GenerateRandomBytes(uint8_t* buf, size_t len) const = 0;
+
+}; // class RandomGeneratorBase
+
 
 } // namespace EclipseMonitor

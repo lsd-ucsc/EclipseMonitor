@@ -10,6 +10,7 @@
 
 #include <array>
 
+#include "../DataTypes.hpp"
 #include "../Internal/SimpleRlp.hpp"
 
 namespace EclipseMonitor

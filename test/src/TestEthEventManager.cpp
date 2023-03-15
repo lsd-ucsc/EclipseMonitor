@@ -28,6 +28,40 @@ GTEST_TEST(TestEthEventManager, CountTestFile)
 }
 
 
+GTEST_TEST(TestEthEventManager, ListenCancelAndSize)
+{
+	// DecentSyncMsgV1 address = 0xe22ee57780ba71e1edd18e066c5b8a2a93bdc3ae
+	const ContractAddr decentSyncV1Addr = {
+		0XE2U, 0X2EU, 0XE5U, 0X77U, 0X80U, 0XBAU, 0X71U, 0XE1U,
+		0XEDU, 0XD1U, 0X8EU, 0X06U, 0X6CU, 0X5BU, 0X8AU, 0X2AU,
+		0X93U, 0XBDU, 0XC3U, 0XAEU,
+	};
+
+	EventDescription eventDesc(
+		decentSyncV1Addr,
+		std::vector<EventTopic>(),
+		[&](
+			const HeaderMgr&,
+			const ReceiptLogEntry&,
+			EventCallbackId
+		) -> void
+		{}
+	);
+
+	EventManager eventMgr;
+	EXPECT_EQ(eventMgr.GetNumOfListeners(), 0);
+
+	auto eventCallbackIdRet = eventMgr.Listen(std::move(eventDesc));
+	EXPECT_EQ(eventMgr.GetNumOfListeners(), 1);
+
+	eventMgr.Cancel(eventCallbackIdRet);
+	EXPECT_EQ(eventMgr.GetNumOfListeners(), 0);
+
+	eventMgr.Cancel(eventCallbackIdRet);
+	EXPECT_EQ(eventMgr.GetNumOfListeners(), 0);
+}
+
+
 GTEST_TEST(TestEthEventManager, TestDecentSyncMsgV1)
 {
 	const auto headerB8569169 =
@@ -62,7 +96,7 @@ GTEST_TEST(TestEthEventManager, TestDecentSyncMsgV1)
 		0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U,
 		0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U,
 	};
-	// // nonce = 0x9566c74d10037c4d7bbb0407d1e2c64981855ad8681d0d86d1e91e00167939cb
+	// nonce = 0x9566c74d10037c4d7bbb0407d1e2c64981855ad8681d0d86d1e91e00167939cb
 	const EventTopic nonce = {
 		0X95U, 0X66U, 0XC7U, 0X4DU, 0X10U, 0X03U, 0X7CU, 0X4DU,
 		0X7BU, 0XBBU, 0X04U, 0X07U, 0XD1U, 0XE2U, 0XC6U, 0X49U,
@@ -166,7 +200,7 @@ GTEST_TEST(TestEthEventManager, TestDecentSyncMsgV2)
 		0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U,
 		0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U, 0X00U,
 	};
-	// // nonce = 0x9566c74d10037c4d7bbb0407d1e2c64981855ad8681d0d86d1e91e00167939cb
+	// nonce = 0x9566c74d10037c4d7bbb0407d1e2c64981855ad8681d0d86d1e91e00167939cb
 	const EventTopic nonce = {
 		0X95U, 0X66U, 0XC7U, 0X4DU, 0X10U, 0X03U, 0X7CU, 0X4DU,
 		0X7BU, 0XBBU, 0X04U, 0X07U, 0XD1U, 0XE2U, 0XC6U, 0X49U,
