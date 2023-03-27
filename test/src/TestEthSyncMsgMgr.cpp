@@ -116,7 +116,7 @@ GTEST_TEST(TestEthSyncMsgMgr, SyncMsgEvent)
 		sessionID.data() + monitorId.get_sessionID().size(),
 		&(monitorId.get_sessionID()[0])
 	);
-	MonitorConfig monitorConfig = BuildDefaultMonitorConfig();
+	MonitorConfig monitorConfig = BuildEthereumMonitorConfig();
 
 
 	auto receiptsMgrGetter =
@@ -211,7 +211,7 @@ GTEST_TEST(TestEthSyncMsgMgr, NullEventMgr)
 		sessionID.data() + monitorId.get_sessionID().size(),
 		&(monitorId.get_sessionID()[0])
 	);
-	MonitorConfig monitorConfig = BuildDefaultMonitorConfig();
+	MonitorConfig monitorConfig = BuildEthereumMonitorConfig();
 
 	std::unique_ptr<TestTimestamper> timestamper(new TestTimestamper());
 	std::unique_ptr<TestRandomGenerator> randomGenerator(new TestRandomGenerator(nonce));

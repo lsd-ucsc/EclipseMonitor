@@ -38,7 +38,6 @@ public:
 
 	EclipseMonitorBase(
 		const MonitorConfig& conf,
-		const std::string& chainName,
 		TimestamperType timestamper,
 		RandomGeneratorType randGen
 	) :
@@ -49,8 +48,6 @@ public:
 		m_timestamper(std::move(timestamper)),
 		m_randGen(std::move(randGen))
 	{
-		m_mSecState.get_chainName() = chainName;
-
 		// generate a random session ID
 		SessionID tmpId;
 		m_randGen->GenerateRandomBytes(tmpId.data(), tmpId.size());
@@ -81,9 +78,24 @@ public:
 		return m_mConfig;
 	}
 
+	const MonitorId& GetMonitorId() const
+	{
+		return m_mId;
+	}
+
 	const MonitorSecState& GetMonitorSecState() const
 	{
 		return m_mSecState;
+	}
+
+	const TimestamperBase& GetTimestamper() const
+	{
+		return *m_timestamper;
+	}
+
+	const RandomGeneratorBase& GetRandomGenerator() const
+	{
+		return *m_randGen;
 	}
 
 	virtual void Update(const std::vector<uint8_t>& hdrBinary) = 0;
@@ -103,6 +115,11 @@ protected:
 	TimestamperBase& GetTimestamper()
 	{
 		return *m_timestamper;
+	}
+
+	RandomGeneratorBase& GetRandomGenerator()
+	{
+		return *m_randGen;
 	}
 
 	MonitorSecState& GetMonitorSecState()

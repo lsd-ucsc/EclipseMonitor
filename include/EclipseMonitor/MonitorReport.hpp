@@ -21,6 +21,11 @@
 namespace EclipseMonitor
 {
 
+inline constexpr uint32_t GetEclipseMonitorSVN()
+{
+	return (ECLIPSEMONITOR_SVN_UPPER << 16) | ECLIPSEMONITOR_SVN_LOWER;
+}
+
 namespace Internal
 {
 
@@ -34,6 +39,10 @@ using MonitorConfigTupleCore = std::tuple<
 	std::pair<
 		Obj::StrKey<SIMOBJ_KSTR("SVN")>,
 		Obj::UInt32
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("chainName")>,
+		Obj::String
 	>,
 	std::pair<
 		Obj::StrKey<SIMOBJ_KSTR("checkpointSize")>,
@@ -57,10 +66,6 @@ using MonitorSecStateTupleCore = std::tuple<
 	std::pair<
 		Obj::StrKey<SIMOBJ_KSTR("SVN")>,
 		Obj::UInt32
-	>,
-	std::pair<
-		Obj::StrKey<SIMOBJ_KSTR("chainName")>,
-		Obj::String
 	>,
 	std::pair<
 		Obj::StrKey<SIMOBJ_KSTR("genesisHash")>,
@@ -157,6 +162,22 @@ public:
 	_RetKRefType<SIMOBJ_KSTR("SVN")> get_SVN() const
 	{
 		return Base::template get<_StrKey<SIMOBJ_KSTR("SVN")> >();
+	}
+
+	/**
+	 * @brief The name of the blockchain to be monitored (e.g., "bitcoin",
+	 *        "ethereum", and so on)
+	 *        NOTE: only ethereum is supported for now
+	 *
+	 */
+	_RetRefType<SIMOBJ_KSTR("chainName")> get_chainName()
+	{
+		return Base::template get<_StrKey<SIMOBJ_KSTR("chainName")> >();
+	}
+
+	_RetKRefType<SIMOBJ_KSTR("chainName")> get_chainName() const
+	{
+		return Base::template get<_StrKey<SIMOBJ_KSTR("chainName")> >();
 	}
 
 	/**
@@ -262,22 +283,6 @@ public:
 	}
 
 	/**
-	 * @brief The name of the blockchain to be monitored (e.g., "bitcoin",
-	 *        "ethereum", and so on)
-	 *        NOTE: only ethereum is supported for now
-	 *
-	 */
-	_RetRefType<SIMOBJ_KSTR("chainName")> get_chainName()
-	{
-		return Base::template get<_StrKey<SIMOBJ_KSTR("chainName")> >();
-	}
-
-	_RetKRefType<SIMOBJ_KSTR("chainName")> get_chainName() const
-	{
-		return Base::template get<_StrKey<SIMOBJ_KSTR("chainName")> >();
-	}
-
-	/**
 	 * @brief The hash of the genesis block. This will be set by the monitor
 	 *        during the bootstrapI phase
 	 *
@@ -324,11 +329,11 @@ public:
 }; // class MonitorSecState
 
 
-inline MonitorConfig BuildDefaultMonitorConfig()
+inline MonitorConfig BuildEthereumMonitorConfig()
 {
 	MonitorConfig conf;
-	conf.get_SVN()             =
-		(ECLIPSEMONITOR_SVN_UPPER << 16) | ECLIPSEMONITOR_SVN_LOWER;
+	conf.get_SVN()             = GetEclipseMonitorSVN();
+	conf.get_chainName()       = "Ethereum";
 	conf.get_checkpointSize()  = 430;
 	conf.get_minDiffPercent()  = 103; // which is around 80%
 	conf.get_maxWaitTime()     = 400;

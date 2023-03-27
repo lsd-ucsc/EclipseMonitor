@@ -46,7 +46,9 @@ GTEST_TEST(TestMonitorReport, MonitorId)
 GTEST_TEST(TestMonitorReport, MonitorConfig)
 {
 	{
-		MonitorConfig mConf = BuildDefaultMonitorConfig();
+		MonitorConfig mConf = BuildEthereumMonitorConfig();
+		EXPECT_EQ(mConf.get_SVN().GetVal(),             GetEclipseMonitorSVN());
+		EXPECT_EQ(mConf.get_chainName().GetVal(),       "Ethereum");
 		EXPECT_EQ(mConf.get_checkpointSize().GetVal(),  430);
 		EXPECT_EQ(mConf.get_minDiffPercent().GetVal(),  103);
 		EXPECT_EQ(mConf.get_maxWaitTime().GetVal(),     400);
@@ -63,14 +65,16 @@ GTEST_TEST(TestMonitorReport, MonitorSecState)
 		Eth::HeaderMgr header01 = Eth::HeaderMgr(header01Bin, 0);
 
 		MonitorSecState mSecState;
-		mSecState.get_chainName()      = "ethereum";
+		mSecState.get_SVN()            = GetEclipseMonitorSVN();
 		mSecState.get_genesisHash()    =
 			header00.GetRawHeader().get_ParentHash();
 		mSecState.get_checkpointIter() = 12345;
 		mSecState.get_checkpointHash() =
 			header01.GetRawHeader().get_ParentHash();
 
-		EXPECT_EQ(mSecState.get_chainName(), "ethereum");
+		EXPECT_EQ(
+			mSecState.get_SVN().GetVal(),
+			GetEclipseMonitorSVN());
 		EXPECT_EQ(
 			mSecState.get_genesisHash(),
 			header00.GetRawHeader().get_ParentHash());
