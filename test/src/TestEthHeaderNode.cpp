@@ -16,6 +16,7 @@ namespace EclipseMonitor_Test
 
 using namespace EclipseMonitor_Test;
 
+using namespace EclipseMonitor;
 using namespace EclipseMonitor::Eth;
 
 GTEST_TEST(TestEthHeaderNode, CountTestFile)
@@ -28,10 +29,16 @@ GTEST_TEST(TestEthHeaderNode, AddChildAndFindDesc)
 {
 	static constexpr size_t testingEnd = 50;
 
+	// testing sync state
+	std::shared_ptr<SyncState> devSyncState =
+		std::make_shared<SyncState>(SyncState::GetDevSyncState());
+
 	std::unique_ptr<HeaderNode> root =
 		SimpleObjects::Internal::make_unique<HeaderNode>(
 			SimpleObjects::Internal::make_unique<HeaderMgr>(
-				GetEthHistHdr_0_100()[0], 0)
+				GetEthHistHdr_0_100()[0], 0
+			),
+			devSyncState
 		);
 
 	// Add children
@@ -41,7 +48,7 @@ GTEST_TEST(TestEthHeaderNode, AddChildAndFindDesc)
 		EXPECT_EQ(currPtr->GetNumOfChildren(), 0);
 		auto header = SimpleObjects::Internal::make_unique<HeaderMgr>(
 			GetEthHistHdr_0_100()[i], 0);
-		auto nextPtr = currPtr->AddChild(std::move(header));
+		auto nextPtr = currPtr->AddChild(std::move(header), devSyncState);
 		EXPECT_EQ(currPtr->GetNumOfChildren(), 1);
 		EXPECT_EQ(nextPtr->GetNumOfChildren(), 0);
 

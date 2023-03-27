@@ -10,6 +10,7 @@
 
 #include "../Exceptions.hpp"
 #include "../Internal/SimpleObj.hpp"
+#include "../SyncMsgMgrBase.hpp"
 
 #include "HeaderMgr.hpp"
 
@@ -42,26 +43,33 @@ public: // static members:
 	};
 
 public:
-	HeaderNode(std::unique_ptr<HeaderMgr> header) :
+	HeaderNode(
+		std::unique_ptr<HeaderMgr> header,
+		std::shared_ptr<SyncState> syncState
+	) :
 		m_children(),
 		m_parent(nullptr),
 		m_header(std::move(header)),
-		m_isLive(false)
+		m_syncState(syncState)
 	{}
 
 	// LCOV_EXCL_START
 	~HeaderNode() = default;
 	// LCOV_EXCL_STOP
 
-	HeaderNode* AddChild(std::unique_ptr<HeaderMgr> childHeader)
+	HeaderNode* AddChild(
+		std::unique_ptr<HeaderMgr> childHeader,
+		std::shared_ptr<SyncState> syncState
+	)
 	{
 		auto child = Internal::Obj::Internal::make_unique<HeaderNode>(
-			std::move(childHeader));
+			std::move(childHeader), syncState
+		);
 		HeaderNode* childPtr = child.get();
 
 		// if parent is a live node (passed the sync phase),
 		// then so do its children
-		child->m_isLive = m_isLive;
+		//child->m_isLive = m_isLive;
 
 		// link child's parent
 		child->m_parent = this;
@@ -159,7 +167,7 @@ private:
 	std::vector<ChildInfo> m_children;
 	HeaderNode* m_parent;
 	std::unique_ptr<HeaderMgr> m_header;
-	bool m_isLive;
+	std::shared_ptr<SyncState> m_syncState;
 
 }; // class HeaderNode
 

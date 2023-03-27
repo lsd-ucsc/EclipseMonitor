@@ -13,7 +13,9 @@
 
 #include "CheckpointMgr.hpp"
 #include "DiffChecker.hpp"
+#include "EventManager.hpp"
 #include "HeaderMgr.hpp"
+#include "SyncMsgMgr.hpp"
 #include "Validator.hpp"
 
 namespace EclipseMonitor
@@ -37,21 +39,39 @@ public:
 
 	EclipseMonitor(
 		const MonitorConfig& conf,
-		const std::string& chainName,
 		TimestamperType timestamper,
+		RandomGeneratorType randGen,
 		OnHeaderConfCallback onHeaderValidated,
 		OnHeaderConfCallback onHeaderConfirmed,
 		std::unique_ptr<ValidatorBase> validator,
-		std::unique_ptr<DiffCheckerBase> diffChecker
+		std::unique_ptr<DiffCheckerBase> diffChecker,
+		const ContractAddr& syncContractAddr,
+		const EventTopic& syncEventSign,
 	) :
-		EclipseMonitorBase(conf, chainName, std::move(timestamper)),
+		EclipseMonitorBase(conf, std::move(timestamper), std::move(randGen)),
+
 		m_onHeaderValidated(onHeaderValidated),
 		m_onHeaderConfirmed(onHeaderConfirmed),
+
 		m_checkpoint(conf, [this](){
 			this->OnCheckpointComplete();
 		}),
 		m_validator(std::move(validator)),
-		m_diffChecker(std::move(diffChecker))
+		m_diffChecker(std::move(diffChecker)),
+
+		m_eventManager(std::make_shared<EventManager>()),
+		m_syncMsgMgr(
+			Base::GetMonitorId(),
+			Base::GetMonitorConfig(),
+			Base::GetTimestamper(),
+			Base::GetRandomGenerator(),
+			syncContractAddr,
+			syncEventSign,
+			m_eventManager
+		),
+
+		m_offlineNodes(),
+		m_activeNodes()
 	{}
 
 	virtual ~EclipseMonitor()
@@ -78,9 +98,11 @@ public:
 
 	virtual void EndBootstrapI() override
 	{
+		auto syncState = m_syncMsgMgr.GetLastSyncState();
+
 		// 1. notify checkpoint manager so it will create the dummy node
 		//    for the last header
-		m_checkpoint.EndBootstrapPhase();
+		m_checkpoint.EndBootstrapPhase(syncState);
 
 		// 2. update active nodes so we will use it as the starting
 		//    point to add the following children
@@ -90,6 +112,11 @@ public:
 
 		// 3. notify the base class that we're entering the next phase
 		Base::EndBootstrapI();
+	}
+
+	std::shared_ptr<EventManager> GetEventManager() const
+	{
+		return m_eventManager;
 	}
 
 protected:
@@ -233,8 +260,10 @@ private:
 		std::unique_ptr<HeaderMgr> header
 	)
 	{
+		auto syncState = m_syncMsgMgr.GetLastSyncState();
+
 		// common validation
-		bool isNewNodeLive = false; // TODO
+		bool isNewNodeLive = syncState->IsSynced();
 		bool validateRes = m_validator->CommonValidate(
 			parentNode->GetHeader(),
 			isParentNodeLive,
@@ -262,8 +291,9 @@ private:
 
 			// add the header to the parent node
 			HeaderNode* node =
-				parentNode->AddChild(std::move(header));
+				parentNode->AddChild(std::move(header), std::move(syncState));
 			// !!! NOTE: header is invalid after this point !!!
+			// !!! NOTE: syncState is invalid after this point !!!
 
 			// add this node also to the active nodes
 			if (isNewNodeLive)
@@ -304,6 +334,9 @@ private:
 	CheckpointMgr m_checkpoint;
 	std::unique_ptr<ValidatorBase> m_validator;
 	std::unique_ptr<DiffCheckerBase> m_diffChecker;
+
+	std::shared_ptr<EventManager> m_eventManager;
+	SyncMsgMgr m_syncMsgMgr;
 
 	// runtime & forks
 	// TODO sync manager

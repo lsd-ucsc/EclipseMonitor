@@ -176,7 +176,7 @@ public:
 		return *mit;
 	}
 
-	void EndBootstrapPhase()
+	void EndBootstrapPhase(std::shared_ptr<SyncState> syncState)
 	{
 		if (m_lastNode != nullptr)
 		{
@@ -188,7 +188,9 @@ public:
 		}
 
 		m_lastNode = Internal::Obj::Internal::make_unique<HeaderNode>(
-			std::move(m_currWindow.back()));
+			std::move(m_currWindow.back()),
+			std::move(syncState)
+		);
 		m_isLastNodeCandidate = false;
 		m_currWindow.pop_back();
 	}
