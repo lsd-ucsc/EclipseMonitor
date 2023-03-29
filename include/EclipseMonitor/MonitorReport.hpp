@@ -6,6 +6,7 @@
 #pragma once
 
 #include "Internal/SimpleObj.hpp"
+#include "Internal/SimpleRlp.hpp"
 
 /**
  * @brief Eclipse Monitor Secure Version Number (SVN) - Upper 1 byte
@@ -62,6 +63,33 @@ using MonitorConfigTupleCore = std::tuple<
 	>
 >;
 
+using MonitorConfigParserTupleCore = std::tuple<
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("SVN")>,
+		AdvRlp::CatIntegerParserT<AdvRlp::SpecificIntConverter<uint32_t> >
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("chainName")>,
+		AdvRlp::CatStringParser
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("checkpointSize")>,
+		AdvRlp::CatIntegerParserT<AdvRlp::SpecificIntConverter<uint64_t> >
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("minDiffPercent")>,
+		AdvRlp::CatIntegerParserT<AdvRlp::SpecificIntConverter<uint8_t> >
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("maxWaitTime")>,
+		AdvRlp::CatIntegerParserT<AdvRlp::SpecificIntConverter<uint64_t> >
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("syncMaxWaitTime")>,
+		AdvRlp::CatIntegerParserT<AdvRlp::SpecificIntConverter<uint64_t> >
+	>
+>;
+
 using MonitorSecStateTupleCore = std::tuple<
 	std::pair<
 		Obj::StrKey<SIMOBJ_KSTR("SVN")>,
@@ -78,6 +106,25 @@ using MonitorSecStateTupleCore = std::tuple<
 	std::pair<
 		Obj::StrKey<SIMOBJ_KSTR("checkpointHash")>,
 		Obj::Bytes
+	>
+>;
+
+using MonitorSecStateParserTupleCore = std::tuple<
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("SVN")>,
+		AdvRlp::CatIntegerParserT<AdvRlp::SpecificIntConverter<uint32_t> >
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("genesisHash")>,
+		AdvRlp::CatBytesParser
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("checkpointIter")>,
+		AdvRlp::CatIntegerParserT<AdvRlp::SpecificIntConverter<uint64_t> >
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("checkpointHash")>,
+		AdvRlp::CatBytesParser
 	>
 >;
 
@@ -327,6 +374,24 @@ public:
 		return Base::template get<_StrKey<SIMOBJ_KSTR("checkpointHash")> >();
 	}
 }; // class MonitorSecState
+
+
+using MonitorConfigParser =
+	Internal::AdvRlp::CatStaticDictParserT<
+		Internal::MonitorConfigParserTupleCore,
+		false,
+		false,
+		MonitorConfig
+	>;
+
+
+using MonitorSecStateParser =
+	Internal::AdvRlp::CatStaticDictParserT<
+		Internal::MonitorSecStateParserTupleCore,
+		false,
+		false,
+		MonitorSecState
+	>;
 
 
 inline MonitorConfig BuildEthereumMonitorConfig()
