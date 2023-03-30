@@ -46,7 +46,7 @@ public:
 		std::unique_ptr<ValidatorBase> validator,
 		std::unique_ptr<DiffCheckerBase> diffChecker,
 		const ContractAddr& syncContractAddr,
-		const EventTopic& syncEventSign,
+		const EventTopic& syncEventSign
 	) :
 		EclipseMonitorBase(conf, std::move(timestamper), std::move(randGen)),
 

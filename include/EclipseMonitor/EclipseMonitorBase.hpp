@@ -49,10 +49,11 @@ public:
 		m_randGen(std::move(randGen))
 	{
 		// generate a random session ID
-		SessionID tmpId;
-		m_randGen->GenerateRandomBytes(tmpId.data(), tmpId.size());
-		std::vector<uint8_t> tmpIdVec(tmpId.begin(), tmpId.end());
-		m_mId.get_sessionID() = std::move(tmpIdVec);
+		m_mId.get_sessionID().resize(std::tuple_size<SessionID>::value);
+		m_randGen->GenerateRandomBytes(
+			&(m_mId.get_sessionID()[0]),
+			m_mId.get_sessionID().size()
+		);
 	}
 
 	virtual ~EclipseMonitorBase() = default;
