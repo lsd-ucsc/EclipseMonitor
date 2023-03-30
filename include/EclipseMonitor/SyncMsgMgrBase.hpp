@@ -11,6 +11,7 @@
 #include <atomic>
 #include <memory>
 
+#include "Config.hpp"
 #include "DataTypes.hpp"
 #include "Exceptions.hpp"
 #include "MonitorReport.hpp"
@@ -24,6 +25,22 @@ class SyncState
 public: // static members
 
 	/**
+	 * @brief The fixed nonce for development use
+	 *        0x9566c74d10037c4d7bbb0407d1e2c64981855ad8681d0d86d1e91e00167939cb
+	 *        NOTE: only use it for development purpose
+	 *
+	 */
+	static constexpr SyncNonce GetDevNonce()
+	{
+		return SyncNonce({
+			0X95U, 0X66U, 0XC7U, 0X4DU, 0X10U, 0X03U, 0X7CU, 0X4DU,
+			0X7BU, 0XBBU, 0X04U, 0X07U, 0XD1U, 0XE2U, 0XC6U, 0X49U,
+			0X81U, 0X85U, 0X5AU, 0XD8U, 0X68U, 0X1DU, 0X0DU, 0X86U,
+			0XD1U, 0XE9U, 0X1EU, 0X00U, 0X16U, 0X79U, 0X39U, 0XCBU,
+		});
+	};
+
+	/**
 	 * @brief Get the Sync State for development use containing a fixed nonce
 	 *        NOTE: only use it for development purpose
 	 *
@@ -31,24 +48,28 @@ public: // static members
 	 */
 	static SyncState GetDevSyncState()
 	{
-		// nonce = 0x9566c74d10037c4d7bbb0407d1e2c64981855ad8681d0d86d1e91e00167939cb
-		SyncNonce nonce = {
-			0X95U, 0X66U, 0XC7U, 0X4DU, 0X10U, 0X03U, 0X7CU, 0X4DU,
-			0X7BU, 0XBBU, 0X04U, 0X07U, 0XD1U, 0XE2U, 0XC6U, 0X49U,
-			0X81U, 0X85U, 0X5AU, 0XD8U, 0X68U, 0X1DU, 0X0DU, 0X86U,
-			0XD1U, 0XE9U, 0X1EU, 0X00U, 0X16U, 0X79U, 0X39U, 0XCBU,
-		};
-
 		return SyncState(
 			std::numeric_limits<TrustedTimestamp>::max(),
 			TrustedTimestamp(),
-			nonce,
+			GetDevNonce(),
 			true
 		);
 	}
 
 public:
 
+#ifdef ECLIPSEMONITOR_DEV_USE_DEV_SYNC_NONCE
+	SyncState(
+		TrustedTimestamp maxWaitTime,
+		const TimestamperBase& timestamper,
+		const RandomGeneratorBase& randGen
+	) :
+		m_maxWaitTime(maxWaitTime),
+		m_genTime(),
+		m_nonce(GetDevNonce()),
+		m_isSynced(false)
+	{}
+#else // ECLIPSEMONITOR_DEV_USE_DEV_SYNC_NONCE
 	SyncState(
 		TrustedTimestamp maxWaitTime,
 		const TimestamperBase& timestamper,
@@ -64,6 +85,7 @@ public:
 		// generate a random nonce
 		randGen.GenerateRandomBytes(m_nonce.data(), m_nonce.size());
 	}
+#endif // ECLIPSEMONITOR_DEV_USE_DEV_SYNC_NONCE
 
 	SyncState(SyncState&& other) :
 		m_maxWaitTime(std::move(other.m_maxWaitTime)),

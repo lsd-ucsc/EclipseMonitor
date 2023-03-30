@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 
+#include "Config.hpp"
 #include "DataTypes.hpp"
 #include "MonitorReport.hpp"
 #include "PlatformInterfaces.hpp"
@@ -48,12 +49,26 @@ public:
 		m_timestamper(std::move(timestamper)),
 		m_randGen(std::move(randGen))
 	{
+#ifdef ECLIPSEMONITOR_DEV_USE_DEV_SESSION_ID
+		// use development session ID
+		// sessionID = 0x52fdfc072182654f163f5f0f9a621d72
+		static constexpr SessionID sk_devSessId = {
+			0X52U, 0XFDU, 0XFCU, 0X07U, 0X21U, 0X82U, 0X65U, 0X4FU,
+			0X16U, 0X3FU, 0X5FU, 0X0FU, 0X9AU, 0X62U, 0X1DU, 0X72U,
+		};
+		std::copy(
+			sk_devSessId.begin(),
+			sk_devSessId.end(),
+			m_mId.get_sessionID().begin()
+		);
+#else // ECLIPSEMONITOR_DEV_USE_DEV_SESSION_ID
 		// generate a random session ID
 		m_mId.get_sessionID().resize(std::tuple_size<SessionID>::value);
 		m_randGen->GenerateRandomBytes(
 			&(m_mId.get_sessionID()[0]),
 			m_mId.get_sessionID().size()
 		);
+#endif // ECLIPSEMONITOR_DEV_USE_DEV_SESSION_ID
 	}
 
 	virtual ~EclipseMonitorBase() = default;
