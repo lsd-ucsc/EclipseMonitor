@@ -140,11 +140,11 @@ class SyncMsgMgrBase
 {
 public: // static members:
 
-#if __cplusplus < 202002L
-	using AtomicSyncStateType = std::shared_ptr<SyncState>;
-#else
+#if defined(__cpp_lib_atomic_shared_ptr) && __cpp_lib_atomic_shared_ptr != 0
 	using AtomicSyncStateType = std::atomic<std::shared_ptr<SyncState> >;
-#endif // __cplusplus < 202002L
+#else // defined(__cpp_lib_atomic_shared_ptr) && __cpp_lib_atomic_shared_ptr != 0
+	using AtomicSyncStateType = std::shared_ptr<SyncState>;
+#endif // defined(__cpp_lib_atomic_shared_ptr) && __cpp_lib_atomic_shared_ptr != 0
 
 public:
 
@@ -202,20 +202,20 @@ protected:
 
 	std::shared_ptr<SyncState> AtomicGetSyncState() const
 	{
-#if __cplusplus < 202002L
-		return std::atomic_load(&m_lastSyncState);
-#else
+#if defined(__cpp_lib_atomic_shared_ptr) && __cpp_lib_atomic_shared_ptr != 0
 		return m_lastSyncState.load();
-#endif // __cplusplus < 202002L
+#else // defined(__cpp_lib_atomic_shared_ptr) && __cpp_lib_atomic_shared_ptr != 0
+		return std::atomic_load(&m_lastSyncState);
+#endif // defined(__cpp_lib_atomic_shared_ptr) && __cpp_lib_atomic_shared_ptr != 0
 	}
 
 	void AtomicSetSyncState(std::shared_ptr<SyncState> syncState)
 	{
-#if __cplusplus < 202002L
-		std::atomic_store(&m_lastSyncState, syncState);
-#else
+#if defined(__cpp_lib_atomic_shared_ptr) && __cpp_lib_atomic_shared_ptr != 0
 		m_lastSyncState.store(syncState);
-#endif // __cplusplus < 202002L
+#else // defined(__cpp_lib_atomic_shared_ptr) && __cpp_lib_atomic_shared_ptr != 0
+		std::atomic_store(&m_lastSyncState, syncState);
+#endif // defined(__cpp_lib_atomic_shared_ptr) && __cpp_lib_atomic_shared_ptr != 0
 	}
 
 private: // helper functions:
