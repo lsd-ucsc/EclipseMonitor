@@ -61,8 +61,8 @@ public:
 #ifdef ECLIPSEMONITOR_DEV_USE_DEV_SYNC_NONCE
 	SyncState(
 		TrustedTimestamp maxWaitTime,
-		const TimestamperBase& timestamper,
-		const RandomGeneratorBase& randGen
+		const TimestamperBase&,
+		const RandomGeneratorBase&
 	) :
 		m_maxWaitTime(maxWaitTime),
 		m_genTime(),

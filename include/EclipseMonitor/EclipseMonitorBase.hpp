@@ -49,6 +49,7 @@ public:
 		m_timestamper(std::move(timestamper)),
 		m_randGen(std::move(randGen))
 	{
+		m_mId.get_sessionID().resize(std::tuple_size<SessionID>::value);
 #ifdef ECLIPSEMONITOR_DEV_USE_DEV_SESSION_ID
 		// use development session ID
 		// sessionID = 0x52fdfc072182654f163f5f0f9a621d72
@@ -63,7 +64,6 @@ public:
 		);
 #else // ECLIPSEMONITOR_DEV_USE_DEV_SESSION_ID
 		// generate a random session ID
-		m_mId.get_sessionID().resize(std::tuple_size<SessionID>::value);
 		m_randGen->GenerateRandomBytes(
 			&(m_mId.get_sessionID()[0]),
 			m_mId.get_sessionID().size()
