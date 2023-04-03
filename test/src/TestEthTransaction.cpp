@@ -75,7 +75,7 @@ GTEST_TEST(TestEthTxn, EthDynamicFeeTxn_15415840)
 
 	auto itac = txnList.cbegin();
 	auto itex = expTxn.cbegin();
-	for(; itac != txnList.cend(), itex != expTxn.cend(); itac++, itex++)
+	for(; itac != txnList.cend() && itex != expTxn.cend(); itac++, itex++)
 	{
 		EXPECT_EQ(*itac, *itex);
 	}
@@ -147,7 +147,7 @@ GTEST_TEST(TestEthTxn, EthAccessListTxn_15415840)
 
 	auto itac = txnList.cbegin();
 	auto itex = expTxn.cbegin();
-	for(; itac != txnList.cend(), itex != expTxn.cend(); itac++, itex++)
+	for(; itac != txnList.cend() && itex != expTxn.cend(); itac++, itex++)
 	{
 		EXPECT_EQ(*itac, *itex);
 	}
@@ -191,7 +191,7 @@ GTEST_TEST(TestEthTxn, EthLegacyTxn_15415840)
 
 	auto itac = txnList.cbegin();
 	auto itex = expTxn.cbegin();
-	for(; itac != txnList.cend(), itex != expTxn.cend(); itac++, itex++)
+	for(; itac != txnList.cend() && itex != expTxn.cend(); itac++, itex++)
 	{
 		EXPECT_EQ(*itac, *itex);
 	}
