@@ -119,6 +119,11 @@ public:
 		return m_eventManager;
 	}
 
+	const SyncMsgMgr& GetSyncMsgMgr() const
+	{
+		return m_syncMsgMgr;
+	}
+
 protected:
 
 	void UpdateOnBootstrapI(const std::vector<uint8_t>& hdrBinary)

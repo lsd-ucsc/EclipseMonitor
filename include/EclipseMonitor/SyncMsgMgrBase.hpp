@@ -171,7 +171,7 @@ public:
 	virtual ~SyncMsgMgrBase() = default;
 	// LCOV_EXCL_STOP
 
-	std::shared_ptr<SyncState> GetLastSyncState()
+	std::shared_ptr<SyncState> GetLastSyncState() const
 	{
 		return AtomicGetSyncState();
 	}
@@ -200,7 +200,7 @@ protected:
 		);
 	}
 
-	std::shared_ptr<SyncState> AtomicGetSyncState()
+	std::shared_ptr<SyncState> AtomicGetSyncState() const
 	{
 #if __cplusplus < 202002L
 		return std::atomic_load(&m_lastSyncState);
