@@ -7,8 +7,6 @@
 
 #include <cstdint>
 
-#include <tuple>
-
 #include "../Internal/SimpleObj.hpp"
 #include "../Internal/SimpleRlp.hpp"
 #include "../Exceptions.hpp"
@@ -79,10 +77,24 @@ public:
 	) :
 		m_version(version),
 		m_txnObj(std::move(txnObj)),
-		m_txnBody(m_txnObj.AsList()),
-		m_contractAddr(GetContractAddrRef(m_version, m_txnBody)),
-		m_data(GetContractParamRef(m_version, m_txnBody))
+		m_txnBody(&(m_txnObj.AsList())),
+		m_contractAddr(&GetContractAddrRef(m_version, *m_txnBody)),
+		m_data(&GetContractParamRef(m_version, *m_txnBody))
 	{}
+
+
+	Transaction(Transaction&& other) :
+		m_version(other.m_version),
+		m_txnObj(std::move(other.m_txnObj)),
+		m_txnBody(&(m_txnObj.AsList())),
+		m_contractAddr(&GetContractAddrRef(m_version, *m_txnBody)),
+		m_data(&GetContractParamRef(m_version, *m_txnBody))
+	{
+		other.m_txnBody = nullptr;
+		other.m_contractAddr = nullptr;
+		other.m_data = nullptr;
+	}
+
 
 	// LCOV_EXCL_START
 	~Transaction() = default;
@@ -90,12 +102,12 @@ public:
 
 	const Internal::Obj::BytesBaseObj& GetContractAddr() const
 	{
-		return m_contractAddr;
+		return *m_contractAddr;
 	}
 
 	const Internal::Obj::BytesBaseObj& GetContactParams() const
 	{
-		return m_data;
+		return *m_data;
 	}
 
 
@@ -127,11 +139,11 @@ private: // static members:
 
 private:
 
-	TxnVersion m_version;
-	Internal::Obj::Object m_txnObj;
-	Internal::Obj::ListBaseObj& m_txnBody;
-	Internal::Obj::BytesBaseObj& m_contractAddr;
-	Internal::Obj::BytesBaseObj& m_data;
+	TxnVersion                   m_version;
+	Internal::Obj::Object        m_txnObj;
+	Internal::Obj::ListBaseObj*  m_txnBody;
+	Internal::Obj::BytesBaseObj* m_contractAddr;
+	Internal::Obj::BytesBaseObj* m_data;
 
 }; // class Transaction
 

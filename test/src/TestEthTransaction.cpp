@@ -274,6 +274,14 @@ GTEST_TEST(TestEthTransaction, AccessListTxn_15415840)
 	const SimpleObjects::BytesBaseObj& expDataObj = expData;
 
 	EXPECT_EQ(expDataObj, mgr.GetContactParams());
+
+
+	// ===== Move
+
+	Transaction mgr2 = std::move(mgr);
+
+	EXPECT_EQ(expContractAddrObj, mgr2.GetContractAddr());
+	EXPECT_EQ(expDataObj,         mgr2.GetContactParams());
 }
 
 

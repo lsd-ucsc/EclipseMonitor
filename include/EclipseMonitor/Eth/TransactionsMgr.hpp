@@ -6,16 +6,11 @@
 #pragma once
 
 
-#include <cstddef>
-#include <cstdint>
-
-#include <array>
 #include <vector>
 
 #include "../Internal/SimpleObj.hpp"
 #include "../Internal/SimpleRlp.hpp"
-#include "EventDescription.hpp"
-#include "Receipt.hpp"
+#include "Transaction.hpp"
 #include "Trie/Trie.hpp"
 
 
@@ -25,19 +20,18 @@ namespace Eth
 {
 
 
-class ReceiptsMgr
+class TransactionsMgr
 {
 public: // static members
 
 
-	using ReceiptListType = std::vector<Receipt>;
-	using LogEntriesKRefType = typename Receipt::LogEntriesKRefType;
+	using TransactionListType = std::vector<Transaction>;
 
 
 public:
 
-	ReceiptsMgr(const Internal::Obj::ListBaseObj& receipts) :
-		m_receipts(),
+	TransactionsMgr(const Internal::Obj::ListBaseObj& transactions) :
+		m_transactions(),
 		m_rootHashBytes()
 	{
 		using _IntWriter = Internal::Rlp::EncodePrimitiveIntValue<
@@ -48,24 +42,28 @@ public:
 		using _KeyRlpWriter =
 			Internal::Rlp::WriterBytesImpl<std::vector<uint8_t> >;
 
-		m_receipts.reserve(receipts.size());
+
+		m_transactions.reserve(transactions.size());
 
 		Trie::PatriciaTrie trie;
 		size_t i = 0;
 		Internal::Obj::Bytes keyBigEndian;
 		keyBigEndian.reserve(8); // size_t usually is at most 8 bytes
-		for (const auto& receipt : receipts)
+
+		for (const auto& transaction : transactions)
 		{
-			const auto& receiptBytes = receipt.AsBytes();
+			const auto& transactionBytes = transaction.AsBytes();
 
 			// 1. trie
 			keyBigEndian.resize(0);
 			_IntWriter::Encode(i, std::back_inserter(keyBigEndian));
 			std::vector<uint8_t> keyRlp = _KeyRlpWriter::Write(keyBigEndian);
-			trie.Put(keyRlp, receiptBytes);
+			trie.Put(keyRlp, transactionBytes);
 
-			// 2. receipt list
-			m_receipts.emplace_back(Receipt::FromBytes(receiptBytes));
+			// 2. transactions
+			m_transactions.emplace_back(
+				Transaction::FromBytes(transactionBytes)
+			);
 
 			++i;
 		}
@@ -74,43 +72,18 @@ public:
 	}
 
 
-	ReceiptsMgr(ReceiptsMgr&& other) :
-		m_receipts(std::move(other.m_receipts)),
-		m_rootHashBytes(std::move(other.m_rootHashBytes))
-	{}
-
-
 	const Internal::Obj::Bytes& GetRootHashBytes() const
 	{
 		return m_rootHashBytes;
 	}
 
 
-	template<typename _TopicsIt>
-	std::vector<LogEntriesKRefType> SearchEvents(
-		const ContractAddr& addr,
-		_TopicsIt topicsBegin,
-		_TopicsIt topicsEnd
-	) const
-	{
-		std::vector<LogEntriesKRefType> res;
-
-		for (const auto& receipt : m_receipts)
-		{
-			auto logEntries = receipt.SearchEvents(addr, topicsBegin, topicsEnd);
-			res.insert(res.end(), logEntries.begin(), logEntries.end());
-		}
-
-		return res;
-	}
-
-
 private:
 
-	ReceiptListType m_receipts;
+	TransactionListType m_transactions;
 	Internal::Obj::Bytes m_rootHashBytes;
 
-}; // class ReceiptsMgr
+}; // class TransactionsMgr
 
 
 } // namespace Eth

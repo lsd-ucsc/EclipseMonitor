@@ -33,8 +33,8 @@ class NodeBase
 {
 public: // static members:
 
-	using RawRetType = SimpleObjects::List;
-	using HashRetType = SimpleObjects::Bytes;
+	using RawRetType = Internal::Obj::List;
+	using HashRetType = Internal::Obj::Bytes;
 	using SerializedRetType = std::vector<uint8_t>;
 
 public:
@@ -136,16 +136,16 @@ struct EmptyNode
 		return node == nullptr;
 	}
 
-	static const SimpleObjects::Bytes& EmptyNodeRaw()
+	static const Internal::Obj::Bytes& EmptyNodeRaw()
 	{
-		static SimpleObjects::Bytes inst;
+		static Internal::Obj::Bytes inst;
 		return inst;
 	}
 
-	static SimpleObjects::Bytes EmptyNodeHash()
+	static Internal::Obj::Bytes EmptyNodeHash()
 	{
 		// https://github.com/ethereum/go-ethereum/blob/master/trie/trie.go#L32
-		SimpleObjects::Bytes emptyTrieHash = {
+		Internal::Obj::Bytes emptyTrieHash = {
 			0x56, 0xe8, 0x1f, 0x17, 0x1b, 0xcc, 0x55, 0xa6,
 			0xff, 0x83, 0x45, 0xe6, 0x92, 0xc0, 0xf8, 0x6e,
 			0x5b, 0x48, 0xe0, 0x1b, 0x99, 0x6c, 0xad, 0xc0,
