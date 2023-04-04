@@ -28,62 +28,52 @@ enum class TxnVersion : uint8_t
 }; // enum class TxnVersion
 
 
-class TransactionMgr
+class Transaction
 {
 public: // static members:
 
-	static std::tuple<TxnVersion, Internal::Obj::Object> ParseTnx(
+
+	static Transaction FromBytes(
 		const Internal::Obj::BytesBaseObj& rlpBytes
 	)
 	{
 		TxnVersion version = TxnVersion::Legacy;
-		Internal::Obj::Object txObj;
-
-		uint8_t firstByte = rlpBytes[0];
 
 		auto itBegin = rlpBytes.begin();
 		auto itEnd = rlpBytes.end();
 		size_t size = rlpBytes.size();
 
-		if (firstByte == 0x01)
+		uint8_t firstByte = *itBegin;
+		switch (firstByte)
 		{
+		case 0x01U:
 			version = TxnVersion::AccessList;
 			++itBegin;
 			--size;
-		}
-		else if (firstByte == 0x02)
-		{
+			break;
+		case 0x02U:
 			version = TxnVersion::DynamicFee;
 			++itBegin;
 			--size;
+			break;
+		default:
+			break;
 		}
 
 		using _FrItType = typename Internal::Rlp::GeneralParser::IteratorType;
-		txObj = Internal::Rlp::GeneralParser().Parse(
+		Internal::Obj::Object txObj = Internal::Rlp::GeneralParser().Parse(
 			_FrItType(itBegin.CopyPtr()),
 			_FrItType(itEnd.CopyPtr()),
 			size
 		);
 
-		return std::make_tuple(version, txObj);
-	}
-
-
-	static TransactionMgr FromBytes(
-		const Internal::Obj::BytesBaseObj& rlpBytes
-	)
-	{
-		TxnVersion ver;
-		Internal::Obj::Object txnObj;
-		std::tie(ver, txnObj) = ParseTnx(rlpBytes);
-
-		return TransactionMgr(ver, std::move(txnObj));
+		return Transaction(version, std::move(txObj));
 	}
 
 
 public:
 
-	TransactionMgr(
+	Transaction(
 		TxnVersion version,
 		Internal::Obj::Object txnObj
 	) :
@@ -95,7 +85,7 @@ public:
 	{}
 
 	// LCOV_EXCL_START
-	~TransactionMgr() = default;
+	~Transaction() = default;
 	// LCOV_EXCL_STOP
 
 	const Internal::Obj::BytesBaseObj& GetContractAddr() const
@@ -143,7 +133,7 @@ private:
 	Internal::Obj::BytesBaseObj& m_contractAddr;
 	Internal::Obj::BytesBaseObj& m_data;
 
-}; // class TransactionMgr
+}; // class Transaction
 
 
 } // namespace Eth
