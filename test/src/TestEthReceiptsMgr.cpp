@@ -9,8 +9,8 @@
 #include <EclipseMonitor/Eth/ReceiptsMgr.hpp>
 #include <SimpleObjects/SimpleObjects.hpp>
 
+#include "BlockData.hpp"
 #include "EthReceipt.hpp"
-#include "EthReceipts.hpp"
 
 namespace EclipseMonitor_Test
 {
@@ -212,21 +212,39 @@ GTEST_TEST(TestEthReceiptsMgr, EventTest3)
 
 GTEST_TEST(TestEthReceiptsMgr, ReceiptsMgr_B15415840)
 {
-	const SimpleObjects::Bytes& expected = GetReceiptsRoot_15415840();
-	const SimpleObjects::ListBaseObj& receipts = GetEthReceipts_15415840();
+	const auto headerB15415840 =
+		BlockData::ReadBinary(
+			BlockData::GetRlpFilePath("mainnet_b_15415840.header")
+		);
+	const auto receiptsB15415840 =
+		BlockData::ReadRlp("mainnet_b_15415840.receipts");
 
-	ReceiptsMgr mgr(receipts);
+	const HeaderMgr headerMgr(headerB15415840, 0);
 
-	EXPECT_EQ(mgr.GetRootHashBytes(), expected);
+	ReceiptsMgr mgr(receiptsB15415840.AsList());
+
+	EXPECT_EQ(
+		mgr.GetRootHashBytes(),
+		headerMgr.GetRawHeader().get_ReceiptsRoot()
+	);
 }
 
 
 GTEST_TEST(TestEthReceiptsMgr, ReceiptsMgr_B15209997)
 {
-	const SimpleObjects::Bytes& expected = GetReceiptsRoot_15209997();
-	const SimpleObjects::ListBaseObj& receipts = GetEthReceipts_15209997();
+	const auto headerB15209997 =
+		BlockData::ReadBinary(
+			BlockData::GetRlpFilePath("mainnet_b_15209997.header")
+		);
+	const auto receiptsB15209997 =
+		BlockData::ReadRlp("mainnet_b_15209997.receipts");
 
-	ReceiptsMgr mgr(receipts);
+	const HeaderMgr headerMgr(headerB15209997, 0);
 
-	EXPECT_EQ(mgr.GetRootHashBytes(), expected);
+	ReceiptsMgr mgr(receiptsB15209997.AsList());
+
+	EXPECT_EQ(
+		mgr.GetRootHashBytes(),
+		headerMgr.GetRawHeader().get_ReceiptsRoot()
+	);
 }

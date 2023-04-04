@@ -27,10 +27,12 @@ def GetHeaderRlpHex(blkNum: int, gethAddr: str, gethPort: int) -> List[str]:
 	#                   "jsonrpc":"2.0"
 	#              }'
 
+	blkNumHex = hex(blkNum)
+
 	url = 'http://{}:{}'.format(gethAddr, gethPort)
 	payload = {
-		'method': 'debug_getHeaderRlp',
-		'params': [blkNum],
+		'method': 'debug_getRawHeader',
+		'params': [blkNumHex],
 		'id': 1,
 		'jsonrpc': '2.0'
 	}
