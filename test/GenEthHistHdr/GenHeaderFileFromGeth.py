@@ -27,7 +27,10 @@ def GetHeaderRlpHex(blkNum: int, gethAddr: str, gethPort: int) -> List[str]:
 	#                   "jsonrpc":"2.0"
 	#              }'
 
-	blkNumHex = hex(blkNum)
+	if blkNum >= 0:
+		blkNumHex = hex(blkNum)
+	else:
+		blkNumHex = 'latest'
 
 	url = 'http://{}:{}'.format(gethAddr, gethPort)
 	payload = {
