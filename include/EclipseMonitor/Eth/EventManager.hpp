@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "../Internal/SimpleObj.hpp"
+#include "../Logging.hpp"
 
 #include "DataTypes.hpp"
 #include "EventDescription.hpp"
@@ -52,7 +53,8 @@ public:
 
 	EventManager() :
 		m_eventDescMapMutex(),
-		m_eventDescMap()
+		m_eventDescMap(),
+		m_logger(LoggerFactory::GetLogger("EventManager"))
 	{}
 
 	~EventManager() = default;
@@ -119,6 +121,13 @@ public:
 			}
 
 
+			m_logger.Debug(
+				"Found " + std::to_string(bloomedEvents.size()) +
+				" positives in bloom filter at block #" +
+				std::to_string(headerMgr.GetNumber())
+			);
+
+
 			// otherwise, check the receipt root, and check the receipt logs
 			// we must verify the receipt root first, because we also want to
 			// ensure if the event is not found in the receipt, it is really
@@ -139,7 +148,8 @@ public:
 			// search through the receipt managers
 			callbackPlans = GenCallbackPlan_Locked(
 				*receiptsMgr,
-				bloomedEvents
+				bloomedEvents,
+				m_logger
 			);
 		}
 
@@ -179,7 +189,8 @@ private: // helper functions
 
 	static std::vector<CallbackPlan> GenCallbackPlan_Locked(
 		const ReceiptsMgr& receiptsMgr,
-		const std::vector<EventDescKIt>& bloomedEvents_locked
+		const std::vector<EventDescKIt>& bloomedEvents_locked,
+		const Logger& logger
 	)
 	{
 		std::vector<CallbackPlan> plans;
@@ -193,6 +204,10 @@ private: // helper functions
 			);
 			if (!logKRefs.empty())
 			{
+				logger.Debug(
+					"Found " + std::to_string(logKRefs.size()) +
+					" events in current receipt"
+				);
 				plans.emplace_back(
 					std::make_pair(
 						bloomedEvent->first,
@@ -226,6 +241,7 @@ private:
 
 	mutable std::mutex  m_eventDescMapMutex;
 	EventDescrpMap      m_eventDescMap;
+	Logger              m_logger;
 }; // class EventManager
 
 

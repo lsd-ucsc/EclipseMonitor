@@ -80,21 +80,29 @@ add_executable(EclipseMonitor_test ${SOURCES})
 target_compile_options(EclipseMonitor_test
 	PRIVATE $<$<CONFIG:>:${DEBUG_OPTIONS}>
 			$<$<CONFIG:Debug>:${DEBUG_OPTIONS}>
-			$<$<CONFIG:Release>:${RELEASE_OPTIONS}>)
+			$<$<CONFIG:Release>:${RELEASE_OPTIONS}>
+)
 target_link_libraries(EclipseMonitor_test
 	EclipseMonitor
 	SimpleRlp
 	SimpleObjects
 	SimpleUtf
-	gtest)
+	gtest
+)
+target_include_directories(EclipseMonitor_test
+	PRIVATE
+	${CMAKE_CURRENT_LIST_DIR}/include
+)
 target_compile_definitions(
 	EclipseMonitor_test
 	PRIVATE
 		ECLIPSEMONITOR_TEST_DIR="${CMAKE_CURRENT_LIST_DIR}"
+		ECLIPSEMONITOR_LOGGING_HEADER=<TestLogging.hpp>
 )
 
 add_test(NAME EclipseMonitor_test
-	COMMAND EclipseMonitor_test)
+	COMMAND EclipseMonitor_test
+)
 
 set_property(TARGET EclipseMonitor_test
 	PROPERTY CXX_STANDARD ${ECLIPSEMONITOR_TEST_CXX_STANDARD})
