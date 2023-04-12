@@ -7,8 +7,11 @@
 
 #include <mutex>
 
+#include <SimpleObjects/Codec/Hex.hpp>
+
 #include "../Logging.hpp"
 #include "../SyncMsgMgrBase.hpp"
+#include "../Internal/SimpleObj.hpp"
 
 #include "DataTypes.hpp"
 #include "EventManager.hpp"
@@ -48,6 +51,7 @@ public:
 		std::shared_ptr<EventManager> eventMgr
 	) :
 		Base(mId, mConf, timestamper, randGen),
+		m_logger(LoggerFactory::GetLogger("SyncMsgMgr")),
 		m_syncStateMutex(),
 		m_syncContractAddr(syncContractAddr),
 		m_eventSign(eventSign),
@@ -142,6 +146,18 @@ protected: // helper functions:
 			}
 		);
 
+		using namespace Internal::Obj::Codec;
+		std::string sessionStr =
+			Hex::Encode<std::string>(baseSessID);
+		std::string nonceStr =
+			Hex::Encode<std::string>(syncState->GetNonce());
+
+		m_logger.Info(
+			std::string("Sync message generated:\n") +
+			"\tSession ID: " + sessionStr + "\n" +
+			"\tNonce:      " + nonceStr
+		);
+
 		auto eventMgr = m_eventMgr.lock();
 		if (eventMgr)
 		{
@@ -152,6 +168,7 @@ protected: // helper functions:
 
 
 private:
+	Logger m_logger;
 	std::mutex m_syncStateMutex;
 	ContractAddr m_syncContractAddr;
 	EventTopic m_eventSign;

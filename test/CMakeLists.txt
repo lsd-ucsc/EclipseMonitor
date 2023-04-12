@@ -56,7 +56,7 @@ FetchContent_MakeAvailable(git_simpleutf)
 FetchContent_Declare(
 	git_simpleobjects
 	GIT_REPOSITORY https://github.com/zhenghaven/SimpleObjects.git
-	GIT_TAG        main
+	GIT_TAG        dev
 )
 FetchContent_MakeAvailable(git_simpleobjects)
 
