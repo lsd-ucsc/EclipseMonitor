@@ -63,6 +63,7 @@ GTEST_TEST(TestEthHeaderNode, AddChildAndFindDesc)
 
 		child = root->ReleaseChildHasNDesc(testingEnd - i - 2);
 		ASSERT_NE(child, nullptr);
+		ASSERT_EQ(child->GetParent(), nullptr);
 
 		auto rootBlkNum = i;
 		auto rootExpHeader =

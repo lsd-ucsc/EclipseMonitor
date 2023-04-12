@@ -118,6 +118,7 @@ public:
 		// remove the child from the children list
 		std::unique_ptr<HeaderNode> child = std::move(it->m_child);
 		m_children.erase(it);
+		child->m_parent = nullptr;
 
 		return child;
 	}
@@ -125,6 +126,11 @@ public:
 	size_t GetNumOfChildren() const
 	{
 		return m_children.size();
+	}
+
+	const HeaderNode* GetParent() const
+	{
+		return m_parent;
 	}
 
 protected:

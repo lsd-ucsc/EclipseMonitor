@@ -9,7 +9,10 @@
 #include <memory>
 #include <unordered_map>
 
+#include <SimpleObjects/Codec/Hex.hpp>
+
 #include "../EclipseMonitorBase.hpp"
+#include "../Internal/SimpleObj.hpp"
 
 #include "CheckpointMgr.hpp"
 #include "DiffChecker.hpp"
@@ -71,7 +74,11 @@ public:
 		),
 
 		m_offlineNodes(),
-		m_activeNodes()
+		m_activeNodes(),
+
+		m_startBlockNum(0),
+		m_bootstrapIEndBlkNum(-1),
+		m_planedSyncBlkNum(-1)
 	{}
 
 	virtual ~EclipseMonitor()
@@ -79,16 +86,19 @@ public:
 
 	virtual void Update(const std::vector<uint8_t>& hdrBinary) override
 	{
+		BlockNumber blkNum = 0;
 		// 1. check current phase
 		if (Base::GetPhase() == Phases::BootstrapI)
 		{
-			UpdateOnBootstrapI(hdrBinary);
+			blkNum = UpdateOnBootstrapI(hdrBinary);
 		}
 		// all other phase will be treated like the runtime phase
 		else
 		{
-			UpdateOnRuntime(hdrBinary);
+			blkNum = UpdateOnRuntime(hdrBinary);
 		}
+
+		PhaseChangeCheck(blkNum);
 
 		if (Base::GetPhase() != Phases::BootstrapI)
 		{
@@ -126,21 +136,90 @@ public:
 
 	std::shared_ptr<SyncState> RefreshSyncMsg()
 	{
+		Base::EndBootstrapII();
 		return m_syncMsgMgr.NewSyncState(
 			Base::GetTimestamper(),
 			Base::GetRandomGenerator()
 		);
 	}
 
+	void RefreshBootstrapPlan(
+		const BlockNumber& latestBlkNum,
+		const BlockNumber* startBlkNum = nullptr
+	)
+	{
+		if (startBlkNum != nullptr)
+		{
+			m_startBlockNum = *startBlkNum;
+		}
+		bool logPlan = false;
+
+		const auto chkptSize =
+			Base::GetMonitorConfig().get_checkpointSize().GetVal();
+
+		switch (Base::GetPhase())
+		{
+		case Phases::BootstrapI:
+			// we need to determine when to end bootstrap I phase
+			m_bootstrapIEndBlkNum = CalcBootstrapIEndBlkNum(
+				latestBlkNum,
+				m_startBlockNum,
+				chkptSize
+			);
+			m_planedSyncBlkNum = latestBlkNum;
+			logPlan = true;
+			break;
+
+		case Phases::BootstrapII:
+			if (m_planedSyncBlkNum != latestBlkNum)
+			{
+				logPlan = true;
+			}
+			m_planedSyncBlkNum = latestBlkNum;
+			break;
+
+		default:
+			break;
+		}
+
+		if (logPlan)
+		{
+			Base::GetLogger().Info(
+				std::string("Refresh Bootstrap Plan:\n") +
+				"\tStart  Block#    " + std::to_string(m_startBlockNum)       + ";\n" +
+				"\tLatest Block#    " + std::to_string(latestBlkNum)          + ";\n" +
+				"\tChkpt Size       " + std::to_string(chkptSize)             + ";\n" +
+				"\tBootI Phase End# " + std::to_string(m_bootstrapIEndBlkNum) + ";\n" +
+				"\tPlan Sync Block# " + std::to_string(m_planedSyncBlkNum) + ";\n"
+			);
+		}
+	}
+
+	const BlockNumber& GetStartBlockNum() const
+	{
+		return m_startBlockNum;
+	}
+
+	const BlockNumber& GetBootstrapIEndBlkNum() const
+	{
+		return m_bootstrapIEndBlkNum;
+	}
+
+	const BlockNumber& GetPlanedSyncBlkNum() const
+	{
+		return m_planedSyncBlkNum;
+	}
+
 protected:
 
-	void UpdateOnBootstrapI(const std::vector<uint8_t>& hdrBinary)
+	BlockNumber UpdateOnBootstrapI(const std::vector<uint8_t>& hdrBinary)
 	{
 		// We're loading blocks before the latest checkpoint
 
 		std::unique_ptr<HeaderMgr> header =
 			Internal::Obj::Internal::make_unique<HeaderMgr>(
 				hdrBinary, 0);
+		BlockNumber blkNum = header->GetNumber();
 
 		// 1 check if this is the genesis (very first) block
 		if (m_checkpoint.IsEmpty())
@@ -148,6 +227,12 @@ protected:
 			// a. it is the genesis block
 			// 1.a. update the monitor security state
 			Base::GetMonitorSecState().get_genesisHash() = header->GetHashObj();
+
+			using namespace Internal::Obj::Codec;
+			const auto hashStr = Hex::Encode<std::string>(header->GetHash());
+			Base::GetLogger().Info(
+				"Genesis block #" + std::to_string(blkNum) + "; Hash: " + hashStr
+			);
 		}
 		else
 		{
@@ -172,15 +257,18 @@ protected:
 		// Add the header to the checkpoint
 		m_checkpoint.AddHeader(std::move(header));
 		// !!! NOTE: header is invalid after this point !!!
+
+		return blkNum;
 	}
 
-	void UpdateOnRuntime(const std::vector<uint8_t>& hdrBinary)
+	BlockNumber UpdateOnRuntime(const std::vector<uint8_t>& hdrBinary)
 	{
 		std::unique_ptr<HeaderMgr> header =
 			Internal::Obj::Internal::make_unique<HeaderMgr>(
 				hdrBinary,
 				Base::GetTimestamper().NowInSec()
 			);
+		BlockNumber blkNum = header->GetNumber();
 
 		// Check offline nodes map first
 		if (m_offlineNodes.size() > 0)
@@ -220,6 +308,18 @@ protected:
 				// !!! NOTE: header is invalid after this point !!!
 			}
 		}
+
+		if (header != nullptr)
+		{
+			using namespace Internal::Obj::Codec;
+			std::string blkHashHex = Hex::Encode<std::string>(header->GetHash());
+			Base::GetLogger().Error(
+				"Cannot find the parent of block #" + std::to_string(blkNum) +
+				"; hash: " + blkHashHex
+			);
+		}
+
+		return blkNum;
 	}
 
 	void RuntimeMaintenance()
@@ -262,6 +362,27 @@ protected:
 				// the node is expired
 				m_activeNodes.erase(nodePtr.first);
 			}
+		}
+	}
+
+	void PhaseChangeCheck(const BlockNumber& currBlkNum)
+	{
+		switch (Base::GetPhase())
+		{
+		case Phases::BootstrapI:
+			if (currBlkNum == m_bootstrapIEndBlkNum)
+			{
+				EndBootstrapI();
+			}
+			break;
+		case Phases::BootstrapII:
+			if (currBlkNum == m_planedSyncBlkNum)
+			{
+				RefreshSyncMsg();
+			}
+			break;
+		default:
+			break;
 		}
 	}
 
@@ -318,6 +439,16 @@ private:
 				m_offlineNodes.insert(std::make_pair(hashObj, node));
 			}
 		}
+		else
+		{
+			using namespace Internal::Obj::Codec;
+			BlockNumber blkNum = header->GetNumber();
+			std::string blkHashHex = Hex::Encode<std::string>(header->GetHash());
+			Base::GetLogger().Error(
+				"Validation failed on block #" + std::to_string(blkNum) +
+				"; hash: " + blkHashHex
+			);
+		}
 	}
 
 	void OnCheckpointComplete()
@@ -334,12 +465,44 @@ private:
 		m_diffChecker->OnChkptUpd(m_checkpoint);
 
 		// on confirmed header callback
+		size_t i = 0;
+		BlockNumber startBlock = 0;
+		BlockNumber endBlock = 0;
 		m_checkpoint.IterateCurrWindow(
-			[this](const HeaderMgr& header)
+			[this, &i, &startBlock, &endBlock](const HeaderMgr& header)
 			{
+				if (i == 0){
+					startBlock = header.GetNumber();
+				}
+				endBlock = header.GetNumber();
 				m_onHeaderConfirmed(header);
+				++i;
 			}
 		);
+		Base::GetLogger().Debug(
+			std::string("Confirmed blocks from: ") +
+				"block #" + std::to_string(startBlock) +
+				" to block #" + std::to_string(endBlock) +
+				" total: " + std::to_string(i) + " blocks"
+		);
+	}
+
+	/**
+	 * @brief `startBlk` and `chkptSize` should be constant, so the plan for
+	 *        when to end bootstrap I phase should solely depend on `latestBlk`
+	 */
+	static uint64_t CalcBootstrapIEndBlkNum(
+		uint64_t latestBlk,
+		uint64_t startBlk,
+		uint64_t chkptSize
+	)
+	{
+		uint64_t numOfBlocks = latestBlk - startBlk + 1;
+		uint64_t numOfInterval = numOfBlocks / chkptSize;
+		numOfInterval = (numOfInterval > 2) ? numOfInterval - 2 : 0;
+		uint64_t endBlkNum = startBlk + (numOfInterval * chkptSize);
+
+		return endBlkNum - 1;
 	}
 
 private:
@@ -358,6 +521,10 @@ private:
 	// TODO sync manager
 	NodeLookUpMap m_offlineNodes;
 	NodeLookUpMap m_activeNodes;
+
+	BlockNumber m_startBlockNum;
+	BlockNumber m_bootstrapIEndBlkNum;
+	BlockNumber m_planedSyncBlkNum;
 
 
 }; // class EclipseMonitor
