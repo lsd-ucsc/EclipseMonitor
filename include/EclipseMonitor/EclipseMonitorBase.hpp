@@ -13,6 +13,7 @@
 
 #include "Config.hpp"
 #include "DataTypes.hpp"
+#include "Logging.hpp"
 #include "MonitorReport.hpp"
 #include "PlatformInterfaces.hpp"
 
@@ -47,7 +48,8 @@ public:
 		m_mSecState(),
 		m_phase(Phases::BootstrapI),
 		m_timestamper(std::move(timestamper)),
-		m_randGen(std::move(randGen))
+		m_randGen(std::move(randGen)),
+		m_logger(LoggerFactory::GetLogger("EclipseMonitorBase"))
 	{
 		m_mId.get_sessionID().resize(std::tuple_size<SessionID>::value);
 #ifdef ECLIPSEMONITOR_DEV_USE_DEV_SESSION_ID
@@ -119,6 +121,19 @@ public:
 	virtual void EndBootstrapI()
 	{
 		m_phase = Phases::BootstrapII;
+		m_logger.Debug("Bootstrap I phase ended");
+	}
+
+	virtual void EndBootstrapII()
+	{
+		m_phase = Phases::Sync;
+		m_logger.Debug("Bootstrap II phase ended");
+	}
+
+	virtual void EndSync()
+	{
+		m_phase = Phases::Runtime;
+		m_logger.Debug("Entering runtime phase");
 	}
 
 	Phases GetPhase() const
@@ -143,15 +158,15 @@ protected:
 		return m_mSecState;
 	}
 
-	// void FinishBootstrapII()
-	// {
-	// 	m_phase = Phases::Sync;
-	// }
+	Logger& GetLogger()
+	{
+		return m_logger;
+	}
 
-	// void FinishSync()
-	// {
-	// 	m_phase = Phases::Runtime;
-	// }
+	const Logger& GetLogger() const
+	{
+		return m_logger;
+	}
 
 private:
 
@@ -161,6 +176,7 @@ private:
 	Phases              m_phase;
 	TimestamperType     m_timestamper;
 	RandomGeneratorType m_randGen;
+	Logger              m_logger;
 
 }; // class EclipseMonitorBase
 

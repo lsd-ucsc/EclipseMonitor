@@ -14,6 +14,7 @@
 #include "Config.hpp"
 #include "DataTypes.hpp"
 #include "Exceptions.hpp"
+#include "Logging.hpp"
 #include "MonitorReport.hpp"
 #include "PlatformInterfaces.hpp"
 
@@ -67,7 +68,8 @@ public:
 		m_maxWaitTime(maxWaitTime),
 		m_genTime(),
 		m_nonce(GetDevNonce()),
-		m_isSynced(false)
+		m_isSynced(false),
+		m_logger(LoggerFactory::GetLogger("SyncState"))
 	{}
 #else // ECLIPSEMONITOR_DEV_USE_DEV_SYNC_NONCE
 	SyncState(
@@ -78,7 +80,8 @@ public:
 		m_maxWaitTime(maxWaitTime),
 		m_genTime(),
 		m_nonce(),
-		m_isSynced(false)
+		m_isSynced(false),
+		m_logger(LoggerFactory::GetLogger("SyncState"))
 	{
 		// generate a timestamp for this nonce
 		m_genTime = timestamper.NowInSec();
@@ -91,7 +94,8 @@ public:
 		m_maxWaitTime(std::move(other.m_maxWaitTime)),
 		m_genTime(std::move(other.m_genTime)),
 		m_nonce(std::move(other.m_nonce)),
-		m_isSynced(other.m_isSynced.load())
+		m_isSynced(other.m_isSynced.load()),
+		m_logger(std::move(other.m_logger))
 	{}
 
 	~SyncState() = default;
@@ -103,6 +107,10 @@ public:
 		if (deltaT <= m_maxWaitTime)
 		{
 			m_isSynced.store(true);
+			m_logger.Info(
+				"Synced after " + std::to_string(deltaT) +
+				" ; @ " + std::to_string(recvTime)
+			);
 		}
 	}
 
@@ -127,13 +135,15 @@ private:
 		m_maxWaitTime(maxWaitTime),
 		m_genTime(genTime),
 		m_nonce(nonce),
-		m_isSynced(isSynced)
+		m_isSynced(isSynced),
+		m_logger(LoggerFactory::GetLogger("SyncState"))
 	{}
 
 	const TrustedTimestamp m_maxWaitTime;
 	TrustedTimestamp m_genTime;
 	SyncNonce m_nonce;
 	std::atomic_bool m_isSynced;
+	Logger           m_logger;
 }; // class SyncState
 
 class SyncMsgMgrBase

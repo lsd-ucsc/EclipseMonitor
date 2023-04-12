@@ -124,6 +124,14 @@ public:
 		return m_syncMsgMgr;
 	}
 
+	std::shared_ptr<SyncState> RefreshSyncMsg()
+	{
+		return m_syncMsgMgr.NewSyncState(
+			Base::GetTimestamper(),
+			Base::GetRandomGenerator()
+		);
+	}
+
 protected:
 
 	void UpdateOnBootstrapI(const std::vector<uint8_t>& hdrBinary)
@@ -319,7 +327,10 @@ private:
 		Base::GetMonitorSecState().get_checkpointHash() =
 			lastHeader.GetHashObj();
 
-		// 2. update the difficulty checker
+		// 2. Increment the checkpoint iterations
+		Base::GetMonitorSecState().get_checkpointIter()++;
+
+		// 3. update the difficulty checker
 		m_diffChecker->OnChkptUpd(m_checkpoint);
 
 		// on confirmed header callback

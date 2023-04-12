@@ -7,6 +7,7 @@
 
 #include <mutex>
 
+#include "../Logging.hpp"
 #include "../SyncMsgMgrBase.hpp"
 
 #include "DataTypes.hpp"
@@ -65,6 +66,11 @@ public:
 		const RandomGeneratorBase& randGen
 	) override
 	{
+#ifdef ECLIPSEMONITOR_DEV_DISABLE_REFRESH_SYNC
+		(void)timestamper;
+		(void)randGen;
+		return Base::AtomicGetSyncState();
+#else // ECLIPSEMONITOR_DEV_DISABLE_REFRESH_SYNC
 		std::lock_guard<std::mutex> lock(m_syncStateMutex);
 
 		auto eventMgr = m_eventMgr.lock();
@@ -79,6 +85,7 @@ public:
 		Base::AtomicSetSyncState(state);
 
 		return state;
+#endif // ECLIPSEMONITOR_DEV_DISABLE_REFRESH_SYNC
 	}
 
 
@@ -120,6 +127,11 @@ protected: // helper functions:
 				if (!syncState->IsSynced())
 				{
 					syncState->SetSynced(headerMgr.GetTrustedTime());
+					auto logger = LoggerFactory::GetLogger("SyncMsgMgr_EventHandler");
+					logger.Debug(
+						"Sync message found at block #" +
+							std::to_string(headerMgr.GetNumber())
+					);
 				}
 
 				auto eventMgr = weakEventMgr.lock();
