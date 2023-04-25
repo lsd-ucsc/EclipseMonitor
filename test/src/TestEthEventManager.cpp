@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 
+#include <EclipseMonitor/Eth/AbiParser.hpp>
 #include <EclipseMonitor/Eth/EventManager.hpp>
 
 #include "BlockData.hpp"
@@ -129,6 +130,33 @@ GTEST_TEST(TestEthEventManager, TestDecentSyncMsgV1)
 			EXPECT_EQ(logEntry.m_logData, sessIDandNonce);
 			EXPECT_EQ(eventCallbackIdRet, eventCallbackId);
 			isEventFound = true;
+
+			using _AbiSessionID = AbiParser<
+				SimpleObjects::ObjCategory::Bytes,
+				AbiSize<16>
+			>;
+			using _AbiNonce = AbiParser<
+				SimpleObjects::ObjCategory::Bytes,
+				AbiSize<32>
+			>;
+
+			std::vector<uint8_t> abiSessID;
+			std::vector<uint8_t> abiNonce;
+			auto abiBegin = logEntry.m_logData.begin();
+			auto abiEnd = logEntry.m_logData.end();
+
+			std::tie(abiSessID, abiBegin) = _AbiSessionID().ToPrimitive(abiBegin, abiEnd, abiBegin);
+			std::tie(abiNonce, abiBegin) = _AbiNonce().ToPrimitive(abiBegin, abiEnd, abiBegin);
+
+			EXPECT_EQ(
+				abiSessID,
+				std::vector<uint8_t>(sessionID.begin(), sessionID.begin() + 16)
+			);
+			EXPECT_EQ(
+				abiNonce,
+				std::vector<uint8_t>(nonce.begin(), nonce.end())
+			);
+			EXPECT_EQ(abiBegin, abiEnd);
 
 			// std::string hex = "eventSignatureTopic: ";
 			// SimpleObjects::Internal::BytesToHEX<true, char>(
