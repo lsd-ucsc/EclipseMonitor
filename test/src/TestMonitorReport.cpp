@@ -84,17 +84,26 @@ GTEST_TEST(TestMonitorReport, MonitorSecState)
 		mSecState.get_checkpointIter() = 12345;
 		mSecState.get_checkpointHash() =
 			header01.GetRawHeader().get_ParentHash();
+		mSecState.get_checkpointNum() =
+			header01.GetRawHeader().get_Number();
 
 		EXPECT_EQ(
 			mSecState.get_SVN().GetVal(),
-			GetEclipseMonitorSVN());
+			GetEclipseMonitorSVN()
+		);
 		EXPECT_EQ(
 			mSecState.get_genesisHash(),
-			header00.GetRawHeader().get_ParentHash());
+			header00.GetRawHeader().get_ParentHash()
+		);
 		EXPECT_EQ(mSecState.get_checkpointIter().GetVal(), 12345);
 		EXPECT_EQ(
 			mSecState.get_checkpointHash(),
-			header01.GetRawHeader().get_ParentHash());
+			header01.GetRawHeader().get_ParentHash()
+		);
+		EXPECT_EQ(
+			mSecState.get_checkpointNum(),
+			header01.GetRawHeader().get_Number()
+		);
 	}
 }
 
@@ -115,6 +124,8 @@ GTEST_TEST(TestMonitorReport, MonitorSecStateAdvRlp)
 		mSecStateIn.get_checkpointIter() = 12345;
 		mSecStateIn.get_checkpointHash() =
 			header01.GetRawHeader().get_ParentHash();
+		mSecStateIn.get_checkpointNum() =
+			header01.GetRawHeader().get_Number();
 	}
 
 	{

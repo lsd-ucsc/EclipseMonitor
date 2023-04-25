@@ -106,6 +106,10 @@ using MonitorSecStateTupleCore = std::tuple<
 	std::pair<
 		Obj::StrKey<SIMOBJ_KSTR("checkpointHash")>,
 		Obj::Bytes
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("checkpointNum")>,
+		Obj::Bytes
 	>
 >;
 
@@ -124,6 +128,10 @@ using MonitorSecStateParserTupleCore = std::tuple<
 	>,
 	std::pair<
 		Obj::StrKey<SIMOBJ_KSTR("checkpointHash")>,
+		AdvRlp::CatBytesParser
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("checkpointNum")>,
 		AdvRlp::CatBytesParser
 	>
 >;
@@ -372,6 +380,20 @@ public:
 	_RetKRefType<SIMOBJ_KSTR("checkpointHash")> get_checkpointHash() const
 	{
 		return Base::template get<_StrKey<SIMOBJ_KSTR("checkpointHash")> >();
+	}
+
+	/**
+	 * @brief The block number corresponding to the checkpointHash
+	 *
+	 */
+	_RetRefType<SIMOBJ_KSTR("checkpointNum")> get_checkpointNum()
+	{
+		return Base::template get<_StrKey<SIMOBJ_KSTR("checkpointNum")> >();
+	}
+
+	_RetKRefType<SIMOBJ_KSTR("checkpointNum")> get_checkpointNum() const
+	{
+		return Base::template get<_StrKey<SIMOBJ_KSTR("checkpointNum")> >();
 	}
 }; // class MonitorSecState
 
