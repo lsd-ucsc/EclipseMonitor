@@ -457,6 +457,8 @@ private:
 		const auto& lastHeader = m_checkpoint.GetLastHeader();
 		Base::GetMonitorSecState().get_checkpointHash() =
 			lastHeader.GetHashObj();
+		Base::GetMonitorSecState().get_checkpointNum() =
+			lastHeader.GetRawHeader().get_Number();
 
 		// 2. Increment the checkpoint iterations
 		Base::GetMonitorSecState().get_checkpointIter()++;
