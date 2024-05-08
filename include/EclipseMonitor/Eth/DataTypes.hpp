@@ -8,6 +8,9 @@
 
 #include <cstdint>
 
+#include <array>
+
+#include "../DataTypes.hpp"
 #include "../Internal/SimpleRlp.hpp"
 
 namespace EclipseMonitor
@@ -54,6 +57,21 @@ struct TimeTypeTrait : PrimitiveTypeTrait<uint64_t>
 
 struct DiffTypeTrait : PrimitiveTypeTrait<uint64_t>
 {}; // struct DiffTypeTrait
+
+using BlockNumber = typename BlkNumTypeTrait::value_type;
+
+using Timestamp = typename TimeTypeTrait::value_type;
+
+using Difficulty = typename DiffTypeTrait::value_type;
+
+
+
+using ContractAddr = std::array<uint8_t, 20>;
+
+using EventTopic = std::array<uint8_t, 32>;
+
+using EventCallbackId = std::uintptr_t;
+
 
 } // namespace Eth
 } // namespace EclipseMonitor

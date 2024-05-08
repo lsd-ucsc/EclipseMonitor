@@ -30,11 +30,11 @@ GTEST_TEST(TestEthTrieTrie, TestPutSingleKey)
 	SimpleObjects::Bytes emptyHash = EmptyNode::EmptyNodeHash();
 	EXPECT_EQ(emptyHash, trie.Hash());
 
-	SimpleObjects::Bytes key = {1, 2, 3, 4};
+	std::vector<uint8_t> key = {1, 2, 3, 4};
 	SimpleObjects::Bytes val = {'h', 'e', 'l', 'l', 'o'};
 	trie.Put(key, val);
 
-	std::vector<Nibble> nibbles = NibbleHelper::FromBytes(key.GetVal());
+	std::vector<Nibble> nibbles = NibbleHelper::FromBytes(key);
 	LeafNode leafNode(nibbles, val);
 	EXPECT_EQ(leafNode.Hash(), trie.Hash());
 }
@@ -43,11 +43,11 @@ GTEST_TEST(TestEthTrieTrie, TestPutLeafShorter)
 {
 	PatriciaTrie trie;
 
-	SimpleObjects::Bytes key1 = {1, 2, 3, 4};
+	std::vector<uint8_t> key1 = {1, 2, 3, 4};
 	SimpleObjects::Bytes val1 = {'h', 'e', 'l', 'l', 'o'};
 	trie.Put(key1, val1);
 
-	SimpleObjects::Bytes key2 = {1, 2, 3};
+	std::vector<uint8_t> key2 = {1, 2, 3};
 	SimpleObjects::Bytes val2 = {'w', 'o', 'r', 'l', 'd'};
 	trie.Put(key2, val2);
 
@@ -83,16 +83,16 @@ GTEST_TEST(TestEthTrieTrie, PutLeafAllMatched)
 {
 	PatriciaTrie trie;
 
-	SimpleObjects::Bytes key1 = {1, 2, 3, 4};
+	std::vector<uint8_t> key1 = {1, 2, 3, 4};
 	SimpleObjects::Bytes val1 = {'h', 'e', 'l', 'l', 'o'};
 	trie.Put(key1, val1);
 
-	SimpleObjects::Bytes key2 = {1, 2, 3, 4};
+	std::vector<uint8_t> key2 = {1, 2, 3, 4};
 	SimpleObjects::Bytes val2 = {'w', 'o', 'r', 'l', 'd'};
 	trie.Put(key2, val2);
 
 	std::unique_ptr<LeafNode> leaf =
-		LeafNode::NewLeafNodeFromBytes(key1.GetVal(), val2);
+		LeafNode::NewLeafNodeFromBytes(key1, val2);
 	EXPECT_EQ(leaf->Hash(), trie.Hash());
 }
 
@@ -100,11 +100,11 @@ GTEST_TEST(TestEthTrieTrie, PutLeafMore)
 {
 	PatriciaTrie trie;
 
-	SimpleObjects::Bytes key1 = {1, 2, 3, 4};
+	std::vector<uint8_t> key1 = {1, 2, 3, 4};
 	SimpleObjects::Bytes val1 = {'h', 'e', 'l', 'l', 'o'};
 	trie.Put(key1, val1);
 
-	SimpleObjects::Bytes key2 = {1, 2, 3, 4, 5, 6};
+	std::vector<uint8_t> key2 = {1, 2, 3, 4, 5, 6};
 	SimpleObjects::Bytes val2 = {'w', 'o', 'r', 'l', 'd'};
 	trie.Put(key2, val2);
 
@@ -135,15 +135,15 @@ GTEST_TEST(TestEthTrieTrie, TestPutMultipleKeys)
 {
 	PatriciaTrie trie;
 
-	SimpleObjects::Bytes key1 = {1};
+	std::vector<uint8_t> key1 = {1};
 	SimpleObjects::Bytes val1 = {'a'};
 	trie.Put(key1, val1);
 
-	SimpleObjects::Bytes key2 = {1, 1};
+	std::vector<uint8_t> key2 = {1, 1};
 	SimpleObjects::Bytes val2 = {'a', 'b'};
 	trie.Put(key2, val2);
 
-	SimpleObjects::Bytes key3 = {1, 1, 2};
+	std::vector<uint8_t> key3 = {1, 1, 2};
 	SimpleObjects::Bytes val3 = {'a', 'b', 'c'};
 	trie.Put(key3, val3);
 
@@ -155,7 +155,7 @@ GTEST_TEST(TestEthTrieTrie, TestPutMultipleKeys)
 	};
 	EXPECT_EQ(expected, trie.Hash().GetVal());
 
-	SimpleObjects::Bytes key4 = {1, 1, 3};
+	std::vector<uint8_t> key4 = {1, 1, 3};
 	SimpleObjects::Bytes val4 = {'a', 'b', 'c'};
 	trie.Put(key4, val4);
 
@@ -168,19 +168,19 @@ GTEST_TEST(TestEthTrieTrie, TestPutMultipleKeys)
 	EXPECT_EQ(expected, trie.Hash().GetVal());
 
 
-	SimpleObjects::Bytes key5 = {1, 1, 10};
+	std::vector<uint8_t> key5 = {1, 1, 10};
 	SimpleObjects::Bytes val5 = {'d'};
 	trie.Put(key5, val5);
 
-	SimpleObjects::Bytes key6 = {1, 1, 11};
+	std::vector<uint8_t> key6 = {1, 1, 11};
 	SimpleObjects::Bytes val6 = {'e'};
 	trie.Put(key6, val6);
 
-	SimpleObjects::Bytes key7 = {1, 1, 18};
+	std::vector<uint8_t> key7 = {1, 1, 18};
 	SimpleObjects::Bytes val7 = {'f'};
 	trie.Put(key7, val7);
 
-	SimpleObjects::Bytes key8 = {1, 1, 19};
+	std::vector<uint8_t> key8 = {1, 1, 19};
 	SimpleObjects::Bytes val8 = {'g'};
 	trie.Put(key8, val8);
 

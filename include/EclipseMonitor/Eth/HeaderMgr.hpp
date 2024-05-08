@@ -5,13 +5,16 @@
 
 #pragma once
 
+
 #include <algorithm>
 
 #include "../Internal/SimpleObj.hpp"
 #include "../Internal/SimpleRlp.hpp"
 
+#include "BloomFilter.hpp"
 #include "DataTypes.hpp"
 #include "Keccak256.hpp"
+
 
 namespace EclipseMonitor
 {
@@ -25,9 +28,6 @@ public: // static member
 
 	using RawHeaderType = Internal::Rlp::EthHeader;
 	using RawHeaderParser = Internal::Rlp::EthHeaderParser;
-	using BlkNumType = typename BlkNumTypeTrait::value_type;
-	using TimeType = typename TimeTypeTrait::value_type;
-	using DiffType = typename DiffTypeTrait::value_type;
 
 	using BytesObjType = Internal::Rlp::BytesObjType;
 
@@ -44,9 +44,25 @@ public: // static member
 
 public:
 
+	HeaderMgr() :
+		m_rawHeader(),
+		m_trustedTime(0),
+		m_bloomFilter(
+			m_rawHeader.get_LogsBloom() =
+				BytesObjType(std::vector<uint8_t>(BloomFilter::sk_bloomByteSize, 0))
+		),
+		m_hash(),
+		m_hashObj(m_hash.begin(), m_hash.end()),
+		m_blkNum(0),
+		m_time(0),
+		m_diff(0),
+		m_hasUncle(false)
+	{}
+
 	HeaderMgr(const std::vector<uint8_t>& rawBinary, uint64_t trustedTime) :
 		m_rawHeader(RawHeaderParser().Parse(rawBinary)),
 		m_trustedTime(trustedTime),
+		m_bloomFilter(m_rawHeader.get_LogsBloom()),
 		m_hash(Keccak256(rawBinary)),
 		m_hashObj(m_hash.begin(), m_hash.end()),
 		m_blkNum(BlkNumTypeTrait::FromBytes(m_rawHeader.get_Number())),
@@ -58,6 +74,30 @@ public:
 	// LCOV_EXCL_START
 	~HeaderMgr() = default;
 	// LCOV_EXCL_STOP
+
+	void SetNumber(const BlockNumber& blkNum)
+	{
+		m_rawHeader.get_Number() = BlkNumTypeTrait::ToBytes(blkNum);
+		m_blkNum = blkNum;
+	}
+
+	void SetTime(const Timestamp& time)
+	{
+		m_rawHeader.get_Timestamp() = TimeTypeTrait::ToBytes(time);
+		m_time = time;
+	}
+
+	void SetDiff(const Difficulty& diff)
+	{
+		m_rawHeader.get_Difficulty() = DiffTypeTrait::ToBytes(diff);
+		m_diff = diff;
+	}
+
+	void SetUncleHash(const BytesObjType& uncleHash)
+	{
+		m_rawHeader.get_Sha3Uncles() = uncleHash;
+		m_hasUncle = (uncleHash != GetEmptyUncleHash());
+	}
 
 	const RawHeaderType& GetRawHeader() const
 	{
@@ -79,17 +119,17 @@ public:
 		return m_hashObj;
 	}
 
-	const BlkNumType& GetNumber() const
+	const BlockNumber& GetNumber() const
 	{
 		return m_blkNum;
 	}
 
-	const TimeType& GetTime() const
+	const Timestamp& GetTime() const
 	{
 		return m_time;
 	}
 
-	const DiffType& GetDiff() const
+	const Difficulty& GetDiff() const
 	{
 		return m_diff;
 	}
@@ -99,15 +139,21 @@ public:
 		return m_hasUncle;
 	}
 
+	const BloomFilter& GetBloomFilter() const
+	{
+		return m_bloomFilter;
+	}
+
 private:
 
 	RawHeaderType m_rawHeader;
 	uint64_t m_trustedTime;
+	BloomFilter m_bloomFilter;
 	std::array<uint8_t, 32> m_hash;
 	Internal::Obj::Bytes m_hashObj;
-	BlkNumType m_blkNum;
-	TimeType m_time;
-	DiffType m_diff;
+	BlockNumber m_blkNum;
+	Timestamp m_time;
+	Difficulty m_diff;
 	bool m_hasUncle;
 }; // class HeaderMgr
 

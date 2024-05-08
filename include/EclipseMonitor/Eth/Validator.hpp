@@ -33,11 +33,14 @@ public:
 	) const = 0;
 };
 
+template<typename _NetConfig>
 class Validator : public ValidatorBase
 {
 public: // Static member:
 	using Base = ValidatorBase;
 	using Self = Validator;
+
+	using NetConfig = _NetConfig;
 
 public:
 	Validator(std::unique_ptr<DAABase> diffCalculator) :
@@ -76,13 +79,22 @@ public:
 		}
 
 		// 3. check difficulty value
-		auto expDiff = (*m_diffCalculator)(
-			parent.GetNumber(), parent.GetTime(),
-			parent.GetDiff(), parent.HasUncle(),
-			current.GetNumber(), current.GetTime());
-		if (current.GetDiff() != expDiff)
+		if (NetConfig::IsBlockOfParis(current.GetNumber()))
 		{
-			return false;
+			// blocks after Paris, difficulty is always 0
+			if (current.GetDiff() != 0)
+			{
+				return false;
+			}
+		}
+		else
+		{
+			// blocks before Paris, need to check difficulty
+			auto expDiff = (*m_diffCalculator)(parent, current);
+			if (current.GetDiff() != expDiff)
+			{
+				return false;
+			}
 		}
 
 		// 4. Check hash puzzle

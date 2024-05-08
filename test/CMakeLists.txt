@@ -49,21 +49,21 @@ FetchContent_MakeAvailable(git_googletest)
 FetchContent_Declare(
 	git_simpleutf
 	GIT_REPOSITORY https://github.com/zhenghaven/SimpleUtf.git
-	GIT_TAG        origin/main
+	GIT_TAG        main
 )
 FetchContent_MakeAvailable(git_simpleutf)
 
 FetchContent_Declare(
 	git_simpleobjects
 	GIT_REPOSITORY https://github.com/zhenghaven/SimpleObjects.git
-	GIT_TAG        origin/main
+	GIT_TAG        dev
 )
 FetchContent_MakeAvailable(git_simpleobjects)
 
 FetchContent_Declare(
 	git_simplerlp
 	GIT_REPOSITORY https://github.com/zhenghaven/SimpleRlp.git
-	GIT_TAG        origin/main
+	GIT_TAG        dev
 )
 FetchContent_MakeAvailable(git_simplerlp)
 
@@ -80,16 +80,29 @@ add_executable(EclipseMonitor_test ${SOURCES})
 target_compile_options(EclipseMonitor_test
 	PRIVATE $<$<CONFIG:>:${DEBUG_OPTIONS}>
 			$<$<CONFIG:Debug>:${DEBUG_OPTIONS}>
-			$<$<CONFIG:Release>:${RELEASE_OPTIONS}>)
+			$<$<CONFIG:Release>:${RELEASE_OPTIONS}>
+)
 target_link_libraries(EclipseMonitor_test
 	EclipseMonitor
 	SimpleRlp
 	SimpleObjects
 	SimpleUtf
-	gtest)
+	gtest
+)
+target_include_directories(EclipseMonitor_test
+	PRIVATE
+	${CMAKE_CURRENT_LIST_DIR}/include
+)
+target_compile_definitions(
+	EclipseMonitor_test
+	PRIVATE
+		ECLIPSEMONITOR_TEST_DIR="${CMAKE_CURRENT_LIST_DIR}"
+		ECLIPSEMONITOR_LOGGING_HEADER=<TestLogging.hpp>
+)
 
 add_test(NAME EclipseMonitor_test
-	COMMAND EclipseMonitor_test)
+	COMMAND EclipseMonitor_test
+)
 
 set_property(TARGET EclipseMonitor_test
 	PROPERTY CXX_STANDARD ${ECLIPSEMONITOR_TEST_CXX_STANDARD})

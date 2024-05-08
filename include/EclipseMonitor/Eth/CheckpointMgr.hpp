@@ -28,8 +28,6 @@ public: // Static members
 
 	using OnCompleteCallback = std::function<void()>;
 
-	using BlkNumType = typename BlkNumTypeTrait::value_type;
-
 public:
 	CheckpointMgr(
 		const MonitorConfig& mConf,
@@ -159,17 +157,14 @@ public:
 	 *
 	 * @return the median difficulty value of this checkpoint
 	 */
-	typename DiffTypeTrait::value_type GetDiffMedian() const
+	Difficulty GetDiffMedian() const
 	{
-		std::vector<typename DiffTypeTrait::value_type> diffs;
-		for (const auto& header : m_currWindow)
-		{
-			diffs.push_back(header->GetDiff());
-		}
-		if ((m_lastNode != nullptr) && !m_isLastNodeCandidate)
-		{
-			diffs.push_back(m_lastNode->GetHeader().GetDiff());
-		}
+		std::vector<Difficulty> diffs;
+		IterateCurrWindow(
+			[&diffs](const HeaderMgr& header) {
+				diffs.push_back(header.GetDiff());
+			}
+		);
 
 		// reference: https://en.cppreference.com/w/cpp/algorithm/nth_element
 		// When the size of the checkpoint is a even number, to get the
@@ -181,7 +176,7 @@ public:
 		return *mit;
 	}
 
-	void EndBootstrapPhase()
+	void EndBootstrapPhase(std::shared_ptr<SyncState> syncState)
 	{
 		if (m_lastNode != nullptr)
 		{
@@ -193,7 +188,9 @@ public:
 		}
 
 		m_lastNode = Internal::Obj::Internal::make_unique<HeaderNode>(
-			std::move(m_currWindow.back()));
+			std::move(m_currWindow.back()),
+			std::move(syncState)
+		);
 		m_isLastNodeCandidate = false;
 		m_currWindow.pop_back();
 	}
@@ -242,11 +239,11 @@ public:
 	/**
 	 * @brief Get the block number range of the current checkpoint
 	 *
-	 * @return a std::pair<BlkNumType, BlkNumType>, where the first element is
+	 * @return a std::pair<BlockNumber, BlockNumber>, where the first element is
 	 *         the start block number and the second element is the end block
 	 *         number
 	 */
-	std::pair<BlkNumType, BlkNumType> GetCheckpointBlkNumRange() const
+	std::pair<BlockNumber, BlockNumber> GetCheckpointBlkNumRange() const
 	{
 		if (m_currWindow.empty())
 		{
@@ -258,6 +255,19 @@ public:
 			begin,
 			begin + m_chkptSize - 1
 		);
+	}
+
+	template<typename _CallBackFuncType>
+	void IterateCurrWindow(_CallBackFuncType callback) const
+	{
+		for (const auto& header : m_currWindow)
+		{
+			callback(*header);
+		}
+		if ((m_lastNode != nullptr) && !m_isLastNodeCandidate)
+		{
+			callback(m_lastNode->GetHeader());
+		}
 	}
 
 private:

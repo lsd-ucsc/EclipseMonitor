@@ -5,6 +5,7 @@
 
 #include <gtest/gtest.h>
 
+#include <EclipseMonitor/Eth/BloomFilter.hpp>
 #include <EclipseMonitor/Eth/DAA.hpp>
 #include <EclipseMonitor/Eth/DiffChecker.hpp>
 
@@ -23,12 +24,9 @@ namespace EclipseMonitor_Test
 		virtual ~FixedDiffEstimator() = default;
 
 		virtual DiffType operator()(
-		const BlkNumType&,
-		const TimeType&,
-		const DiffType&,
-		bool,
-		const BlkNumType&,
-		const TimeType&) const override
+			const EclipseMonitor::Eth::HeaderMgr&,
+			const EclipseMonitor::Eth::HeaderMgr&
+		) const override
 		{
 			return 0;
 		}
@@ -48,8 +46,8 @@ GTEST_TEST(TestEthDiffChecker, CountTestFile)
 
 
 static std::vector<uint8_t> BuildHeader(
-	typename BlkNumTypeTrait::value_type blkNum,
-	typename DiffTypeTrait::value_type diffVal
+	BlockNumber blkNum,
+	Difficulty diffVal
 )
 {
 	auto diffBytes = DiffTypeTrait::ToBytes(diffVal);
@@ -59,6 +57,7 @@ static std::vector<uint8_t> BuildHeader(
 	rlpHdr.get_Number() = blkNumBytes;
 	rlpHdr.get_Difficulty() = diffBytes;
 	rlpHdr.get_Sha3Uncles() = HeaderMgr::GetEmptyUncleHash();
+	rlpHdr.get_LogsBloom().resize(BloomFilter::sk_bloomByteSize);
 
 	return SimpleRlp::WriteRlp(rlpHdr);
 }
@@ -90,13 +89,13 @@ GTEST_TEST(TestEthDiffChecker, TestHistBlocks)
 		mConf,
 		std::move(fixedDiffEstimator)
 	);
-	typename DiffTypeTrait::value_type diffMedian = 0;
+	Difficulty diffMedian = 0;
 	std::unique_ptr<CheckpointMgr> chkptMgr;
 	chkptMgr = SimpleObjects::Internal::make_unique<CheckpointMgr>(
 		mConf,
 		[&diffMedian, &diffChecker, &diffCheckerFixedEst, &chkptMgr](){
-			diffChecker.UpdateDiffMin(*chkptMgr);
-			diffCheckerFixedEst.UpdateDiffMin(*chkptMgr);
+			diffChecker.OnChkptUpd(*chkptMgr);
+			diffCheckerFixedEst.OnChkptUpd(*chkptMgr);
 			diffMedian = chkptMgr->GetDiffMedian();
 		}
 	);

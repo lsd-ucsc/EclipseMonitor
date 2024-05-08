@@ -16,6 +16,7 @@ namespace EclipseMonitor_Test
 
 using namespace EclipseMonitor_Test;
 
+using namespace EclipseMonitor;
 using namespace EclipseMonitor::Eth;
 
 GTEST_TEST(TestEthCheckpointMgr, CountTestFile)
@@ -30,11 +31,15 @@ GTEST_TEST(TestEthCheckpointMgr, Normal_BootstrapI_Add)
 	static constexpr size_t testingChkptSize = 10;
 	static constexpr size_t testingNumChkpt = 5;
 
+	// testing sync state
+	std::shared_ptr<SyncState> devSyncState =
+		std::make_shared<SyncState>(SyncState::GetDevSyncState());
+
 	// Expected results
-	std::vector<typename DiffTypeTrait::value_type> expDiffMedian;
+	std::vector<Difficulty> expDiffMedian;
 	for (size_t i = 0; i < testingNumChkpt; ++i)
 	{
-		std::vector<typename DiffTypeTrait::value_type> diffs;
+		std::vector<Difficulty> diffs;
 		for (size_t j = 0; j < testingChkptSize; ++j)
 		{
 			HeaderMgr header(
@@ -96,7 +101,7 @@ GTEST_TEST(TestEthCheckpointMgr, Normal_BootstrapI_Add)
 	);
 	EXPECT_THROW(chkptMgr->GetLastNode(), EclipseMonitor::Exception);
 
-	EXPECT_NO_THROW(chkptMgr->EndBootstrapPhase());
+	EXPECT_NO_THROW(chkptMgr->EndBootstrapPhase(devSyncState));
 	EXPECT_NO_THROW(
 		EXPECT_EQ(
 			chkptMgr->GetLastNode().GetHeader().GetRawHeader(),
@@ -118,11 +123,15 @@ GTEST_TEST(TestEthCheckpointMgr, Normal_Runtime_Add)
 	static constexpr size_t testingChkptStart = 2;
 	static constexpr size_t testingChkptEnd = 7;
 
+	// testing sync state
+	std::shared_ptr<SyncState> devSyncState =
+		std::make_shared<SyncState>(SyncState::GetDevSyncState());
+
 	// Expected results
-	std::vector<typename DiffTypeTrait::value_type> expDiffMedian;
+	std::vector<Difficulty> expDiffMedian;
 	for (size_t i = testingChkptStart; i < testingChkptEnd; ++i)
 	{
-		std::vector<typename DiffTypeTrait::value_type> diffs;
+		std::vector<Difficulty> diffs;
 		for (size_t j = 0; j < testingChkptSize; ++j)
 		{
 			HeaderMgr header(
@@ -183,7 +192,7 @@ GTEST_TEST(TestEthCheckpointMgr, Normal_Runtime_Add)
 			chkptMgr->AddHeader(std::move(header));
 		}
 	}
-	chkptMgr->EndBootstrapPhase();
+	chkptMgr->EndBootstrapPhase(devSyncState);
 
 	// Test
 	EXPECT_FALSE(chkptMgr->IsEmpty());
@@ -194,7 +203,9 @@ GTEST_TEST(TestEthCheckpointMgr, Normal_Runtime_Add)
 			auto header = SimpleObjects::Internal::make_unique<HeaderMgr>(
 				GetEthHistHdr_0_100()[(i * testingChkptSize) + j], 0);
 			auto node = SimpleObjects::Internal::make_unique<HeaderNode>(
-				std::move(header));
+				std::move(header),
+				devSyncState
+			);
 			chkptMgr->AddNode(std::move(node));
 		}
 	}

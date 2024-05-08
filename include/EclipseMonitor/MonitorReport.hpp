@@ -6,6 +6,7 @@
 #pragma once
 
 #include "Internal/SimpleObj.hpp"
+#include "Internal/SimpleRlp.hpp"
 
 /**
  * @brief Eclipse Monitor Secure Version Number (SVN) - Upper 1 byte
@@ -21,6 +22,11 @@
 namespace EclipseMonitor
 {
 
+inline constexpr uint32_t GetEclipseMonitorSVN()
+{
+	return (ECLIPSEMONITOR_SVN_UPPER << 16) | ECLIPSEMONITOR_SVN_LOWER;
+}
+
 namespace Internal
 {
 
@@ -31,6 +37,14 @@ using MonitorIdTupleCore = std::tuple<
 >;
 
 using MonitorConfigTupleCore = std::tuple<
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("SVN")>,
+		Obj::UInt32
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("chainName")>,
+		Obj::String
+	>,
 	std::pair<
 		Obj::StrKey<SIMOBJ_KSTR("checkpointSize")>,
 		Obj::UInt64
@@ -49,10 +63,37 @@ using MonitorConfigTupleCore = std::tuple<
 	>
 >;
 
-using MonitorSecStateTupleCore = std::tuple<
+using MonitorConfigParserTupleCore = std::tuple<
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("SVN")>,
+		AdvRlp::CatIntegerParserT<AdvRlp::SpecificIntConverter<uint32_t> >
+	>,
 	std::pair<
 		Obj::StrKey<SIMOBJ_KSTR("chainName")>,
-		Obj::String
+		AdvRlp::CatStringParser
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("checkpointSize")>,
+		AdvRlp::CatIntegerParserT<AdvRlp::SpecificIntConverter<uint64_t> >
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("minDiffPercent")>,
+		AdvRlp::CatIntegerParserT<AdvRlp::SpecificIntConverter<uint8_t> >
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("maxWaitTime")>,
+		AdvRlp::CatIntegerParserT<AdvRlp::SpecificIntConverter<uint64_t> >
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("syncMaxWaitTime")>,
+		AdvRlp::CatIntegerParserT<AdvRlp::SpecificIntConverter<uint64_t> >
+	>
+>;
+
+using MonitorSecStateTupleCore = std::tuple<
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("SVN")>,
+		Obj::UInt32
 	>,
 	std::pair<
 		Obj::StrKey<SIMOBJ_KSTR("genesisHash")>,
@@ -65,6 +106,33 @@ using MonitorSecStateTupleCore = std::tuple<
 	std::pair<
 		Obj::StrKey<SIMOBJ_KSTR("checkpointHash")>,
 		Obj::Bytes
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("checkpointNum")>,
+		Obj::Bytes
+	>
+>;
+
+using MonitorSecStateParserTupleCore = std::tuple<
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("SVN")>,
+		AdvRlp::CatIntegerParserT<AdvRlp::SpecificIntConverter<uint32_t> >
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("genesisHash")>,
+		AdvRlp::CatBytesParser
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("checkpointIter")>,
+		AdvRlp::CatIntegerParserT<AdvRlp::SpecificIntConverter<uint64_t> >
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("checkpointHash")>,
+		AdvRlp::CatBytesParser
+	>,
+	std::pair<
+		Obj::StrKey<SIMOBJ_KSTR("checkpointNum")>,
+		AdvRlp::CatBytesParser
 	>
 >;
 
@@ -136,6 +204,36 @@ public: // static members:
 public:
 
 	using Base::Base;
+
+	/**
+	 * @brief The security version number
+	 *
+	 */
+	_RetRefType<SIMOBJ_KSTR("SVN")> get_SVN()
+	{
+		return Base::template get<_StrKey<SIMOBJ_KSTR("SVN")> >();
+	}
+
+	_RetKRefType<SIMOBJ_KSTR("SVN")> get_SVN() const
+	{
+		return Base::template get<_StrKey<SIMOBJ_KSTR("SVN")> >();
+	}
+
+	/**
+	 * @brief The name of the blockchain to be monitored (e.g., "bitcoin",
+	 *        "ethereum", and so on)
+	 *        NOTE: only ethereum is supported for now
+	 *
+	 */
+	_RetRefType<SIMOBJ_KSTR("chainName")> get_chainName()
+	{
+		return Base::template get<_StrKey<SIMOBJ_KSTR("chainName")> >();
+	}
+
+	_RetKRefType<SIMOBJ_KSTR("chainName")> get_chainName() const
+	{
+		return Base::template get<_StrKey<SIMOBJ_KSTR("chainName")> >();
+	}
 
 	/**
 	 * @brief The number of blocks in each checkpoint window
@@ -226,19 +324,17 @@ public:
 	using Base::Base;
 
 	/**
-	 * @brief The name of the blockchain to be monitored (e.g., "bitcoin",
-	 *        "ethereum", and so on)
-	 *        NOTE: only ethereum is supported for now
+	 * @brief The security version number
 	 *
 	 */
-	_RetRefType<SIMOBJ_KSTR("chainName")> get_chainName()
+	_RetRefType<SIMOBJ_KSTR("SVN")> get_SVN()
 	{
-		return Base::template get<_StrKey<SIMOBJ_KSTR("chainName")> >();
+		return Base::template get<_StrKey<SIMOBJ_KSTR("SVN")> >();
 	}
 
-	_RetKRefType<SIMOBJ_KSTR("chainName")> get_chainName() const
+	_RetKRefType<SIMOBJ_KSTR("SVN")> get_SVN() const
 	{
-		return Base::template get<_StrKey<SIMOBJ_KSTR("chainName")> >();
+		return Base::template get<_StrKey<SIMOBJ_KSTR("SVN")> >();
 	}
 
 	/**
@@ -285,12 +381,46 @@ public:
 	{
 		return Base::template get<_StrKey<SIMOBJ_KSTR("checkpointHash")> >();
 	}
+
+	/**
+	 * @brief The block number corresponding to the checkpointHash
+	 *
+	 */
+	_RetRefType<SIMOBJ_KSTR("checkpointNum")> get_checkpointNum()
+	{
+		return Base::template get<_StrKey<SIMOBJ_KSTR("checkpointNum")> >();
+	}
+
+	_RetKRefType<SIMOBJ_KSTR("checkpointNum")> get_checkpointNum() const
+	{
+		return Base::template get<_StrKey<SIMOBJ_KSTR("checkpointNum")> >();
+	}
 }; // class MonitorSecState
 
 
-inline MonitorConfig BuildDefaultMonitorConfig()
+using MonitorConfigParser =
+	Internal::AdvRlp::CatStaticDictParserT<
+		Internal::MonitorConfigParserTupleCore,
+		false,
+		false,
+		MonitorConfig
+	>;
+
+
+using MonitorSecStateParser =
+	Internal::AdvRlp::CatStaticDictParserT<
+		Internal::MonitorSecStateParserTupleCore,
+		false,
+		false,
+		MonitorSecState
+	>;
+
+
+inline MonitorConfig BuildEthereumMonitorConfig()
 {
 	MonitorConfig conf;
+	conf.get_SVN()             = GetEclipseMonitorSVN();
+	conf.get_chainName()       = "Ethereum";
 	conf.get_checkpointSize()  = 430;
 	conf.get_minDiffPercent()  = 103; // which is around 80%
 	conf.get_maxWaitTime()     = 400;

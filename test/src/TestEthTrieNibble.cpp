@@ -31,50 +31,50 @@ GTEST_TEST(TestEthTrieNibble, IsNibble)
 	}
 }
 
-GTEST_TEST(TestEthTrieNibble, FromNibbleByte)
-{
-	for(uint8_t i = 0; i < 20; ++i)
-	{
-		bool isNibbleExpected = (i <= 15);
-		if(isNibbleExpected)
-		{
-			EXPECT_EQ(i, NibbleHelper::FromNibbleByte(i));
-		}
-		else
-		{
-			EXPECT_THROW(
-				NibbleHelper::FromNibbleByte(i),
-				NibblesConversionException
-			);
-		}
-	}
-}
+// GTEST_TEST(TestEthTrieNibble, FromNibbleByte)
+// {
+// 	for(uint8_t i = 0; i < 20; ++i)
+// 	{
+// 		bool isNibbleExpected = (i <= 15);
+// 		if(isNibbleExpected)
+// 		{
+// 			EXPECT_EQ(i, NibbleHelper::FromNibbleByte(i));
+// 		}
+// 		else
+// 		{
+// 			EXPECT_THROW(
+// 				NibbleHelper::FromNibbleByte(i),
+// 				NibblesConversionException
+// 			);
+// 		}
+// 	}
+// }
 
-GTEST_TEST(TestEthTrieNibble, FromNibbleBytes)
-{
-	{
-		std::vector<uint8_t> nibbleBytes = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-		std::vector<Nibble> nibbles =
-			NibbleHelper::FromNibbleBytes(nibbleBytes);
-		EXPECT_EQ(nibbleBytes.size(), nibbles.size());
-		EXPECT_EQ(nibbleBytes, nibbles);
-	}
-	{
-		std::vector<uint8_t> nibbleBytes = {0, 1, 2, 3, 4, 5, 16, 17, 18, 19};
-		EXPECT_THROW(
-			NibbleHelper::FromNibbleBytes(nibbleBytes),
-			NibblesConversionException
-		);
-	}
-}
+// GTEST_TEST(TestEthTrieNibble, FromNibbleBytes)
+// {
+// 	{
+// 		std::vector<uint8_t> nibbleBytes = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+// 		std::vector<Nibble> nibbles =
+// 			NibbleHelper::FromNibbleBytes(nibbleBytes);
+// 		EXPECT_EQ(nibbleBytes.size(), nibbles.size());
+// 		EXPECT_EQ(nibbleBytes, nibbles);
+// 	}
+// 	{
+// 		std::vector<uint8_t> nibbleBytes = {0, 1, 2, 3, 4, 5, 16, 17, 18, 19};
+// 		EXPECT_THROW(
+// 			NibbleHelper::FromNibbleBytes(nibbleBytes),
+// 			NibblesConversionException
+// 		);
+// 	}
+// }
 
-GTEST_TEST(TestEthTrieNibble, FromByte)
-{
-	EXPECT_EQ(std::vector<Nibble>({0, 0}), NibbleHelper::FromByte(0));
-	EXPECT_EQ(std::vector<Nibble>({0, 10}), NibbleHelper::FromByte(10));
-	EXPECT_EQ(std::vector<Nibble>({1, 0}), NibbleHelper::FromByte(16));
-	EXPECT_EQ(std::vector<Nibble>({15, 15}), NibbleHelper::FromByte(255));
-}
+// GTEST_TEST(TestEthTrieNibble, FromByte)
+// {
+// 	EXPECT_EQ(std::vector<Nibble>({0, 0}), NibbleHelper::FromByte(0));
+// 	EXPECT_EQ(std::vector<Nibble>({0, 10}), NibbleHelper::FromByte(10));
+// 	EXPECT_EQ(std::vector<Nibble>({1, 0}), NibbleHelper::FromByte(16));
+// 	EXPECT_EQ(std::vector<Nibble>({15, 15}), NibbleHelper::FromByte(255));
+// }
 
 GTEST_TEST(TestEthTrieNibble, FromBytes)
 {

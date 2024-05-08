@@ -46,11 +46,26 @@ GTEST_TEST(TestMonitorReport, MonitorId)
 GTEST_TEST(TestMonitorReport, MonitorConfig)
 {
 	{
-		MonitorConfig mConf = BuildDefaultMonitorConfig();
+		MonitorConfig mConf = BuildEthereumMonitorConfig();
+		EXPECT_EQ(mConf.get_SVN().GetVal(),             GetEclipseMonitorSVN());
+		EXPECT_EQ(mConf.get_chainName().GetVal(),       "Ethereum");
 		EXPECT_EQ(mConf.get_checkpointSize().GetVal(),  430);
 		EXPECT_EQ(mConf.get_minDiffPercent().GetVal(),  103);
 		EXPECT_EQ(mConf.get_maxWaitTime().GetVal(),     400);
 		EXPECT_EQ(mConf.get_syncMaxWaitTime().GetVal(), 13);
+	}
+}
+
+GTEST_TEST(TestMonitorReport, MonitorConfigAdvRlp)
+{
+	{
+		MonitorConfig mConfIn = BuildEthereumMonitorConfig();
+
+		const auto advRlp = AdvancedRlp::GenericWriter::Write(mConfIn);
+
+		MonitorConfig mConfOut = MonitorConfigParser().Parse(advRlp);
+
+		EXPECT_EQ(mConfIn, mConfOut);
 	}
 }
 
@@ -63,20 +78,61 @@ GTEST_TEST(TestMonitorReport, MonitorSecState)
 		Eth::HeaderMgr header01 = Eth::HeaderMgr(header01Bin, 0);
 
 		MonitorSecState mSecState;
-		mSecState.get_chainName()      = "ethereum";
+		mSecState.get_SVN()            = GetEclipseMonitorSVN();
 		mSecState.get_genesisHash()    =
 			header00.GetRawHeader().get_ParentHash();
 		mSecState.get_checkpointIter() = 12345;
 		mSecState.get_checkpointHash() =
 			header01.GetRawHeader().get_ParentHash();
+		mSecState.get_checkpointNum() =
+			header01.GetRawHeader().get_Number();
 
-		EXPECT_EQ(mSecState.get_chainName(), "ethereum");
+		EXPECT_EQ(
+			mSecState.get_SVN().GetVal(),
+			GetEclipseMonitorSVN()
+		);
 		EXPECT_EQ(
 			mSecState.get_genesisHash(),
-			header00.GetRawHeader().get_ParentHash());
+			header00.GetRawHeader().get_ParentHash()
+		);
 		EXPECT_EQ(mSecState.get_checkpointIter().GetVal(), 12345);
 		EXPECT_EQ(
 			mSecState.get_checkpointHash(),
-			header01.GetRawHeader().get_ParentHash());
+			header01.GetRawHeader().get_ParentHash()
+		);
+		EXPECT_EQ(
+			mSecState.get_checkpointNum(),
+			header01.GetRawHeader().get_Number()
+		);
+	}
+}
+
+GTEST_TEST(TestMonitorReport, MonitorSecStateAdvRlp)
+{
+	MonitorSecState mSecStateIn;
+
+	{
+
+		auto header00Bin = GetEthHistHdr_0_100()[0];
+		Eth::HeaderMgr header00 = Eth::HeaderMgr(header00Bin, 0);
+		auto header01Bin = GetEthHistHdr_0_100()[1];
+		Eth::HeaderMgr header01 = Eth::HeaderMgr(header01Bin, 0);
+
+		mSecStateIn.get_SVN()            = GetEclipseMonitorSVN();
+		mSecStateIn.get_genesisHash()    =
+			header00.GetRawHeader().get_ParentHash();
+		mSecStateIn.get_checkpointIter() = 12345;
+		mSecStateIn.get_checkpointHash() =
+			header01.GetRawHeader().get_ParentHash();
+		mSecStateIn.get_checkpointNum() =
+			header01.GetRawHeader().get_Number();
+	}
+
+	{
+		auto advRlp = AdvancedRlp::GenericWriter::Write(mSecStateIn);
+
+		MonitorSecState mSecStateOut = MonitorSecStateParser().Parse(advRlp);
+
+		EXPECT_EQ(mSecStateIn, mSecStateOut);
 	}
 }

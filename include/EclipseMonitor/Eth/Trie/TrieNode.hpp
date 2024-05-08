@@ -5,7 +5,9 @@
 
 #pragma once
 
+#include "../../Internal/SimpleObj.hpp"
 #include "../../Internal/SimpleRlp.hpp"
+#include "../Keccak256.hpp"
 
 namespace EclipseMonitor
 {
@@ -29,6 +31,12 @@ enum class NodeType
 
 class NodeBase
 {
+public: // static members:
+
+	using RawRetType = Internal::Obj::List;
+	using HashRetType = Internal::Obj::Bytes;
+	using SerializedRetType = std::vector<uint8_t>;
+
 public:
 
 	NodeBase() = default;
@@ -39,9 +47,36 @@ public:
 
 	virtual NodeType GetNodeType() const = 0;
 
-	virtual SimpleObjects::Bytes Hash() = 0;
+	virtual RawRetType Raw() const = 0;
 
-	virtual SimpleObjects::List Raw() = 0;
+	SerializedRetType Serialize() const
+	{
+		return GenSerialized(Raw());
+	}
+
+	HashRetType Hash() const
+	{
+		return CalcHash(Serialize());
+	}
+
+protected:
+
+	static SerializedRetType GenSerialized(const RawRetType& raw)
+	{
+		return Internal::Rlp::WriteRlp(raw);
+	}
+
+	static size_t CalcSerializedSize(const RawRetType& raw)
+	{
+		return Internal::Rlp::CalcRlpSize(raw);
+	}
+
+	static HashRetType CalcHash(const SerializedRetType& serialized)
+	{
+		std::array<uint8_t, 32> hashed = Keccak256(serialized);
+		return Internal::Obj::Bytes(hashed.begin(), hashed.end());
+	}
+
 }; // class NodeBase
 
 
@@ -78,9 +113,14 @@ public:
 		}
 	}
 
-	std::unique_ptr<NodeBase>& GetNodeBase()
+	std::unique_ptr<NodeBase>& GetNodeBasePtr()
 	{
 		return m_node;
+	}
+
+	const NodeBase& GetNodeBase() const
+	{
+		return *m_node;
 	}
 
 private:
@@ -96,15 +136,16 @@ struct EmptyNode
 		return node == nullptr;
 	}
 
-	static SimpleObjects::Bytes EmptyNodeRaw()
+	static const Internal::Obj::Bytes& EmptyNodeRaw()
 	{
-		return SimpleObjects::Bytes();
+		static Internal::Obj::Bytes inst;
+		return inst;
 	}
 
-	static SimpleObjects::Bytes EmptyNodeHash()
+	static Internal::Obj::Bytes EmptyNodeHash()
 	{
 		// https://github.com/ethereum/go-ethereum/blob/master/trie/trie.go#L32
-		SimpleObjects::Bytes emptyTrieHash = {
+		Internal::Obj::Bytes emptyTrieHash = {
 			0x56, 0xe8, 0x1f, 0x17, 0x1b, 0xcc, 0x55, 0xa6,
 			0xff, 0x83, 0x45, 0xe6, 0x92, 0xc0, 0xf8, 0x6e,
 			0x5b, 0x48, 0xe0, 0x1b, 0x99, 0x6c, 0xad, 0xc0,
@@ -114,26 +155,6 @@ struct EmptyNode
 	}
 
 }; // struct EmptyNode
-
-
-struct NodeHelper
-{
-	static std::vector<uint8_t> Serialize(NodeBase* node)
-	{
-		SimpleObjects::Object raw;
-		if (EmptyNode::IsEmptyNode(node))
-		{
-			raw = EmptyNode::EmptyNodeRaw();
-		}
-		else
-		{
-			raw = node->Raw();
-		}
-
-		Internal::Rlp::OutputContainerType rlp = Internal::Rlp::WriteRlp(raw);
-		return rlp;
-	}
-}; // struct NodeHelper
 
 } // namespace Trie
 } // namespace Eth
