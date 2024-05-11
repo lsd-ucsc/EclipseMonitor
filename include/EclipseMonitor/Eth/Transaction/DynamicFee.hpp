@@ -15,6 +15,8 @@
 #include "../DataTypes.hpp"
 #include "../Keccak256.hpp"
 
+#include "AccessListObj.hpp"
+
 
 namespace EclipseMonitor
 {
@@ -22,94 +24,6 @@ namespace Eth
 {
 namespace Transaction
 {
-
-
-using AccessListObj = Internal::Obj::List;
-
-
-
-inline void ValidateContractAddr(
-	const Internal::Obj::BytesBaseObj& addr
-)
-{
-	if (addr.size() != 20)
-	{
-		throw Exception("Invalid access list address size");
-	}
-}
-
-
-inline void ValidateAccessListStorageKey(
-	const Internal::Obj::BytesBaseObj& storageKey
-)
-{
-	if (storageKey.size() != 32)
-	{
-		throw Exception("Invalid access list storage key size");
-	}
-}
-
-
-inline void ValidateAccessListStorageKeys(
-	const Internal::Obj::ListBaseObj& storageKeys
-)
-{
-	for (const auto& storageKey : storageKeys)
-	{
-		if (storageKey.GetCategory() != Internal::Obj::ObjCategory::Bytes)
-		{
-			throw Exception("Invalid access list storage key type");
-		}
-		ValidateAccessListStorageKey(storageKey.AsBytes());
-	}
-}
-
-
-/**
- * @brief validate the tuples in the access list object; each tuple should
- *        contain two elements: address(bytes) and storageKeys(list[bytes])
- *        reference: https://github.com/ethereum/eth-account/blob/8478a86a8d235acba0a33fcae5804887473c72de/eth_account/account.py#L666
- *
- * @param accessTuple the tuple to be validated
- */
-inline void ValidateAccessListTuple(const Internal::Obj::ListBaseObj& accessTuple)
-{
-	if (accessTuple.size() != 2)
-	{
-		throw Exception("Invalid access list tuple size");
-	}
-
-	if (accessTuple[0].GetCategory() != Internal::Obj::ObjCategory::Bytes)
-	{
-		throw Exception("Invalid access list address type");
-	}
-	ValidateContractAddr(accessTuple[0].AsBytes());
-
-	if (accessTuple[1].GetCategory() != Internal::Obj::ObjCategory::List)
-	{
-		throw Exception("Invalid access list storage keys type");
-	}
-	ValidateAccessListStorageKeys(accessTuple[1].AsList());
-}
-
-
-/**
- * @brief validate the access list object, which supposed to be a list of
- *        tuple[bytes, list[bytes]]
- *
- * @param accessList the access list object to be validated
- */
-inline void ValidateAccessList(const AccessListObj& accessList)
-{
-	for (const auto& tuple : accessList)
-	{
-		if (tuple.GetCategory() != Internal::Obj::ObjCategory::List)
-		{
-			throw Exception("Invalid access list tuple type");
-		}
-		ValidateAccessListTuple(tuple.AsList());
-	}
-}
 
 
 /**
@@ -177,7 +91,7 @@ using DynFeeParserTupleCore = std::tuple<
 		Internal::Rlp::BytesParser>,
 	// 09.
 	std::pair<Internal::Obj::StrKey<SIMOBJ_KSTR("AccessList")>,
-		Internal::Rlp::ListParser>
+		AccessListObjParser>
 >;
 
 
@@ -195,14 +109,18 @@ public:
 
 	using Base::Base;
 
-	Internal::Rlp::OutputContainerType RlpSerialize() const
+	void Validate() const
 	{
 		// validate the access list object
-		ValidateAccessList(get_AccessList());
+		ValidateAccessListObj(get_AccessList());
 
 		// validate the destination address
 		ValidateContractAddr(get_Destination());
+	}
 
+	Internal::Rlp::OutputContainerType RlpSerialize() const
+	{
+		Validate();
 		return Internal::Rlp::WriterGeneric::Write(*this);
 	}
 
