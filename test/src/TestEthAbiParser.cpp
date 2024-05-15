@@ -1019,7 +1019,7 @@ GTEST_TEST(TestEthAbiParser, ParseMixParamsPrimitive)
 	// function bar(
 	// 		bool isFoo,
 	// 		uint64 num,
-	// 		bytes32 fooBytes,
+	// 		bytes16 fooBytes,
 	// 		bytes dynBytes,
 	// 		uint64[2] nums,
 	// 		bytes[] arrBytes,
@@ -1109,6 +1109,14 @@ GTEST_TEST(TestEthAbiParser, ParseMixParamsPrimitive)
 					0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
 					0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
 		};
+
+		// std::string testInputHex;
+		// SimpleObjects::Internal::BytesToHEX<true, char>(
+		// 	std::back_inserter(testInputHex),
+		// 	input.begin(),
+		// 	input.end()
+		// );
+		// std::cout << testInputHex << std::endl;
 
 		// destination variables
 		bool                 param1;

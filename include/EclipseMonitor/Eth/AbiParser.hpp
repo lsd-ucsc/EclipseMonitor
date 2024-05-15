@@ -19,6 +19,8 @@
 #include "../Internal/SimpleRlp.hpp"
 #include "../Exceptions.hpp"
 
+#include "AbiCommon.hpp"
+
 
 namespace EclipseMonitor
 {
@@ -26,18 +28,6 @@ namespace Eth
 {
 
 
-// ==========
-// Constant values
-// ==========
-
-
-struct AbiParserConst
-{
-	static constexpr size_t sk_chunkSize() noexcept
-	{
-		return 32;
-	}
-}; // struct AbiParserConst
 
 
 // ==========
@@ -47,67 +37,6 @@ struct AbiParserConst
 
 namespace EthInternal
 {
-
-template<
-	Internal::Obj::RealNumType _RealNumType,
-	typename _PrimitiveType
->
-struct RealNumTypeTraitsPrimitiveImpl
-{
-	using Primitive = _PrimitiveType;
-
-	static constexpr size_t sk_consumedSize() noexcept
-	{
-		return sizeof(Primitive);
-	}
-}; // struct RealNumTypeTraitsPrimitiveImpl
-
-
-template<typename _T>
-inline constexpr _T AbiCeilingDiv(_T a, _T b) noexcept
-{
-	return (a + (b - 1)) / b;
-}
-
-
-template<Internal::Obj::RealNumType _RealNumType>
-struct RealNumTypeTraits;
-
-
-template<>
-struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt8> :
-	public RealNumTypeTraitsPrimitiveImpl<
-		Internal::Obj::RealNumType::UInt8,
-		uint8_t
-	>
-{}; // struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt8>
-
-
-template<>
-struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt16> :
-	public RealNumTypeTraitsPrimitiveImpl<
-		Internal::Obj::RealNumType::UInt16,
-		uint16_t
-	>
-{}; // struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt16>
-
-
-template<>
-struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt32> :
-	public RealNumTypeTraitsPrimitiveImpl<
-		Internal::Obj::RealNumType::UInt32,
-		uint32_t
-	>
-{}; // struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt32>
-
-
-template<>
-struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt64> :
-	public RealNumTypeTraitsPrimitiveImpl<
-		Internal::Obj::RealNumType::UInt64,
-		uint64_t
-	>
-{}; // struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt64>
 
 
 template<bool _CheckVal, typename _It>
@@ -189,33 +118,34 @@ template<
 	Internal::Obj::ObjCategory _DataType,
 	typename... _Args
 >
-struct AbiCodecImpl;
+struct AbiParserImpl;
 
 
 // ==========
-// AbiCodecImpl for integer types
+// AbiParserImpl for integer types
 // ==========
 
 
 template<Internal::Obj::RealNumType _RealNumType>
-struct AbiCodecImpl<
+struct AbiParserImpl<
 	Internal::Obj::ObjCategory::Integer,
 	std::integral_constant<Internal::Obj::RealNumType, _RealNumType>
->
+> :
+	public AbiCodecImpl<
+		Internal::Obj::ObjCategory::Integer,
+		std::integral_constant<Internal::Obj::RealNumType, _RealNumType>
+	>
 {
-	using RealNumTraits = RealNumTypeTraits<_RealNumType>;
-	static constexpr size_t sk_consumedSize = RealNumTraits::sk_consumedSize();
-	static_assert(
-		sk_consumedSize <= AbiParserConst::sk_chunkSize(),
-		"ABI parser - integer type is too large"
-	);
-	static constexpr size_t sk_skipLeadSize =
-		AbiParserConst::sk_chunkSize() - sk_consumedSize;
-	using Primitive = typename RealNumTraits::Primitive;
-
-
-	AbiCodecImpl() = default;
-	~AbiCodecImpl() = default;
+	using Base = AbiCodecImpl<
+		Internal::Obj::ObjCategory::Integer,
+		std::integral_constant<Internal::Obj::RealNumType, _RealNumType>
+	>;
+	using Self = AbiParserImpl<
+		Internal::Obj::ObjCategory::Integer,
+		std::integral_constant<Internal::Obj::RealNumType, _RealNumType>
+	>;
+	using Codec = Base;
+	using Primitive = typename Base::Primitive;
 
 
 	template<typename _ItType>
@@ -228,7 +158,7 @@ struct AbiCodecImpl<
 	{
 		// Skip the leading zero bytes that are larger than the target type
 		begin = AbiParserSkipPadding<true>(
-			sk_skipLeadSize,
+			Base::sk_leadPadSize,
 			begin,
 			end
 		);
@@ -243,36 +173,36 @@ struct AbiCodecImpl<
 		Primitive res = Internal::Rlp::ParsePrimitiveIntValue<
 			Primitive,
 			Internal::Rlp::Endian::native
-		>::Parse(sk_consumedSize, inFunc);
+		>::Parse(Base::sk_consumedSize, inFunc);
 
 		return std::make_tuple(res, begin, 1);
 	}
-}; // struct AbiCodecImpl<Internal::Obj::ObjCategory::Integer, ...>
+}; // struct AbiParserImpl<Internal::Obj::ObjCategory::Integer, ...>
 
 
 // ==========
-// AbiCodecImpl for bool types
+// AbiParserImpl for bool types
 // ==========
 
 
 template<>
-struct AbiCodecImpl<
+struct AbiParserImpl<
 	Internal::Obj::ObjCategory::Bool
->
+> : public AbiCodecImpl<Internal::Obj::ObjCategory::Bool>
 {
-	using IntParser = AbiCodecImpl<
+	using Base = AbiCodecImpl<Internal::Obj::ObjCategory::Bool>;
+	using Self = AbiParserImpl<Internal::Obj::ObjCategory::Bool>;
+	using Codec = Base;
+	using Primitive = typename Base::Primitive;
+
+	using IntParser = AbiParserImpl<
 		Internal::Obj::ObjCategory::Integer,
-		std::integral_constant<
-			Internal::Obj::RealNumType,
-			Internal::Obj::RealNumType::UInt8
-		>
+		AbiUInt8
 	>;
-	using Primitive = bool;
-
-
-	AbiCodecImpl() = default;
-	~AbiCodecImpl() = default;
-
+	static_assert(
+		std::is_same<typename IntParser::Base, typename Base::Base>::value,
+		"ABI parser - bool parser must have the same base as uint8 parser"
+	);
 
 	template<typename _ItType>
 	std::tuple<
@@ -294,45 +224,57 @@ struct AbiCodecImpl<
 
 		return std::make_tuple(valBool, begin, chunkConsumed);
 	}
-}; // struct AbiCodecImpl<Internal::Obj::ObjCategory::Bool>
+}; // struct AbiParserImpl<Internal::Obj::ObjCategory::Bool>
 
 
 // ==========
-// AbiCodecImpl for bytes<M> types
+// AbiParserImpl for bytes<M> types
 // ==========
 
 
 template<>
-struct AbiCodecImpl<
+struct AbiParserImpl<
 	Internal::Obj::ObjCategory::Bytes,
 	std::false_type /* IsDynamic? - false */
->
+> : public AbiCodecImpl<Internal::Obj::ObjCategory::Bytes, std::false_type>
 {
-	using Primitive = std::vector<uint8_t>;
+	using Base =
+		AbiCodecImpl<Internal::Obj::ObjCategory::Bytes, std::false_type>;
+	using Self =
+		AbiParserImpl<Internal::Obj::ObjCategory::Bytes, std::false_type>;
+	using Codec = Base;
+	using Primitive = typename Base::Primitive;
 
-
-	// NOTE: This constructor does not check the size value, since this is an
-	// internal type and we assume the size is checked before calling this
-	AbiCodecImpl(size_t size) :
-		m_size(size)
+	/**
+	 * @brief Construct a new Abi Parser Impl object
+	 *        NOTE: This constructor does not check the size value,
+	 *        since this is an internal type and we assume the size is checked
+	 *        before calling this
+	 *
+	 * @param size The size of the bytes, which should be within the range of
+	 *             (0, 32]
+	 */
+	AbiParserImpl(size_t size) :
+		m_size(size),
+		m_padSize(AbiParserConst::sk_chunkSize() - m_size)
 	{}
-	~AbiCodecImpl() = default;
+	~AbiParserImpl() = default;
 
 
 	template<typename _ItType>
 	std::tuple<
-		Primitive, /* Parsed value */
-		_ItType,       /* Iterator of where the parsing stopped */
-		size_t         /* Number of chunks consumed */
+		Primitive,  /* Parsed value */
+		_ItType,    /* Iterator of where the parsing stopped */
+		size_t      /* Number of chunks consumed */
 	>
 	ToPrimitive(_ItType begin, _ItType end) const
 	{
-		std::vector<uint8_t> res;
+		Primitive res;
 		res.reserve(m_size);
 
 		begin = EthInternal::AbiParserCopyBytesThenSkip<true>(
 			m_size,
-			AbiParserConst::sk_chunkSize() - m_size,
+			m_padSize,
 			begin,
 			end,
 			std::back_inserter(res)
@@ -343,34 +285,32 @@ struct AbiCodecImpl<
 
 private:
 
-	size_t m_size = 0;
+	size_t m_size;
+	size_t m_padSize;
 
-}; // struct AbiCodecImpl<Internal::Obj::ObjCategory::Bytes, false>
+}; // struct AbiParserImpl<Internal::Obj::ObjCategory::Bytes, false>
 
 
 // ==========
-// AbiCodecImpl for bytes types
+// AbiParserImpl for bytes types
 // ==========
 
 
 template<>
-struct AbiCodecImpl<
+struct AbiParserImpl<
 	Internal::Obj::ObjCategory::Bytes,
 	std::true_type /* IsDynamic? - true */
->
+> : public AbiCodecImpl<Internal::Obj::ObjCategory::Bytes, std::true_type>
 {
-	using Primitive = std::vector<uint8_t>;
-	using DynLenParser = AbiCodecImpl<
-		Internal::Obj::ObjCategory::Integer,
-		std::integral_constant<
-			Internal::Obj::RealNumType,
-			Internal::Obj::RealNumType::UInt64
-		>
-	>;
+	using Base =
+		AbiCodecImpl<Internal::Obj::ObjCategory::Bytes, std::true_type>;
+	using Self =
+		AbiParserImpl<Internal::Obj::ObjCategory::Bytes, std::true_type>;
+	using Codec = Base;
+	using Primitive = typename Base::Primitive;
 
-	AbiCodecImpl() = default;
-	~AbiCodecImpl() = default;
-
+	using DynLenParser =
+		AbiParserImpl<Internal::Obj::ObjCategory::Integer, AbiUInt64>;
 
 	template<typename _ItType>
 	std::tuple<
@@ -393,7 +333,7 @@ struct AbiCodecImpl<
 		size_t paddingSize =
 			(numChunk * AbiParserConst::sk_chunkSize()) - len;
 
-		std::vector<uint8_t> res;
+		Primitive res;
 		res.reserve(len);
 		begin = EthInternal::AbiParserCopyBytesThenSkip<true>(
 			len,
@@ -409,38 +349,51 @@ struct AbiCodecImpl<
 		return std::make_tuple(res, begin, chunkConsumed);
 	}
 
-}; // struct AbiCodecImpl<Internal::Obj::ObjCategory::Bytes, true>
+}; // struct AbiParserImpl<Internal::Obj::ObjCategory::Bytes, true>
 
 
 // ==========
-// AbiCodecImpl for T[k] types, where T is static type
+// AbiParserImpl for T[k] types, where T is static type
 // ==========
 
 
 template<typename _ItemParser>
-struct AbiCodecImpl<
+struct AbiParserImpl<
 	Internal::Obj::ObjCategory::List,
 	_ItemParser,
 	std::false_type, /* IsLenDynamic? - false */
 	std::false_type  /* IsItemDynamic? - false */
->
+> :
+	public AbiCodecImpl<
+		Internal::Obj::ObjCategory::List,
+		typename _ItemParser::Codec,
+		std::false_type,
+		std::false_type
+	>
 {
-	static_assert(
-		!_ItemParser::sk_hasTail,
-		"ABI parser - static item must have no tail"
-	);
+	using Base = AbiCodecImpl<
+		Internal::Obj::ObjCategory::List,
+		typename _ItemParser::Codec,
+		std::false_type,
+		std::false_type
+	>;
+	using Self = AbiParserImpl<
+		Internal::Obj::ObjCategory::List,
+		_ItemParser,
+		std::false_type,
+		std::false_type
+	>;
 
-
+	using Codec = Base;
 	using ItemParser = _ItemParser;
-	using ItemPrimitive = typename ItemParser::Primitive;
-	using Primitive = std::vector<ItemPrimitive>;
+	using ItemPrimitive = typename Base::ItemPrimitive;
+	using Primitive = typename Base::Primitive;
 
-
-	AbiCodecImpl(ItemParser itemParser, size_t size) :
+	AbiParserImpl(ItemParser itemParser, size_t size) :
 		m_itemParser(std::move(itemParser)),
 		m_size(size)
 	{}
-	~AbiCodecImpl() = default;
+	~AbiParserImpl() = default;
 
 
 	template<typename _ItType>
@@ -485,45 +438,59 @@ private:
 	ItemParser m_itemParser;
 	size_t m_size;
 
-}; // struct AbiCodecImpl<Internal::Obj::ObjCategory::List, _Item, false, false>
+}; // struct AbiParserImpl<Internal::Obj::ObjCategory::List, _Item, false, false>
 
 
 // ==========
-// AbiCodecImpl for T[k] types, where T is dynamic type
+// AbiParserImpl for T[k] types, where T is dynamic type
 // ==========
 
 
 template<typename _ItemParser>
-struct AbiCodecImpl<
+struct AbiParserImpl<
 	Internal::Obj::ObjCategory::List,
 	_ItemParser,
 	std::false_type, /* IsLenDynamic? - false */
 	std::true_type  /* IsItemDynamic? - true */
->
+> :
+	public AbiCodecImpl<
+		Internal::Obj::ObjCategory::List,
+		typename _ItemParser::Codec,
+		std::false_type,
+		std::true_type
+	>
 {
-	static_assert(
-		_ItemParser::sk_hasTail,
-		"ABI parser - dynamic item must have tail"
-	);
+	using Base = AbiCodecImpl<
+		Internal::Obj::ObjCategory::List,
+		typename _ItemParser::Codec,
+		std::false_type,
+		std::true_type
+	>;
+	using Self = AbiParserImpl<
+		Internal::Obj::ObjCategory::List,
+		_ItemParser,
+		std::false_type,
+		std::true_type
+	>;
 
-
+	using Codec = Base;
 	using ItemParser = _ItemParser;
-	using ItemPrimitive = typename ItemParser::Primitive;
-	using Primitive = std::vector<ItemPrimitive>;
+	using ItemPrimitive = typename Base::ItemPrimitive;
+	using Primitive = typename Base::Primitive;
 
 
-	AbiCodecImpl(ItemParser itemParser, size_t size) :
+	AbiParserImpl(ItemParser itemParser, size_t size) :
 		m_itemParser(std::move(itemParser)),
 		m_size(size)
 	{}
-	~AbiCodecImpl() = default;
+	~AbiParserImpl() = default;
 
 
 	template<typename _ItType>
 	std::tuple<
-		Primitive, /* Parsed value */
-		_ItType,       /* Iterator of where the parsing stopped */
-		size_t         /* Number of chunks consumed */
+		Primitive,  /* Parsed value */
+		_ItType,    /* Iterator of where the parsing stopped */
+		size_t      /* Number of chunks consumed */
 	>
 	ToPrimitive(size_t size, _ItType begin, _ItType end) const
 	{
@@ -569,9 +536,9 @@ struct AbiCodecImpl<
 
 	template<typename _ItType>
 	std::tuple<
-		Primitive, /* Parsed value */
-		_ItType,       /* Iterator of where the parsing stopped */
-		size_t         /* Number of chunks consumed */
+		Primitive,  /* Parsed value */
+		_ItType,    /* Iterator of where the parsing stopped */
+		size_t      /* Number of chunks consumed */
 	>
 	ToPrimitive(_ItType begin, _ItType end) const
 	{
@@ -583,58 +550,59 @@ private:
 	ItemParser m_itemParser;
 	size_t m_size;
 
-}; // struct AbiCodecImpl<Internal::Obj::ObjCategory::List, _Item, false, true>
+}; // struct AbiParserImpl<Internal::Obj::ObjCategory::List, _Item, false, true>
 
 
 // ==========
-// AbiCodecImpl for T[] types, where T is static type
+// AbiParserImpl for T[] types, where T is static type
 // ==========
 
 
-template<typename _ItemParser>
-struct AbiCodecImpl<
-	Internal::Obj::ObjCategory::List,
-	_ItemParser,
-	std::true_type,  /* IsLenDynamic? - true */
-	std::false_type  /* IsItemDynamic? - false */
->
+template<typename _ItemParser, typename _IsItemDyn>
+struct AbiParserDynLenListImpl :
+	public AbiCodecImpl<
+		Internal::Obj::ObjCategory::List,
+		typename _ItemParser::Codec,
+		std::true_type,
+		_IsItemDyn
+	>
 {
-	static_assert(
-		!_ItemParser::sk_hasTail,
-		"ABI parser - static item must have no tail"
-	);
-
-
-	using ItemParser = _ItemParser;
-	using ItemPrimitive = typename ItemParser::Primitive;
-	using Primitive = std::vector<ItemPrimitive>;
-
-	using DynLenParser = AbiCodecImpl<
-		Internal::Obj::ObjCategory::Integer,
-		std::integral_constant<
-			Internal::Obj::RealNumType,
-			Internal::Obj::RealNumType::UInt64
-		>
+	using Base = AbiCodecImpl<
+		Internal::Obj::ObjCategory::List,
+		typename _ItemParser::Codec,
+		std::true_type,
+		_IsItemDyn
 	>;
-	using DataParser = AbiCodecImpl<
+	using Self = AbiParserDynLenListImpl<_ItemParser, _IsItemDyn>;
+
+	using Codec = Base;
+	using ItemParser = _ItemParser;
+	using ItemPrimitive = typename Base::ItemPrimitive;
+	using Primitive = typename Base::Primitive;
+
+	using DynLenParser = AbiParserImpl<
+		Internal::Obj::ObjCategory::Integer,
+		AbiUInt64
+	>;
+	using DataParser = AbiParserImpl<
 		Internal::Obj::ObjCategory::List,
 		ItemParser,
 		std::false_type, /* IsLenDynamic? - false */
-		std::false_type  /* IsItemDynamic? - false */
+		_IsItemDyn  /* IsItemDynamic? - false */
 	>;
 
 
-	AbiCodecImpl(ItemParser itemParser) :
+	AbiParserDynLenListImpl(ItemParser itemParser) :
 		m_dataParser(std::move(itemParser), 0)
 	{}
-	~AbiCodecImpl() = default;
+	~AbiParserDynLenListImpl() = default;
 
 
 	template<typename _ItType>
 	std::tuple<
-		Primitive, /* Parsed value */
-		_ItType,       /* Iterator of where the parsing stopped */
-		size_t         /* Number of chunks consumed */
+		Primitive,  /* Parsed value */
+		_ItType,    /* Iterator of where the parsing stopped */
+		size_t      /* Number of chunks consumed */
 	>
 	ToPrimitive(_ItType begin, _ItType end) const
 	{
@@ -662,85 +630,54 @@ private:
 
 	DataParser m_dataParser;
 
-}; // struct AbiCodecImpl<Internal::Obj::ObjCategory::List, _Item, true, false>
+}; // struct AbiParserDynLenListImpl
+
+
+template<typename _ItemParser>
+struct AbiParserImpl<
+	Internal::Obj::ObjCategory::List,
+	_ItemParser,
+	std::true_type, /* IsLenDynamic? - true */
+	std::false_type  /* IsItemDynamic? - true */
+> :
+	public AbiParserDynLenListImpl<_ItemParser, std::false_type>
+{
+	using Base = AbiParserDynLenListImpl<_ItemParser, std::false_type>;
+	using Self = AbiParserImpl<
+		Internal::Obj::ObjCategory::List,
+		_ItemParser,
+		std::true_type,
+		std::false_type
+	>;
+
+	using Base::Base;
+}; // struct AbiParserImpl<Internal::Obj::ObjCategory::List, _Item, true, false>
 
 
 // ==========
-// AbiCodecImpl for T[] types, where T is dynamic type
+// AbiParserImpl for T[] types, where T is dynamic type
 // ==========
 
 
 template<typename _ItemParser>
-struct AbiCodecImpl<
+struct AbiParserImpl<
 	Internal::Obj::ObjCategory::List,
 	_ItemParser,
 	std::true_type, /* IsLenDynamic? - true */
 	std::true_type  /* IsItemDynamic? - true */
->
+> :
+	public AbiParserDynLenListImpl<_ItemParser, std::true_type>
 {
-	static_assert(
-		_ItemParser::sk_hasTail,
-		"ABI parser - dynamic item must have tail"
-	);
-
-
-	using ItemParser = _ItemParser;
-	using ItemPrimitive = typename ItemParser::Primitive;
-	using Primitive = std::vector<ItemPrimitive>;
-
-	using DynLenParser = AbiCodecImpl<
-		Internal::Obj::ObjCategory::Integer,
-		std::integral_constant<
-			Internal::Obj::RealNumType,
-			Internal::Obj::RealNumType::UInt64
-		>
-	>;
-	using DataParser = AbiCodecImpl<
+	using Base = AbiParserDynLenListImpl<_ItemParser, std::true_type>;
+	using Self = AbiParserImpl<
 		Internal::Obj::ObjCategory::List,
-		ItemParser,
-		std::false_type, /* IsLenDynamic? - false */
-		std::true_type   /* IsItemDynamic? - true */
+		_ItemParser,
+		std::true_type,
+		std::true_type
 	>;
 
-	AbiCodecImpl(ItemParser itemParser) :
-		m_dataParser(std::move(itemParser), 0)
-	{}
-	~AbiCodecImpl() = default;
-
-
-	template<typename _ItType>
-	std::tuple<
-		Primitive, /* Parsed value */
-		_ItType,       /* Iterator of where the parsing stopped */
-		size_t         /* Number of chunks consumed */
-	>
-	ToPrimitive(_ItType begin, _ItType end) const
-	{
-		// first, parse the length of the bytes
-		size_t totalChunkConsumed = 0;
-
-		uint64_t len = 0;
-		size_t chunkConsumed = 0;
-		std::tie(len, begin, chunkConsumed) =
-			DynLenParser().ToPrimitive(begin, end);
-		totalChunkConsumed += chunkConsumed;
-
-		size_t lenSize = static_cast<size_t>(len);
-
-		// then, parse the data / list items
-		Primitive res;
-		std::tie(res, begin, chunkConsumed) =
-			m_dataParser.ToPrimitive(lenSize, begin, end);
-		totalChunkConsumed += chunkConsumed;
-
-		return std::make_tuple(res, begin, totalChunkConsumed);
-	}
-
-private:
-
-	DataParser m_dataParser;
-
-}; // struct AbiCodecImpl<Internal::Obj::ObjCategory::List, _Item, true, true>
+	using Base::Base;
+}; // struct AbiParserImpl<Internal::Obj::ObjCategory::List, _Item, true, true>
 
 
 // ==========
@@ -749,19 +686,21 @@ private:
 
 
 template<
-	typename _CodecImpl
+	typename _ParserImpl
 >
 struct AbiParserHeadOnlyTypes
 {
-	using Codec = _CodecImpl;
-	using HeadCodec = Codec;
+	using ParserImpl = _ParserImpl;
+	using Codec = typename ParserImpl::Codec;
+
+	using HeadParserImpl = ParserImpl;
 
 	static constexpr bool sk_hasTail = false;
-	using HeadPrimitive = typename HeadCodec::Primitive;
+	using HeadPrimitive = typename HeadParserImpl::Primitive;
 	using Primitive = HeadPrimitive;
 
 	// constructors
-	AbiParserHeadOnlyTypes(HeadCodec headCodec) :
+	AbiParserHeadOnlyTypes(HeadParserImpl headCodec) :
 		m_headCodec(std::move(headCodec))
 	{}
 	// destructor
@@ -798,33 +737,41 @@ struct AbiParserHeadOnlyTypes
 
 protected:
 
-	HeadCodec m_headCodec;
+	HeadParserImpl m_headCodec;
 
 }; // struct AbiParserHeadOnlyTypes
 
 
 template<
-	typename _CodecImpl
+	typename _ParserImpl
 >
 struct AbiParserHeadTailTypes
 {
-	using Codec = _CodecImpl;
-	using HeadCodec = AbiCodecImpl<
+	using ParserImpl = _ParserImpl;
+	using Codec = typename ParserImpl::Codec;
+
+	/**
+	 * @brief The type of the parser used to parse the head part of the ABI data
+	 *        NOTE: the ABI spec assume the head is always a uint256 offset,
+	 *        but here we assume a uint64 offset for simplicity, and it's
+	 *        very unlikely that the offset will be larger than uint64 in
+	 *        real-world cases.
+	 *
+	 */
+	using HeadParserImpl = AbiParserImpl<
 		Internal::Obj::ObjCategory::Integer,
-		std::integral_constant<
-			Internal::Obj::RealNumType,
-			Internal::Obj::RealNumType::UInt64
-		>
+		AbiUInt64
 	>; // head is a uint256 offset
-	using TailCodec = Codec;
+
+	using TailParserImpl = ParserImpl;
 
 	static constexpr bool sk_hasTail = true;
-	using HeadPrimitive = typename HeadCodec::Primitive;
-	using TailPrimitive = typename TailCodec::Primitive;
+	using HeadPrimitive = typename HeadParserImpl::Primitive;
+	using TailPrimitive = typename TailParserImpl::Primitive;
 	using Primitive = TailPrimitive;
 
 	// constructors
-	AbiParserHeadTailTypes(TailCodec tailCodec) :
+	AbiParserHeadTailTypes(TailParserImpl tailCodec) :
 		m_headCodec(),
 		m_tailCodec(std::move(tailCodec))
 	{}
@@ -908,41 +855,21 @@ struct AbiParserHeadTailTypes
 
 protected:
 
-	HeadCodec m_headCodec;
-	TailCodec m_tailCodec;
+	HeadParserImpl m_headCodec;
+	TailParserImpl m_tailCodec;
 
 }; // struct AbiParserHeadTailTypes
 
 
-template<bool _HasTail, typename _CodecImpl>
+template<bool _HasTail, typename _ParserImpl>
 using AbiHeadTailTypesSelector = typename std::conditional<
 	_HasTail,
-	AbiParserHeadTailTypes<_CodecImpl>,
-	AbiParserHeadOnlyTypes<_CodecImpl>
+	AbiParserHeadTailTypes<_ParserImpl>,
+	AbiParserHeadOnlyTypes<_ParserImpl>
 >::type;
 
 
 } // namespace EthInternal
-
-
-// ==========
-// Alias types for convenience
-// ==========
-
-
-using AbiUInt8 =
-	std::integral_constant<
-		Internal::Obj::RealNumType,
-		Internal::Obj::RealNumType::UInt8
-	>;
-using AbiUInt64 =
-	std::integral_constant<
-		Internal::Obj::RealNumType,
-		Internal::Obj::RealNumType::UInt64
-	>;
-
-template<size_t _Size>
-using AbiSize = std::integral_constant<size_t, _Size>;
 
 
 // ==========
@@ -967,22 +894,21 @@ struct AbiParser<
 	std::integral_constant<Internal::Obj::RealNumType, _RealNumType>
 > :
 	EthInternal::AbiParserHeadOnlyTypes<
-		EthInternal::AbiCodecImpl<
+		EthInternal::AbiParserImpl<
 			Internal::Obj::ObjCategory::Integer,
 			std::integral_constant<Internal::Obj::RealNumType, _RealNumType>
 		>
 	>
 {
-	using Base = EthInternal::AbiParserHeadOnlyTypes<
-		EthInternal::AbiCodecImpl<
-			Internal::Obj::ObjCategory::Integer,
-			std::integral_constant<Internal::Obj::RealNumType, _RealNumType>
-		>
+	using ParserImpl = EthInternal::AbiParserImpl<
+		Internal::Obj::ObjCategory::Integer,
+		std::integral_constant<Internal::Obj::RealNumType, _RealNumType>
 	>;
-	using Codec = typename Base::Codec;
+	using Base = EthInternal::AbiParserHeadOnlyTypes<ParserImpl>;
+	using Codec = typename ParserImpl::Codec;
 
 	AbiParser() :
-		Base(Codec())
+		Base(ParserImpl())
 	{}
 	// LCOV_EXCL_START
 	virtual ~AbiParser() = default;
@@ -1000,20 +926,19 @@ struct AbiParser<
 	Internal::Obj::ObjCategory::Bool
 > :
 	EthInternal::AbiParserHeadOnlyTypes<
-		EthInternal::AbiCodecImpl<
+		EthInternal::AbiParserImpl<
 			Internal::Obj::ObjCategory::Bool
 		>
 	>
 {
-	using Base = EthInternal::AbiParserHeadOnlyTypes<
-		EthInternal::AbiCodecImpl<
-			Internal::Obj::ObjCategory::Bool
-		>
+	using ParserImpl = EthInternal::AbiParserImpl<
+		Internal::Obj::ObjCategory::Bool
 	>;
-	using Codec = typename Base::Codec;
+	using Base = EthInternal::AbiParserHeadOnlyTypes<ParserImpl>;
+	using Codec = typename ParserImpl::Codec;
 
 	AbiParser() :
-		Base(Codec())
+		Base(ParserImpl())
 	{}
 	// LCOV_EXCL_START
 	virtual ~AbiParser() = default;
@@ -1032,28 +957,27 @@ struct AbiParser<
 	std::false_type /* IsDynamic? - false */
 > :
 	EthInternal::AbiParserHeadOnlyTypes<
-		EthInternal::AbiCodecImpl<
+		EthInternal::AbiParserImpl<
 			Internal::Obj::ObjCategory::Bytes,
 			std::false_type
 		>
 	>
 {
-	using Base = EthInternal::AbiParserHeadOnlyTypes<
-		EthInternal::AbiCodecImpl<
-			Internal::Obj::ObjCategory::Bytes,
-			std::false_type
-		>
+	using ParserImpl = EthInternal::AbiParserImpl<
+		Internal::Obj::ObjCategory::Bytes,
+		std::false_type
 	>;
-	using Codec = typename Base::Codec;
+	using Base = EthInternal::AbiParserHeadOnlyTypes<ParserImpl>;
+	using Codec = typename ParserImpl::Codec;
 
 
 	AbiParser(size_t size) :
-		Base(Codec(EthInternal::AbiWithinChunkSize(size)))
+		Base(ParserImpl(EthInternal::AbiWithinChunkSize(size)))
 	{}
 	// LCOV_EXCL_START
 	virtual ~AbiParser() = default;
 	// LCOV_EXCL_STOP
-}; // struct AbiParser<Internal::Obj::ObjCategory::Bool, false>
+}; // struct AbiParser<Internal::Obj::ObjCategory::Bytes, false>
 
 
 template<size_t _Size>
@@ -1062,33 +986,32 @@ struct AbiParser<
 	std::integral_constant<size_t, _Size>
 > :
 	EthInternal::AbiParserHeadOnlyTypes<
-		EthInternal::AbiCodecImpl<
+		EthInternal::AbiParserImpl<
 			Internal::Obj::ObjCategory::Bytes,
 			std::false_type
 		>
 	>
 {
+	using ParserImpl = EthInternal::AbiParserImpl<
+		Internal::Obj::ObjCategory::Bytes,
+		std::false_type
+	>;
+	using Base = EthInternal::AbiParserHeadOnlyTypes<ParserImpl>;
+	using Codec = typename ParserImpl::Codec;
+
 	static constexpr size_t sk_size = _Size;
 	static_assert(
 		sk_size <= AbiParserConst::sk_chunkSize(),
 		"ABI parser - bytes type is too large"
 	);
 
-	using Base = EthInternal::AbiParserHeadOnlyTypes<
-		EthInternal::AbiCodecImpl<
-			Internal::Obj::ObjCategory::Bytes,
-			std::false_type
-		>
-	>;
-	using Codec = typename Base::Codec;
-
 	AbiParser() :
-		Base(Codec(sk_size))
+		Base(ParserImpl(sk_size))
 	{}
 	// LCOV_EXCL_START
 	virtual ~AbiParser() = default;
 	// LCOV_EXCL_STOP
-}; // struct AbiParser<Internal::Obj::ObjCategory::Bool, size_t>
+}; // struct AbiParser<Internal::Obj::ObjCategory::Bytes, size_t>
 
 
 // ==========
@@ -1102,28 +1025,27 @@ struct AbiParser<
 	std::true_type /* IsDynamic? - true */
 > :
 	EthInternal::AbiParserHeadTailTypes<
-		EthInternal::AbiCodecImpl<
+		EthInternal::AbiParserImpl<
 			Internal::Obj::ObjCategory::Bytes,
 			std::true_type
 		>
 	>
 {
-	using Base = EthInternal::AbiParserHeadTailTypes<
-		EthInternal::AbiCodecImpl<
-			Internal::Obj::ObjCategory::Bytes,
-			std::true_type
-		>
+	using ParserImpl = EthInternal::AbiParserImpl<
+		Internal::Obj::ObjCategory::Bytes,
+		std::true_type
 	>;
-	using Codec = typename Base::Codec;
+	using Base = EthInternal::AbiParserHeadTailTypes<ParserImpl>;
+	using Codec = typename ParserImpl::Codec;
 
 
 	AbiParser() :
-		Base(Codec())
+		Base(ParserImpl())
 	{}
 	// LCOV_EXCL_START
 	virtual ~AbiParser() = default;
 	// LCOV_EXCL_STOP
-}; // struct AbiParser<Internal::Obj::ObjCategory::Bool, true>
+}; // struct AbiParser<Internal::Obj::ObjCategory::Bytes, true>
 
 
 // ==========
@@ -1138,35 +1060,30 @@ struct AbiParser<
 	std::false_type /* IsLenDynamic? - false */
 > :
 	EthInternal::AbiHeadTailTypesSelector<
-		_ItemParser::sk_hasTail,
-		EthInternal::AbiCodecImpl<
+		_ItemParser::Codec::sk_isDynamic,
+		EthInternal::AbiParserImpl<
 			Internal::Obj::ObjCategory::List,
 			_ItemParser,
 			std::false_type,
-			std::integral_constant<
-				bool,
-				_ItemParser::sk_hasTail
-			>
+			typename _ItemParser::Codec::IsDynamic
 		>
 	>
 {
-	using Base = EthInternal::AbiHeadTailTypesSelector<
-		_ItemParser::sk_hasTail,
-		EthInternal::AbiCodecImpl<
-			Internal::Obj::ObjCategory::List,
-			_ItemParser,
-			std::false_type,
-			std::integral_constant<
-				bool,
-				_ItemParser::sk_hasTail
-			>
-		>
+	using ParserImpl = EthInternal::AbiParserImpl<
+		Internal::Obj::ObjCategory::List,
+		_ItemParser,
+		std::false_type,
+		typename _ItemParser::Codec::IsDynamic
 	>;
-	using Codec = typename Base::Codec;
+	using Base = EthInternal::AbiHeadTailTypesSelector<
+		_ItemParser::Codec::sk_isDynamic,
+		ParserImpl
+	>;
+	using Codec = typename ParserImpl::Codec;
 
 
 	AbiParser(_ItemParser itemParser, size_t len) :
-		Base(Codec(std::move(itemParser), len))
+		Base(ParserImpl(std::move(itemParser), len))
 	{}
 	// LCOV_EXCL_START
 	virtual ~AbiParser() = default;
@@ -1181,36 +1098,31 @@ struct AbiParser<
 	std::integral_constant<size_t, _Size>
 > :
 	EthInternal::AbiHeadTailTypesSelector<
-		_ItemParser::sk_hasTail,
-		EthInternal::AbiCodecImpl<
+		_ItemParser::Codec::sk_isDynamic,
+		EthInternal::AbiParserImpl<
 			Internal::Obj::ObjCategory::List,
 			_ItemParser,
 			std::false_type,
-			std::integral_constant<
-				bool,
-				_ItemParser::sk_hasTail
-			>
+			typename _ItemParser::Codec::IsDynamic
 		>
 	>
 {
-	using Base = EthInternal::AbiHeadTailTypesSelector<
-		_ItemParser::sk_hasTail,
-		EthInternal::AbiCodecImpl<
-			Internal::Obj::ObjCategory::List,
-			_ItemParser,
-			std::false_type,
-			std::integral_constant<
-				bool,
-				_ItemParser::sk_hasTail
-			>
-		>
+	using ParserImpl = EthInternal::AbiParserImpl<
+		Internal::Obj::ObjCategory::List,
+		_ItemParser,
+		std::false_type,
+		typename _ItemParser::Codec::IsDynamic
 	>;
-	using Codec = typename Base::Codec;
+	using Base = EthInternal::AbiHeadTailTypesSelector<
+		_ItemParser::Codec::sk_isDynamic,
+		ParserImpl
+	>;
+	using Codec = typename ParserImpl::Codec;
 
 	static constexpr size_t sk_size = _Size;
 
 	AbiParser(_ItemParser itemParser) :
-		Base(Codec(std::move(itemParser), sk_size))
+		Base(ParserImpl(std::move(itemParser), sk_size))
 	{}
 	// LCOV_EXCL_START
 	virtual ~AbiParser() = default;
@@ -1231,34 +1143,26 @@ struct AbiParser<
 > :
 	EthInternal::AbiParserHeadTailTypes<
 		// dynamic length make this type always has tail
-		EthInternal::AbiCodecImpl<
+		EthInternal::AbiParserImpl<
 			Internal::Obj::ObjCategory::List,
 			_ItemParser,
 			std::true_type,
-			std::integral_constant<
-				bool,
-				_ItemParser::sk_hasTail
-			>
+			typename _ItemParser::Codec::IsDynamic
 		>
 	>
 {
-	using Base =
-		EthInternal::AbiParserHeadTailTypes<
-			EthInternal::AbiCodecImpl<
-				Internal::Obj::ObjCategory::List,
-				_ItemParser,
-				std::true_type,
-				std::integral_constant<
-					bool,
-					_ItemParser::sk_hasTail
-				>
-			>
-		>;
-	using Codec = typename Base::Codec;
+	using ParserImpl = EthInternal::AbiParserImpl<
+		Internal::Obj::ObjCategory::List,
+		_ItemParser,
+		std::true_type,
+		typename _ItemParser::Codec::IsDynamic
+	>;
+	using Base = EthInternal::AbiParserHeadTailTypes<ParserImpl>;
+	using Codec = typename ParserImpl::Codec;
 
 
 	explicit AbiParser(_ItemParser itemParser) :
-		Base(Codec(std::move(itemParser)))
+		Base(ParserImpl(std::move(itemParser)))
 	{}
 	// LCOV_EXCL_START
 	virtual ~AbiParser() = default;
@@ -1268,3 +1172,4 @@ struct AbiParser<
 
 } // namespace Eth
 } // namespace EclipseMonitor
+
