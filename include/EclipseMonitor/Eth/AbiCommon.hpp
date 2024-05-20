@@ -27,13 +27,13 @@ namespace Eth
 // ==========
 
 
-struct AbiParserConst
+struct AbiCodecConst
 {
 	static constexpr size_t sk_chunkSize() noexcept
 	{
 		return 32;
 	}
-}; // struct AbiParserConst
+}; // struct AbiCodecConst
 
 
 // ==========
@@ -87,6 +87,14 @@ inline constexpr _T AbiCeilingDiv(_T a, _T b) noexcept
 }
 
 
+inline constexpr size_t AbiWithinChunkSize(size_t size)
+{
+	return size <= AbiCodecConst::sk_chunkSize() ?
+		size :
+		throw Exception("ABI parser - bytes type is too large");
+}
+
+
 template<Internal::Obj::RealNumType _RealNumType>
 struct RealNumTypeTraits;
 
@@ -97,7 +105,12 @@ struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt8> :
 		Internal::Obj::RealNumType::UInt8,
 		uint8_t
 	>
-{}; // struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt8>
+{
+	static Primitive FromRealNumBase(const Internal::Obj::RealNumBaseObj& val)
+	{
+		return val.AsCppUInt8();
+	}
+}; // struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt8>
 
 
 template<>
@@ -115,7 +128,12 @@ struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt32> :
 		Internal::Obj::RealNumType::UInt32,
 		uint32_t
 	>
-{}; // struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt32>
+{
+	static Primitive FromRealNumBase(const Internal::Obj::RealNumBaseObj& val)
+	{
+		return val.AsCppUInt32();
+	}
+}; // struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt32>
 
 
 template<>
@@ -124,7 +142,12 @@ struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt64> :
 		Internal::Obj::RealNumType::UInt64,
 		uint64_t
 	>
-{}; // struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt64>
+{
+	static Primitive FromRealNumBase(const Internal::Obj::RealNumBaseObj& val)
+	{
+		return val.AsCppUInt64();
+	}
+}; // struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt64>
 
 
 } // namespace EthInternal
@@ -162,17 +185,18 @@ struct AbiCodecImpl<
 	static constexpr size_t sk_consumedSize = RealNumTraits::sk_consumedSize();
 
 	static_assert(
-		sk_consumedSize <= AbiParserConst::sk_chunkSize(),
+		sk_consumedSize <= AbiCodecConst::sk_chunkSize(),
 		"ABI parser - integer type is too large"
 	);
 
 	static constexpr size_t sk_leadPadSize =
-		AbiParserConst::sk_chunkSize() - sk_consumedSize;
+		AbiCodecConst::sk_chunkSize() - sk_consumedSize;
 
 	using Primitive = typename RealNumTraits::Primitive;
 
 	using IsDynamic = std::false_type;
 	static constexpr bool sk_isDynamic = IsDynamic::value;
+	bool IsDynamicType() const noexcept { return sk_isDynamic; }
 
 }; // struct AbiCodecImpl<Internal::Obj::ObjCategory::Integer, RealNumType>
 
@@ -205,6 +229,7 @@ struct AbiCodecImpl<
 
 	using IsDynamic = std::false_type;
 	static constexpr bool sk_isDynamic = IsDynamic::value;
+	bool IsDynamicType() const noexcept { return sk_isDynamic; }
 
 }; // struct AbiCodecImpl<Internal::Obj::ObjCategory::Bool>
 
@@ -225,6 +250,7 @@ struct AbiCodecImpl<
 
 	using IsDynamic = std::false_type;
 	static constexpr bool sk_isDynamic = IsDynamic::value;
+	bool IsDynamicType() const noexcept { return sk_isDynamic; }
 
 }; // struct AbiCodecImpl<Internal::Obj::ObjCategory::Bytes, false>
 
@@ -245,6 +271,7 @@ struct AbiCodecImpl<
 
 	using IsDynamic = std::true_type;
 	static constexpr bool sk_isDynamic = IsDynamic::value;
+	bool IsDynamicType() const noexcept { return sk_isDynamic; }
 
 }; // struct AbiCodecImpl<Internal::Obj::ObjCategory::Bytes, true>
 
@@ -273,6 +300,7 @@ struct AbiCodecImpl<
 
 	using IsDynamic = std::false_type;
 	static constexpr bool sk_isDynamic = IsDynamic::value;
+	bool IsDynamicType() const noexcept { return sk_isDynamic; }
 
 }; // struct AbiCodecImpl<Internal::Obj::ObjCategory::List, _ItemCodec, false, false>
 
@@ -301,6 +329,7 @@ struct AbiCodecImpl<
 
 	using IsDynamic = std::true_type;
 	static constexpr bool sk_isDynamic = IsDynamic::value;
+	bool IsDynamicType() const noexcept { return sk_isDynamic; }
 
 }; // struct AbiCodecImpl<Internal::Obj::ObjCategory::List, _ItemCodec, false, true>
 
@@ -334,6 +363,7 @@ struct AbiCodecDynLenListImpl
 
 	using IsDynamic = std::true_type;
 	static constexpr bool sk_isDynamic = IsDynamic::value;
+	bool IsDynamicType() const noexcept { return sk_isDynamic; }
 
 }; // struct AbiCodecDynLenListImpl
 

@@ -94,14 +94,6 @@ inline _SrcIt AbiParserCopyBytesThenSkip(
 }
 
 
-inline constexpr size_t AbiWithinChunkSize(size_t size)
-{
-	return size <= AbiParserConst::sk_chunkSize() ?
-		size :
-		throw Exception("ABI parser - bytes type is too large");
-}
-
-
 } // namespace EthInternal
 
 
@@ -195,12 +187,12 @@ struct AbiParserImpl<
 	using Codec = Base;
 	using Primitive = typename Base::Primitive;
 
-	using IntParser = AbiParserImpl<
+	using IntParserImpl = AbiParserImpl<
 		Internal::Obj::ObjCategory::Integer,
 		AbiUInt8
 	>;
 	static_assert(
-		std::is_same<typename IntParser::Base, typename Base::Base>::value,
+		std::is_same<typename IntParserImpl::Codec, typename Codec::Base>::value,
 		"ABI parser - bool parser must have the same base as uint8 parser"
 	);
 
@@ -215,7 +207,7 @@ struct AbiParserImpl<
 		uint8_t valInt = 0;
 		size_t chunkConsumed = 0;
 		std::tie(valInt, begin, chunkConsumed) =
-			IntParser().ToPrimitive(begin, end);
+			IntParserImpl().ToPrimitive(begin, end);
 
 		bool valBool =
 			(valInt == 1 ? true  :
@@ -256,7 +248,7 @@ struct AbiParserImpl<
 	 */
 	AbiParserImpl(size_t size) :
 		m_size(size),
-		m_padSize(AbiParserConst::sk_chunkSize() - m_size)
+		m_padSize(AbiCodecConst::sk_chunkSize() - m_size)
 	{}
 	~AbiParserImpl() = default;
 
@@ -328,10 +320,10 @@ struct AbiParserImpl<
 
 		size_t numChunk = EthInternal::AbiCeilingDiv(
 			static_cast<size_t>(len),
-			AbiParserConst::sk_chunkSize()
+			AbiCodecConst::sk_chunkSize()
 		);
 		size_t paddingSize =
-			(numChunk * AbiParserConst::sk_chunkSize()) - len;
+			(numChunk * AbiCodecConst::sk_chunkSize()) - len;
 
 		Primitive res;
 		res.reserve(len);
@@ -517,7 +509,7 @@ struct AbiParserImpl<
 		{
 			// check the offset is correct
 			size_t bytesConsumed =
-				totalChunkConsumed * AbiParserConst::sk_chunkSize();
+				totalChunkConsumed * AbiCodecConst::sk_chunkSize();
 			if (head != bytesConsumed)
 			{
 				throw Exception("ABI parser - invalid offset");
@@ -1001,7 +993,7 @@ struct AbiParser<
 
 	static constexpr size_t sk_size = _Size;
 	static_assert(
-		sk_size <= AbiParserConst::sk_chunkSize(),
+		sk_size <= AbiCodecConst::sk_chunkSize(),
 		"ABI parser - bytes type is too large"
 	);
 
