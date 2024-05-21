@@ -186,6 +186,11 @@ struct AbiWriterUIntImpl :
 		return 0;
 	}
 
+	size_t GetNumTailChunks(const Internal::Obj::BaseObj&) const
+	{
+		return GetNumTailChunks();
+	}
+
 	/**
 	 * @brief Write the given integer value to the destination stream
 	 *
@@ -315,6 +320,11 @@ struct AbiWriterImpl<
 		return 0;
 	}
 
+	size_t GetNumTailChunks(const Internal::Obj::BaseObj&) const
+	{
+		return GetNumTailChunks();
+	}
+
 	/**
 	 * @brief Write the given bool value to the destination stream
 	 *
@@ -404,6 +414,11 @@ struct AbiWriterImpl<
 	size_t GetNumTailChunks() const
 	{
 		return 0;
+	}
+
+	size_t GetNumTailChunks(const Internal::Obj::BaseObj&) const
+	{
+		return GetNumTailChunks();
 	}
 
 	/**
@@ -531,6 +546,16 @@ struct AbiWriterImpl<
 		return 1 + GetNumDataChunks(len);
 	}
 
+	size_t GetNumTailChunks(const Internal::Obj::BytesBaseObj& val) const
+	{
+		return GetNumTailChunks(val.size());
+	}
+
+	size_t GetNumTailChunks(const Internal::Obj::BaseObj& val) const
+	{
+		return GetNumTailChunks(val.AsBytes());
+	}
+
 	/**
 	 * @brief Get the size of the padding needed to store the dynamic bytes
 	 *
@@ -612,6 +637,12 @@ struct AbiWriterImpl<
 		return Write(destIt, cnt.begin(), cnt.end(), cnt.size());
 	}
 
+	template<typename _DestIt>
+	_DestIt WriteObj(_DestIt destIt, const Internal::Obj::BaseObj& val) const
+	{
+		return Write(destIt, val.AsBytes());
+	}
+
 private:
 
 	// DynLenWriterImpl m_dynLenWriter;
@@ -683,6 +714,11 @@ struct AbiWriterImpl<
 		return 0;
 	}
 
+	size_t GetNumTailChunks(const Internal::Obj::BaseObj&) const
+	{
+		return GetNumTailChunks();
+	}
+
 	template<typename _DestIt, typename _ItemIt>
 	_DestIt Write(_DestIt destIt, _ItemIt begin, _ItemIt end) const
 	{
@@ -698,6 +734,12 @@ struct AbiWriterImpl<
 	_DestIt Write(_DestIt destIt, const _CntT& cnt) const
 	{
 		return Write(destIt, cnt.begin(), cnt.end());
+	}
+
+	template<typename _DestIt>
+	_DestIt WriteObj(_DestIt destIt, const Internal::Obj::BaseObj& val) const
+	{
+		return Write(destIt, val.AsList());
 	}
 
 private:
@@ -848,6 +890,118 @@ private:
 	WriterImpl m_impl;
 
 }; // class AbiWriterHeadOnlyBase
+
+
+template<typename _Impl>
+class AbiWriterHeadTailBase : public AbiWriterBase
+{
+public: // static members:
+
+	using Base = AbiWriterBase;
+	using Self = AbiWriterHeadTailBase<_Impl>;
+
+	using WriterImpl = _Impl;
+
+	/**
+	 * @brief The type of the parser used to parse the head part of the ABI data
+	 *        NOTE: the ABI spec assume the head is always a uint256 offset,
+	 *        but here we assume a uint64 offset for simplicity, and it's
+	 *        very unlikely that the offset will be larger than uint64 in
+	 *        real-world cases.
+	 *
+	 */
+	using HeadWriterImpl = EthInternal::AbiWriterImpl<
+		Internal::Obj::ObjCategory::Integer,
+		AbiUInt64
+	>; // head is a uint256 offset
+
+	using WriteIterator = typename Base::WriteIterator;
+
+public:
+
+	AbiWriterHeadTailBase(WriterImpl impl) :
+		Base(),
+		m_headWriter(HeadWriterImpl()),
+		m_impl(std::move(impl))
+	{}
+
+	virtual ~AbiWriterHeadTailBase() = default;
+
+	bool IsDynamicType() const override
+	{
+		return m_impl.IsDynamicType();
+	}
+
+	size_t GetNumHeadChunks() const override
+	{
+		return m_impl.GetNumHeadChunks();
+	}
+
+	size_t GetNumTailChunks(const Internal::Obj::BaseObj& val) const override
+	{
+		return m_impl.GetNumTailChunks(val);
+	}
+
+	virtual
+	std::tuple<
+		WriteIterator,
+		size_t
+	>
+	WriteHead(
+		WriteIterator destIt,
+		const Internal::Obj::BaseObj& val,
+		size_t currDataOffset
+	) const override
+	{
+		if (!IsDynamicType())
+		{
+			// static type - head only
+			return std::make_tuple(
+				m_impl.WriteObj(destIt, val),
+				currDataOffset
+			);
+		}
+		else
+		{
+			// dynamic type - head is a uint representing the data offset
+			auto headIt = m_headWriter.Write(
+				destIt,
+				static_cast<uint64_t>(currDataOffset)
+			);
+
+			// calculate the new data offset
+			currDataOffset += (
+				m_impl.GetNumTailChunks(val) *
+				AbiCodecConst::sk_chunkSize()
+			);
+
+			return std::make_tuple(headIt, currDataOffset);
+		}
+	}
+
+	virtual WriteIterator WriteTail(
+		WriteIterator destIt,
+		const Internal::Obj::BaseObj& val
+	) const override
+	{
+		if (!IsDynamicType())
+		{
+			// static type - no tail chunks
+			return destIt;
+		}
+		else
+		{
+			// dynamic type - write the tail chunks
+			return m_impl.WriteObj(destIt, val);
+		}
+	}
+
+protected:
+
+	HeadWriterImpl m_headWriter;
+	WriterImpl m_impl;
+
+}; // class AbiWriterHeadTailBase
 
 
 // ==========
@@ -1017,6 +1171,36 @@ struct AbiWriter<
 // ==========
 // AbiWriter for bytes types
 // ==========
+
+
+template<>
+struct AbiWriter<
+	Internal::Obj::ObjCategory::Bytes,
+	std::true_type // IsDynamic? - true
+> :
+	public AbiWriterHeadTailBase<
+		EthInternal::AbiWriterImpl<
+			Internal::Obj::ObjCategory::Bytes,
+			std::true_type
+		>
+	>
+{
+	using WriterImpl = EthInternal::AbiWriterImpl<
+		Internal::Obj::ObjCategory::Bytes,
+		std::true_type
+	>;
+	using Base = AbiWriterHeadTailBase<WriterImpl>;
+	using Self = AbiWriter<Internal::Obj::ObjCategory::Bytes, std::true_type>;
+
+	AbiWriter() :
+		Base(WriterImpl())
+	{}
+
+	// LCOV_EXCL_START
+	virtual ~AbiWriter() = default;
+	// LCOV_EXCL_STOP
+
+}; // struct AbiWriter<Internal::Obj::ObjCategory::Bytes, true>
 
 
 // ==========

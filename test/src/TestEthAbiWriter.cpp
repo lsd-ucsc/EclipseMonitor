@@ -70,6 +70,14 @@ static void TestWriterImpl(
 }
 
 
+static const std::vector<uint8_t> gsk_testObjWriterHead = {
+	0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+	0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+	0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+	0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x80U,
+};
+
+
 template<typename _Writer>
 static void TestObjWriter(
 	const _Writer& writer,
@@ -122,6 +130,7 @@ GTEST_TEST(TestEthAbiWriter, WriteIntegerImpl)
 	EXPECT_EQ(AbiWriterImplUInt64().IsDynamicType(), false);
 	EXPECT_EQ(AbiWriterImplUInt64().GetNumHeadChunks(), 1);
 	EXPECT_EQ(AbiWriterImplUInt64().GetNumTailChunks(), 0);
+	EXPECT_EQ(AbiWriterImplUInt64().GetNumTailChunks(SimpleObjects::UInt64()), 0);
 
 	EXPECT_EQ(AbiWriterUInt64().IsDynamicType(), false);
 	EXPECT_EQ(AbiWriterUInt64().GetNumHeadChunks(), 1);
@@ -155,6 +164,7 @@ GTEST_TEST(TestEthAbiWriter, WriteBoolImpl)
 	EXPECT_EQ(AbiWriterImplBool().IsDynamicType(), false);
 	EXPECT_EQ(AbiWriterImplBool().GetNumHeadChunks(), 1);
 	EXPECT_EQ(AbiWriterImplBool().GetNumTailChunks(), 0);
+	EXPECT_EQ(AbiWriterImplBool().GetNumTailChunks(SimpleObjects::Bool()), 0);
 
 	EXPECT_EQ(AbiWriterBool().IsDynamicType(), false);
 	EXPECT_EQ(AbiWriterBool().GetNumHeadChunks(), 1);
@@ -212,6 +222,7 @@ GTEST_TEST(TestEthAbiWriter, WriteStaticBytesImpl)
 		EXPECT_EQ(writerImpl.IsDynamicType(), false);
 		EXPECT_EQ(writerImpl.GetNumHeadChunks(), 1);
 		EXPECT_EQ(writerImpl.GetNumTailChunks(), 0);
+		EXPECT_EQ(writerImpl.GetNumTailChunks(SimpleObjects::Bytes()), 0);
 		EXPECT_EQ(writerImpl.GetPadSize(), 16);
 
 		EXPECT_EQ(writer.IsDynamicType(), false);
@@ -240,6 +251,7 @@ GTEST_TEST(TestEthAbiWriter, WriteStaticBytesImpl)
 		EXPECT_EQ(writerImpl.IsDynamicType(), false);
 		EXPECT_EQ(writerImpl.GetNumHeadChunks(), 1);
 		EXPECT_EQ(writerImpl.GetNumTailChunks(), 0);
+		EXPECT_EQ(writerImpl.GetNumTailChunks(SimpleObjects::Bytes()), 0);
 		EXPECT_EQ(writerImpl.GetPadSize(), 0);
 
 		EXPECT_EQ(writer.IsDynamicType(), false);
@@ -295,6 +307,10 @@ GTEST_TEST(TestEthAbiWriter, WriteDynamicBytesImpl)
 		SimpleObjects::ObjCategory::Bytes,
 		std::true_type
 	>;
+	using AbiWriterBytes = AbiWriter<
+		SimpleObjects::ObjCategory::Bytes,
+		std::true_type
+	>;
 
 	AbiWriterImplBytes writerImpl;
 
@@ -319,6 +335,7 @@ GTEST_TEST(TestEthAbiWriter, WriteDynamicBytesImpl)
 	EXPECT_EQ(writerImpl.GetNumTailChunks(45), 3);
 	EXPECT_EQ(writerImpl.GetNumTailChunks(64), 3);
 	EXPECT_EQ(writerImpl.GetNumTailChunks(65), 4);
+	EXPECT_EQ(writerImpl.GetNumTailChunks(SimpleObjects::Bytes()), 1);
 
 	EXPECT_EQ(writerImpl.GetPadSize(0), 0);
 	EXPECT_EQ(writerImpl.GetPadSize(10), 22);
@@ -328,6 +345,12 @@ GTEST_TEST(TestEthAbiWriter, WriteDynamicBytesImpl)
 	EXPECT_EQ(writerImpl.GetPadSize(45), 19);
 	EXPECT_EQ(writerImpl.GetPadSize(64), 0);
 	EXPECT_EQ(writerImpl.GetPadSize(65), 31);
+
+	AbiWriterBytes writer;
+
+	EXPECT_EQ(writer.IsDynamicType(), true);
+	EXPECT_EQ(writer.GetNumHeadChunks(), 1);
+	EXPECT_EQ(writer.GetNumTailChunks(SimpleObjects::Bytes()), 1);
 
 	{
 		std::vector<uint8_t> expOutput = {
@@ -365,6 +388,12 @@ GTEST_TEST(TestEthAbiWriter, WriteDynamicBytesImpl)
 			expOutput,
 			inVal.AsBytes().begin(),
 			inVal.AsBytes().end()
+		);
+		TestObjWriter(
+			writer,
+			inVal,
+			gsk_testObjWriterHead,
+			expOutput, 3 * AbiCodecConst::sk_chunkSize()
 		);
 	}
 
@@ -405,6 +434,12 @@ GTEST_TEST(TestEthAbiWriter, WriteDynamicBytesImpl)
 			expOutput,
 			inVal.AsBytes().begin(),
 			inVal.AsBytes().end()
+		);
+		TestObjWriter(
+			writer,
+			inVal,
+			gsk_testObjWriterHead,
+			expOutput, 3 * AbiCodecConst::sk_chunkSize()
 		);
 	}
 
@@ -451,6 +486,7 @@ GTEST_TEST(TestEthAbiWriter, WriteStaticListImpl)
 
 		EXPECT_EQ(writerImpl.GetNumHeadChunks(), 5);
 		EXPECT_EQ(writerImpl.GetNumTailChunks(), 0);
+		EXPECT_EQ(writerImpl.GetNumTailChunks(SimpleObjects::List()), 0);
 
 		std::vector<uint8_t> expOutput = {
 			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
@@ -496,6 +532,7 @@ GTEST_TEST(TestEthAbiWriter, WriteStaticListImpl)
 
 		EXPECT_EQ(writerImpl.GetNumHeadChunks(), 2);
 		EXPECT_EQ(writerImpl.GetNumTailChunks(), 0);
+		EXPECT_EQ(writerImpl.GetNumTailChunks(SimpleObjects::List()), 0);
 
 		std::vector<uint8_t> expOutput = {
 			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
