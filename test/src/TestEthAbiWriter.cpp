@@ -466,27 +466,29 @@ GTEST_TEST(TestEthAbiWriter, WriteDynamicBytesImpl)
 }
 
 
-GTEST_TEST(TestEthAbiWriter, WriteStaticListImpl)
+GTEST_TEST(TestEthAbiWriter, WriteStaticList)
 {
-	using AbiWriterImplUInt64 = EthInternal::AbiWriterImpl<
+	using AbiWriterUint64 = AbiWriter<
 		SimpleObjects::ObjCategory::Integer,
 		AbiUInt64
 	>;
-	using AbiWriterImplUInt64List = EthInternal::AbiWriterImpl<
+	using AbiWriterListUint64 = AbiWriter<
 		SimpleObjects::ObjCategory::List,
-		AbiWriterImplUInt64,
-		std::false_type,
+		AbiWriterUint64,
 		std::false_type
+	>;
+	using AbiWriterListUint64_2 = AbiWriter<
+		SimpleObjects::ObjCategory::List,
+		AbiWriterUint64,
+		AbiSize<2>
 	>;
 
 	{
-		AbiWriterImplUInt64List writerImpl(AbiWriterImplUInt64(), 5);
+		AbiWriterListUint64 writer(AbiWriterUint64(), 5);
 
-		EXPECT_EQ(writerImpl.IsDynamicType(), false);
+		EXPECT_EQ(writer.IsDynamicType(), false);
 
-		EXPECT_EQ(writerImpl.GetNumHeadChunks(), 5);
-		EXPECT_EQ(writerImpl.GetNumTailChunks(), 0);
-		EXPECT_EQ(writerImpl.GetNumTailChunks(SimpleObjects::List()), 0);
+		EXPECT_EQ(writer.GetNumHeadChunks(), 5);
 
 		std::vector<uint8_t> expOutput = {
 			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
@@ -514,25 +516,25 @@ GTEST_TEST(TestEthAbiWriter, WriteStaticListImpl)
 			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
 			0x99U, 0x00U, 0xAAU, 0xBBU, 0xCCU, 0xDDU, 0xEEU, 0xFFU,
 		};
-		std::vector<uint64_t> inVal = {
-			(0x1234567890ABCDEFULL),
-			(0xEFCDAB8967452301ULL),
-			(0x0123456789ABCDEFULL),
-			(0x1122334455667788ULL),
-			(0x9900AABBCCDDEEFFULL),
+		SimpleObjects::List inVal = {
+			SimpleObjects::UInt64(0x1234567890ABCDEFULL),
+			SimpleObjects::UInt64(0xEFCDAB8967452301ULL),
+			SimpleObjects::UInt64(0x0123456789ABCDEFULL),
+			SimpleObjects::UInt64(0x1122334455667788ULL),
+			SimpleObjects::UInt64(0x9900AABBCCDDEEFFULL),
 		};
 
-		TestWriterImpl(writerImpl, expOutput, inVal);
+		EXPECT_EQ(writer.GetNumTailChunks(inVal), 0);
+		TestObjWriter(writer, inVal, expOutput, {});
 	}
 
 	{
-		AbiWriterImplUInt64List writerImpl(AbiWriterImplUInt64(), 2);
+		AbiWriterUint64 innerWriter;
+		AbiWriterListUint64_2 writer(innerWriter);
 
-		EXPECT_EQ(writerImpl.IsDynamicType(), false);
+		EXPECT_EQ(writer.IsDynamicType(), false);
 
-		EXPECT_EQ(writerImpl.GetNumHeadChunks(), 2);
-		EXPECT_EQ(writerImpl.GetNumTailChunks(), 0);
-		EXPECT_EQ(writerImpl.GetNumTailChunks(SimpleObjects::List()), 0);
+		EXPECT_EQ(writer.GetNumHeadChunks(), 2);
 
 		std::vector<uint8_t> expOutput = {
 			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
@@ -545,13 +547,187 @@ GTEST_TEST(TestEthAbiWriter, WriteStaticListImpl)
 			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
 			0x99U, 0x00U, 0xAAU, 0xBBU, 0xCCU, 0xDDU, 0xEEU, 0xFFU,
 		};
-		std::vector<uint64_t> inVal = {
-			(0x1122334455667788ULL),
-			(0x9900AABBCCDDEEFFULL),
+		SimpleObjects::ListT<SimpleObjects::UInt64> inVal = {
+			SimpleObjects::UInt64(0x1122334455667788ULL),
+			SimpleObjects::UInt64(0x9900AABBCCDDEEFFULL),
 		};
 
-		TestWriterImpl(writerImpl, expOutput, inVal);
+		EXPECT_EQ(writer.GetNumTailChunks(inVal), 0);
+		TestObjWriter(writer, inVal, expOutput, {});
 	}
 
+	// Too many values given in the list
+	{
+		AbiWriterListUint64 writer(AbiWriterUint64(), 1);
+		SimpleObjects::ListT<SimpleObjects::UInt64> inVal = {
+			SimpleObjects::UInt64(0x1122334455667788ULL),
+			SimpleObjects::UInt64(0x9900AABBCCDDEEFFULL),
+		};
+		std::vector<uint8_t> output;
+		auto destIt = SimpleObjects::ToOutIt<uint8_t>(std::back_inserter(output));
+		EXPECT_THROW_MSG(
+			writer.WriteHead(destIt, inVal, 0);,
+			EclipseMonitor::Exception,
+			"ABI writer - too many given data than declared"
+		);
+	}
+
+	// Too few values given in the list
+	{
+		AbiWriterListUint64 writer(AbiWriterUint64(), 1);
+		SimpleObjects::ListT<SimpleObjects::UInt64> inVal = {
+		};
+		std::vector<uint8_t> output;
+		auto destIt = SimpleObjects::ToOutIt<uint8_t>(std::back_inserter(output));
+		EXPECT_THROW_MSG(
+			writer.WriteHead(destIt, inVal, 0);,
+			EclipseMonitor::Exception,
+			"ABI writer - the number of given data is less than declared"
+		);
+	}
+}
+
+
+GTEST_TEST(TestEthAbiWriter, WriteDynListConstLen)
+{
+	using AbiWriterBytes = AbiWriter<
+		SimpleObjects::ObjCategory::Bytes,
+		std::true_type
+	>;
+	using AbiWriterListBytes = AbiWriter<
+		SimpleObjects::ObjCategory::List,
+		AbiWriterBytes,
+		std::false_type
+	>;
+	using AbiWriterListBytes2 = AbiWriter<
+		SimpleObjects::ObjCategory::List,
+		AbiWriterBytes,
+		AbiSize<2>
+	>;
+
+	{
+		AbiWriterListBytes writer(AbiWriterBytes(), 1);
+
+		EXPECT_EQ(writer.IsDynamicType(), true);
+
+		EXPECT_EQ(writer.GetNumHeadChunks(), 1);
+
+		std::vector<uint8_t> expOutput = {
+			// item 1 - offset
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x20U,
+			// data area
+			// item 1 - len
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x05U,
+			// item 1 - bytes
+			0x01U, 0x02U, 0x03U, 0x04U, 0x05U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+		};
+		SimpleObjects::List inVal = {
+			SimpleObjects::Bytes({0x01U, 0x02U, 0x03U, 0x04U, 0x05U}),
+		};
+
+		EXPECT_EQ(writer.GetNumTailChunks(inVal), 3);
+		TestObjWriter(
+			writer,
+			inVal,
+			gsk_testObjWriterHead,
+			expOutput,
+			3 * AbiCodecConst::sk_chunkSize()
+		);
+	}
+
+	{
+		AbiWriterBytes innerWriter;
+		AbiWriterListBytes2 writer(innerWriter);
+
+		EXPECT_EQ(writer.IsDynamicType(), true);
+
+		EXPECT_EQ(writer.GetNumHeadChunks(), 1);
+
+		std::vector<uint8_t> expOutput = {
+			// item 1 - offset
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x40U,
+			// item 2 - offset
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x80U,
+			// data area
+			// item 1 - len
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x05U,
+			// item 1 - bytes
+			0x01U, 0x02U, 0x03U, 0x04U, 0x05U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			// item 2 - len
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x09U,
+			// item 2 - bytes
+			0x09U, 0x08U, 0x07U, 0x06U, 0x05U, 0x04U, 0x03U, 0x02U,
+			0x01U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+		};
+		SimpleObjects::ListT<SimpleObjects::Bytes> inVal = {
+			SimpleObjects::Bytes({0x01U, 0x02U, 0x03U, 0x04U, 0x05U}),
+			SimpleObjects::Bytes({0x09U, 0x08U, 0x07U, 0x06U, 0x05U, 0x04U, 0x03U, 0x02U, 0x01U}),
+		};
+
+		EXPECT_EQ(writer.GetNumTailChunks(inVal), 6);
+		TestObjWriter(
+			writer,
+			inVal,
+			gsk_testObjWriterHead,
+			expOutput,
+			6 * AbiCodecConst::sk_chunkSize()
+		);
+	}
+
+	// Too many values given in the list
+	{
+		AbiWriterListBytes writer(AbiWriterBytes(), 1);
+		SimpleObjects::List inVal = {
+			SimpleObjects::Bytes({0x01U, 0x02U, 0x03U, 0x04U, 0x05U}),
+			SimpleObjects::Bytes({0x09U, 0x08U, 0x07U, 0x06U, 0x05U, 0x04U, 0x03U, 0x02U, 0x01U}),
+		};
+		std::vector<uint8_t> output;
+		auto destIt = SimpleObjects::ToOutIt<uint8_t>(std::back_inserter(output));
+		EXPECT_THROW_MSG(
+			writer.WriteHead(destIt, inVal, 0);,
+			EclipseMonitor::Exception,
+			"ABI writer - too many given data than declared"
+		);
+	}
+
+	// Too few values given in the list
+	{
+		AbiWriterListBytes writer(AbiWriterBytes(), 1);
+		SimpleObjects::List inVal = {
+		};
+		std::vector<uint8_t> output;
+		auto destIt = SimpleObjects::ToOutIt<uint8_t>(std::back_inserter(output));
+		EXPECT_THROW_MSG(
+			writer.WriteHead(destIt, inVal, 0);,
+			EclipseMonitor::Exception,
+			"ABI writer - the number of given data is less than declared"
+		);
+	}
 }
 

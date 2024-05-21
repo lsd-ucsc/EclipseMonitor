@@ -650,104 +650,240 @@ private:
 }; // struct AbiWriterImpl<Internal::Obj::ObjCategory::Bytes, true>
 
 
-// ==========
-// AbiWriterImpl for T[k] types, where T is static type
-// ==========
-
-
+/**
+ * @brief This is one of the classes used to manage the nested writers for a
+ *        type that has nested types;
+ *        for example, T[k] types, or tuple (T1, T2, ..., Tn) types.
+ *        And this class is used to manage the nested writers for T[k] types,
+ *        which only have a single type, T, as the nested type.
+ *
+ * @tparam _ItemWriter
+ */
 template<typename _ItemWriter>
-struct AbiWriterImpl<
-	Internal::Obj::ObjCategory::List,
-	_ItemWriter,
-	std::false_type, // IsLenDynamic? - false
-	std::false_type  // IsItemDynamic? - false
-> :
-	public AbiCodecImpl<
-		Internal::Obj::ObjCategory::List,
-		typename _ItemWriter::Codec,
-		std::false_type,
-		std::false_type
-	>
+struct AbiNestedWriterMgrList
 {
-	using Base = AbiCodecImpl<
-		Internal::Obj::ObjCategory::List,
-		typename _ItemWriter::Codec,
-		std::false_type,
-		std::false_type
-	>;
-	using Self = AbiWriterImpl<
-		Internal::Obj::ObjCategory::List,
-		_ItemWriter,
-		std::false_type,
-		std::false_type
-	>;
-
-	using Codec = Base;
 	using ItemWriter = _ItemWriter;
 
-	AbiWriterImpl(ItemWriter itemWriter, size_t size) :
+	AbiNestedWriterMgrList(
+		ItemWriter itemWriter,
+		size_t size
+	) :
 		m_itemWriter(std::move(itemWriter)),
 		m_size(size)
 	{}
 
-	~AbiWriterImpl() = default;
+	AbiNestedWriterMgrList(std::pair<ItemWriter, size_t> pair) :
+		AbiNestedWriterMgrList(std::move(pair.first), pair.second)
+	{}
+
+	~AbiNestedWriterMgrList() = default;
+
+	bool IsDynamicType() const
+	{
+		return m_itemWriter.IsDynamicType();
+	}
 
 	/**
-	 * @brief Get the number of head chunks required to store the list
-	 *        NOTE: The static list always stores all data at head chunks
+	 * @brief Get the total number of head chunks of nested types,
+	 *        NO MATTER IF THIS TYPE IS DYNAMIC OR STATIC
 	 *
-	 * @return The number of chunks required
+	 * @return The total number of head chunks
 	 */
-	size_t GetNumHeadChunks() const
+	size_t GetTotalNumHeadChunks() const
 	{
 		return m_size * m_itemWriter.GetNumHeadChunks();
 	}
 
-	/**
-	 * @brief Get the number of tail chunks required to store the list
-	 *        NOTE: The static list has no tail chunks
-	 *
-	 * @return The number of chunks required
-	 */
-	size_t GetNumTailChunks() const
+	template<typename _Func, typename _ValIt>
+	void IterateVals(_Func func, _ValIt begin, _ValIt end) const
 	{
-		return 0;
-	}
-
-	size_t GetNumTailChunks(const Internal::Obj::BaseObj&) const
-	{
-		return GetNumTailChunks();
-	}
-
-	template<typename _DestIt, typename _ItemIt>
-	_DestIt Write(_DestIt destIt, _ItemIt begin, _ItemIt end) const
-	{
-		for (auto it = begin; it != end; ++it)
+		size_t size = m_size;
+		for(auto it = begin; it != end; ++it)
 		{
-			destIt = m_itemWriter.Write(destIt, *it);
+			if (size == 0)
+			{
+				throw Exception(
+					"ABI writer - too many given data than declared"
+				);
+			}
+			func(m_itemWriter, *it);
+			--size;
 		}
-
-		return destIt;
+		if (size != 0)
+		{
+			throw Exception(
+				"ABI writer - the number of given data is less than declared"
+			);
+		}
 	}
-
-	template<typename _DestIt, typename _CntT>
-	_DestIt Write(_DestIt destIt, const _CntT& cnt) const
-	{
-		return Write(destIt, cnt.begin(), cnt.end());
-	}
-
-	template<typename _DestIt>
-	_DestIt WriteObj(_DestIt destIt, const Internal::Obj::BaseObj& val) const
-	{
-		return Write(destIt, val.AsList());
-	}
-
-private:
 
 	ItemWriter m_itemWriter;
 	size_t m_size;
 
-}; // struct AbiWriterImpl<Internal::Obj::ObjCategory::List, _Item, false, false>
+}; // struct AbiNestedWriterMgrList
+
+
+template<typename _NestedWriterMgr>
+struct AbiWriterNestedTypeConstLenImpl
+{
+
+	using NestedWriterMgr = _NestedWriterMgr;
+
+	AbiWriterNestedTypeConstLenImpl(NestedWriterMgr nestedWriterMgr) :
+		m_nestedWriterMgr(std::move(nestedWriterMgr))
+	{}
+
+	~AbiWriterNestedTypeConstLenImpl() = default;
+
+	bool IsDynamicType() const
+	{
+		return m_nestedWriterMgr.IsDynamicType();
+	}
+
+	size_t GetNumHeadChunks() const
+	{
+		if (!IsDynamicType())
+		{
+			// static type - everything is stored at head chunks
+			return m_nestedWriterMgr.GetTotalNumHeadChunks();
+		}
+		else
+		{
+			// dynamic type - the head chunk stores the offset of the data
+			return 1;
+		}
+	}
+
+	struct NumTailChunksFunctor
+	{
+		NumTailChunksFunctor(size_t& size) :
+			m_size(size)
+		{}
+
+		~NumTailChunksFunctor() = default;
+
+		template<typename _Writer, typename _ValType>
+		void operator()(const _Writer& writer, const _ValType& val)
+		{
+			m_size += writer.GetNumTailChunks(val);
+		}
+
+		size_t& m_size;
+	}; // struct NumTailChunksFunctor
+
+	template<typename _It>
+	size_t GetNumTailChunks(_It begin, _It end) const
+	{
+		if (!IsDynamicType())
+		{
+			// static type - no tail chunks
+			return 0;
+		}
+		else
+		{
+			// dynamic type - the tail is
+			// sub_head_1, sub_head_2, ..., sub_head_n,
+			// sub_tail_1, sub_tail_2, ..., sub_tail_n
+			size_t numTailChunks = m_nestedWriterMgr.GetTotalNumHeadChunks();
+
+			m_nestedWriterMgr.IterateVals(
+				NumTailChunksFunctor(numTailChunks),
+				begin,
+				end
+			);
+
+			return numTailChunks;
+		}
+	}
+
+	template<typename _DestIt>
+	struct WriteHeadsFunctor
+	{
+		WriteHeadsFunctor(_DestIt& destIt, size_t& dataOffset) :
+			m_destIt(destIt),
+			m_dataOffset(dataOffset)
+		{}
+
+		template<typename _Writer, typename _ValType>
+		void operator()(const _Writer& writer, const _ValType& val)
+		{
+			std::tie(m_destIt, m_dataOffset) =
+				writer.WriteHead(m_destIt, val, m_dataOffset);
+		}
+
+		_DestIt& m_destIt;
+		size_t& m_dataOffset;
+	}; // struct WriteHeadsFunctor
+
+	template<typename _DestIt>
+	struct WriteTailsFunctor
+	{
+		WriteTailsFunctor(_DestIt& destIt) :
+			m_destIt(destIt)
+		{}
+
+		template<typename _Writer, typename _ValType>
+		void operator()(const _Writer& writer, const _ValType& val)
+		{
+			m_destIt = writer.WriteTail(m_destIt, val);
+		}
+
+		_DestIt& m_destIt;
+	}; // struct WriteTailsFunctor
+
+	template<typename _DestIt, typename _SrcIt>
+	_DestIt Write(_DestIt destIt, _SrcIt begin, _SrcIt end) const
+	{
+		// calculate the offset of the data area
+		size_t dataOffset =
+			m_nestedWriterMgr.GetTotalNumHeadChunks() *
+				AbiCodecConst::sk_chunkSize();
+
+		// write all head chunks
+		m_nestedWriterMgr.IterateVals(
+			WriteHeadsFunctor<_DestIt>(destIt, dataOffset),
+			begin,
+			end
+		);
+
+		// write all tail chunks
+		m_nestedWriterMgr.IterateVals(
+			WriteTailsFunctor<_DestIt>(destIt),
+			begin,
+			end
+		);
+
+		return destIt;
+	}
+
+	NestedWriterMgr m_nestedWriterMgr;
+
+}; // struct AbiWriterNestedTypeConstLenImpl
+
+
+template<typename _NestedWriterMgr>
+struct AbiWriterNestedListConstLenImpl :
+	public AbiWriterNestedTypeConstLenImpl<_NestedWriterMgr>
+{
+	using NestedWriterMgr = _NestedWriterMgr;
+	using Base = AbiWriterNestedTypeConstLenImpl<_NestedWriterMgr>;
+
+	using Base::Base;
+
+	~AbiWriterNestedListConstLenImpl() = default;
+
+	size_t GetNumTailChunks(const Internal::Obj::BaseObj& val) const
+	{
+		const auto& list = val.AsList();
+		return Base::GetNumTailChunks(list.begin(), list.end());
+	}
+	template<typename _DestIt>
+	_DestIt WriteObj(_DestIt destIt, const Internal::Obj::BaseObj& val) const
+	{
+		const auto& list = val.AsList();
+		return Base::Write(destIt, list.begin(), list.end());
+	}
+}; // struct AbiWriterNestedListConstLenImpl
 
 
 // ==========
@@ -1206,6 +1342,79 @@ struct AbiWriter<
 // ==========
 // AbiWriter for list types (T[k])
 // ==========
+
+
+template<typename _ItemWriter>
+struct AbiWriter<
+	Internal::Obj::ObjCategory::List,
+	_ItemWriter,
+	std::false_type // IsLenDynamic? - false
+> :
+	public AbiWriterHeadTailBase<
+		EthInternal::AbiWriterNestedListConstLenImpl<
+			EthInternal::AbiNestedWriterMgrList<_ItemWriter>
+		>
+	>
+{
+	using NestedWritersMgr = EthInternal::AbiNestedWriterMgrList<_ItemWriter>;
+	using WriterImpl =
+		EthInternal::AbiWriterNestedListConstLenImpl<NestedWritersMgr>;
+	using Base = AbiWriterHeadTailBase<WriterImpl>;
+	using Self = AbiWriter<
+		Internal::Obj::ObjCategory::List,
+		_ItemWriter,
+		std::false_type
+	>;
+
+	AbiWriter(_ItemWriter itemWriter, size_t size) :
+		Base(
+			WriterImpl(
+				NestedWritersMgr(std::make_pair(itemWriter, size))
+			)
+		)
+	{}
+
+	// LCOV_EXCL_START
+	virtual ~AbiWriter() = default;
+	// LCOV_EXCL_STOP
+
+}; // struct AbiParser<Internal::Obj::ObjCategory::List, _Item, false>
+
+
+template<typename _ItemWriter, size_t _Size>
+struct AbiWriter<
+	Internal::Obj::ObjCategory::List,
+	_ItemWriter,
+	std::integral_constant<size_t, _Size>
+> :
+	public AbiWriter<
+		Internal::Obj::ObjCategory::List,
+		_ItemWriter,
+		std::false_type
+	>
+{
+	using Base = AbiWriter<
+		Internal::Obj::ObjCategory::List,
+		_ItemWriter,
+		std::false_type
+	>;
+	using Self = AbiWriter<
+		Internal::Obj::ObjCategory::List,
+		_ItemWriter,
+		std::integral_constant<size_t, _Size>
+	>;
+
+	static constexpr size_t sk_size = _Size;
+
+	AbiWriter(_ItemWriter itemWriter) :
+		Base(itemWriter, sk_size)
+	{}
+
+	// LCOV_EXCL_START
+	virtual ~AbiWriter() = default;
+	// LCOV_EXCL_STOP
+
+}; // struct AbiWriter<Internal::Obj::ObjCategory::List, _Item, size_t>
 
 
 // ==========
