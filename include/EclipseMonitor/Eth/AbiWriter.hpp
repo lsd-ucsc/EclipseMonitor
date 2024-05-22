@@ -1253,7 +1253,7 @@ struct AbiWriterNestedListConstLenImpl :
 	>
 {
 	using Base = AbiWriterNestedConstLenImpl<
-		AbiWriterNestedTypeConstLenImpl,
+		EthInternal::AbiWriterNestedTypeConstLenImpl,
 		_NestedWriterMgr
 	>;
 
@@ -1305,7 +1305,7 @@ struct AbiWriterNestedTupleImpl :
 {
 	using NestedWriterMgr = _NestedWriterMgr;
 	using Base = AbiWriterNestedConstLenImpl<
-		AbiWriterNestedTypeTupleImpl,
+		EthInternal::AbiWriterNestedTypeTupleImpl,
 		_NestedWriterMgr
 	>;
 
