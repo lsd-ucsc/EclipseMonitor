@@ -1026,6 +1026,18 @@ GTEST_TEST(TestEthAbiWriter, WriteStaticTuple)
 				expOutput,
 				{}
 			);
+
+			SimpleObjects::List inValObj = SimpleObjects::List({
+				SimpleObjects::UInt64(0x1234567890ABCDEFULL),
+				SimpleObjects::Bytes({0x01U, 0x02U, 0x03U, 0x04U, 0x05U})
+			});
+			EXPECT_EQ(writer.GetNumTailChunks(inValObj), 0);
+			TestObjWriter(
+				writer,
+				inValObj,
+				expOutput,
+				{}
+			);
 		}
 	}
 }
@@ -1110,6 +1122,19 @@ GTEST_TEST(TestEthAbiWriter, WriteDynamicTuple)
 				expOutput,
 				6 * AbiCodecConst::sk_chunkSize()
 			);
+
+			SimpleObjects::List inValObj = SimpleObjects::List({
+				SimpleObjects::Bytes({0x01U, 0x02U, 0x03U, 0x04U, 0x05U}),
+				SimpleObjects::Bytes({0x09U, 0x08U, 0x07U, 0x06U, 0x05U, 0x04U, 0x03U, 0x02U, 0x01U}),
+			});
+			EXPECT_EQ(writer.GetNumTailChunks(inValObj), 6);
+			TestObjWriter(
+				writer,
+				inValObj,
+				gsk_testObjWriterHead,
+				expOutput,
+				6 * AbiCodecConst::sk_chunkSize()
+			);
 		}
 	}
 }
@@ -1187,6 +1212,20 @@ GTEST_TEST(TestEthAbiWriter, WriteMixedTuple)
 			expOutput,
 			6 * AbiCodecConst::sk_chunkSize()
 		);
+
+		SimpleObjects::List inValObj = SimpleObjects::List({
+			val1,
+			SimpleObjects::List({ val2, val3 }),
+			val4,
+		});
+		EXPECT_EQ(writer.GetNumTailChunks(inValObj), 6);
+		TestObjWriter(
+			writer,
+			inValObj,
+			gsk_testObjWriterHead,
+			expOutput,
+			6 * AbiCodecConst::sk_chunkSize()
+		);
 	}
 
 	// ('uint64', '(uint64,uint64)', 'bytes5')
@@ -1249,6 +1288,19 @@ GTEST_TEST(TestEthAbiWriter, WriteMixedTuple)
 		TestObjWriter(
 			writer,
 			inValRef,
+			expOutput,
+			{}
+		);
+
+		SimpleObjects::List inValObj = SimpleObjects::List({
+			val1,
+			SimpleObjects::List({ val2, val3 }),
+			val4,
+		});
+		EXPECT_EQ(writer.GetNumTailChunks(inValObj), 0);
+		TestObjWriter(
+			writer,
+			inValObj,
 			expOutput,
 			{}
 		);
@@ -1325,6 +1377,20 @@ GTEST_TEST(TestEthAbiWriter, WriteMixedTuple)
 		TestObjWriter(
 			writer,
 			inValRef,
+			gsk_testObjWriterHead,
+			expOutput,
+			7 * AbiCodecConst::sk_chunkSize()
+		);
+
+		SimpleObjects::List inValObj = SimpleObjects::List({
+			val1,
+			SimpleObjects::List({ val2, val4 }),
+			val4,
+		});
+		EXPECT_EQ(writer.GetNumTailChunks(inValObj), 7);
+		TestObjWriter(
+			writer,
+			inValObj,
 			gsk_testObjWriterHead,
 			expOutput,
 			7 * AbiCodecConst::sk_chunkSize()
@@ -1417,6 +1483,24 @@ GTEST_TEST(TestEthAbiWriter, WriteMixedTuple)
 		TestObjWriter(
 			writer,
 			inValRef,
+			gsk_testObjWriterHead,
+			expOutput,
+			9 * AbiCodecConst::sk_chunkSize()
+		);
+
+		SimpleObjects::List inValObj = SimpleObjects::List({
+			val1,
+			SimpleObjects::List({
+				val2,
+				SimpleObjects::List({ val3, val4 })
+			}),
+			val4
+		});
+
+		EXPECT_EQ(writer.GetNumTailChunks(inValObj), 9);
+		TestObjWriter(
+			writer,
+			inValObj,
 			gsk_testObjWriterHead,
 			expOutput,
 			9 * AbiCodecConst::sk_chunkSize()
