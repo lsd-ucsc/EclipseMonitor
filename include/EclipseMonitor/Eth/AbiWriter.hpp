@@ -1553,7 +1553,7 @@ public:
 		return destIt;
 	}
 
-	virtual const std::string& GetTypeName() const
+	virtual const std::string& GetTypeName() const override
 	{
 		return m_typeName;
 	}
@@ -1671,7 +1671,7 @@ public:
 		}
 	}
 
-	virtual const std::string& GetTypeName() const
+	virtual const std::string& GetTypeName() const override
 	{
 		return m_typeName;
 	}
