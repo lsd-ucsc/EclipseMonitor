@@ -131,10 +131,12 @@ GTEST_TEST(TestEthAbiWriter, WriteIntegerImpl)
 	EXPECT_EQ(AbiWriterImplUInt64().GetNumHeadChunks(), 1);
 	EXPECT_EQ(AbiWriterImplUInt64().GetNumTailChunks(), 0);
 	EXPECT_EQ(AbiWriterImplUInt64().GetNumTailChunks(SimpleObjects::UInt64()), 0);
+	EXPECT_EQ(AbiWriterImplUInt64().GetTypeName(), "uint64");
 
 	EXPECT_EQ(AbiWriterUInt64().IsDynamicType(), false);
 	EXPECT_EQ(AbiWriterUInt64().GetNumHeadChunks(), 1);
 	EXPECT_EQ(AbiWriterUInt64().GetNumTailChunks(SimpleObjects::UInt64()), 0);
+	EXPECT_EQ(AbiWriterUInt64().GetTypeName(), "uint64");
 
 	{
 		std::vector<uint8_t> expOutput = {
@@ -165,10 +167,12 @@ GTEST_TEST(TestEthAbiWriter, WriteBoolImpl)
 	EXPECT_EQ(AbiWriterImplBool().GetNumHeadChunks(), 1);
 	EXPECT_EQ(AbiWriterImplBool().GetNumTailChunks(), 0);
 	EXPECT_EQ(AbiWriterImplBool().GetNumTailChunks(SimpleObjects::Bool()), 0);
+	EXPECT_EQ(AbiWriterImplBool().GetTypeName(), "bool");
 
 	EXPECT_EQ(AbiWriterBool().IsDynamicType(), false);
 	EXPECT_EQ(AbiWriterBool().GetNumHeadChunks(), 1);
 	EXPECT_EQ(AbiWriterBool().GetNumTailChunks(SimpleObjects::Bool()), 0);
+	EXPECT_EQ(AbiWriterBool().GetTypeName(), "bool");
 
 	{
 		std::vector<uint8_t> expOutput = {
@@ -224,10 +228,12 @@ GTEST_TEST(TestEthAbiWriter, WriteStaticBytesImpl)
 		EXPECT_EQ(writerImpl.GetNumTailChunks(), 0);
 		EXPECT_EQ(writerImpl.GetNumTailChunks(SimpleObjects::Bytes()), 0);
 		EXPECT_EQ(writerImpl.GetPadSize(), 16);
+		EXPECT_EQ(writerImpl.GetTypeName(), "bytes16");
 
 		EXPECT_EQ(writer.IsDynamicType(), false);
 		EXPECT_EQ(writer.GetNumHeadChunks(), 1);
 		EXPECT_EQ(writer.GetNumTailChunks(SimpleObjects::Bytes()), 0);
+		EXPECT_EQ(writerImpl.GetTypeName(), "bytes16");
 
 		std::vector<uint8_t> expOutput = {
 			0x01U, 0x23U, 0x45U, 0x67U, 0x89U, 0xABU, 0xCDU, 0xEFU,
@@ -253,10 +259,12 @@ GTEST_TEST(TestEthAbiWriter, WriteStaticBytesImpl)
 		EXPECT_EQ(writerImpl.GetNumTailChunks(), 0);
 		EXPECT_EQ(writerImpl.GetNumTailChunks(SimpleObjects::Bytes()), 0);
 		EXPECT_EQ(writerImpl.GetPadSize(), 0);
+		EXPECT_EQ(writerImpl.GetTypeName(), "bytes32");
 
 		EXPECT_EQ(writer.IsDynamicType(), false);
 		EXPECT_EQ(writer.GetNumHeadChunks(), 1);
 		EXPECT_EQ(writer.GetNumTailChunks(SimpleObjects::Bytes()), 0);
+		EXPECT_EQ(writerImpl.GetTypeName(), "bytes32");
 
 		std::vector<uint8_t> expOutput = {
 			0x01U, 0x23U, 0x45U, 0x67U, 0x89U, 0xABU, 0xCDU, 0xEFU,
@@ -346,11 +354,15 @@ GTEST_TEST(TestEthAbiWriter, WriteDynamicBytesImpl)
 	EXPECT_EQ(writerImpl.GetPadSize(64), 0);
 	EXPECT_EQ(writerImpl.GetPadSize(65), 31);
 
+	EXPECT_EQ(writerImpl.GetTypeName(), "bytes");
+
 	AbiWriterBytes writer;
 
 	EXPECT_EQ(writer.IsDynamicType(), true);
 	EXPECT_EQ(writer.GetNumHeadChunks(), 1);
 	EXPECT_EQ(writer.GetNumTailChunks(SimpleObjects::Bytes()), 1);
+
+	EXPECT_EQ(writer.GetTypeName(), "bytes");
 
 	{
 		std::vector<uint8_t> expOutput = {
@@ -477,11 +489,7 @@ GTEST_TEST(TestEthAbiWriter, WriteStaticListConstLen)
 		AbiWriterUint64,
 		std::false_type
 	>;
-	using AbiWriterListUint64_2 = AbiWriter<
-		SimpleObjects::ObjCategory::List,
-		AbiWriterUint64,
-		AbiSize<2>
-	>;
+	using AbiWriterListUint64_2 = AbiWriterListConstLen<AbiWriterUint64, 2>;
 
 	{
 		AbiWriterListUint64 writer(AbiWriterUint64(), 5);
@@ -489,6 +497,8 @@ GTEST_TEST(TestEthAbiWriter, WriteStaticListConstLen)
 		EXPECT_EQ(writer.IsDynamicType(), false);
 
 		EXPECT_EQ(writer.GetNumHeadChunks(), 5);
+
+		EXPECT_EQ(writer.GetTypeName(), "uint64[5]");
 
 		std::vector<uint8_t> expOutput = {
 			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
@@ -529,12 +539,13 @@ GTEST_TEST(TestEthAbiWriter, WriteStaticListConstLen)
 	}
 
 	{
-		AbiWriterUint64 innerWriter;
-		AbiWriterListUint64_2 writer(innerWriter);
+		AbiWriterListUint64_2 writer;
 
 		EXPECT_EQ(writer.IsDynamicType(), false);
 
 		EXPECT_EQ(writer.GetNumHeadChunks(), 2);
+
+		EXPECT_EQ(writer.GetTypeName(), "uint64[2]");
 
 		std::vector<uint8_t> expOutput = {
 			0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
@@ -599,11 +610,7 @@ GTEST_TEST(TestEthAbiWriter, WriteDynListConstLen)
 		AbiWriterBytes,
 		std::false_type
 	>;
-	using AbiWriterListBytes2 = AbiWriter<
-		SimpleObjects::ObjCategory::List,
-		AbiWriterBytes,
-		AbiSize<2>
-	>;
+	using AbiWriterListBytes2 = AbiWriterListConstLen<AbiWriterBytes, 2>;
 
 	{
 		AbiWriterListBytes writer(AbiWriterBytes(), 1);
@@ -611,6 +618,8 @@ GTEST_TEST(TestEthAbiWriter, WriteDynListConstLen)
 		EXPECT_EQ(writer.IsDynamicType(), true);
 
 		EXPECT_EQ(writer.GetNumHeadChunks(), 1);
+
+		EXPECT_EQ(writer.GetTypeName(), "bytes[1]");
 
 		std::vector<uint8_t> expOutput = {
 			// item 1 - offset
@@ -645,12 +654,13 @@ GTEST_TEST(TestEthAbiWriter, WriteDynListConstLen)
 	}
 
 	{
-		AbiWriterBytes innerWriter;
-		AbiWriterListBytes2 writer(innerWriter);
+		AbiWriterListBytes2 writer;
 
 		EXPECT_EQ(writer.IsDynamicType(), true);
 
 		EXPECT_EQ(writer.GetNumHeadChunks(), 1);
+
+		EXPECT_EQ(writer.GetTypeName(), "bytes[2]");
 
 		std::vector<uint8_t> expOutput = {
 			// item 1 - offset
@@ -738,17 +748,13 @@ GTEST_TEST(TestEthAbiWriter, WriteStaticListDynLen)
 		SimpleObjects::ObjCategory::Integer,
 		AbiUInt64
 	>;
-	using AbiWriterListUint64 = AbiWriter<
-		SimpleObjects::ObjCategory::List,
-		AbiWriterUint64,
-		std::true_type
-	>;
+	using AbiWriterListUint64 = AbiWriterListDynLen<AbiWriterUint64>;
 
-	AbiWriterUint64 innerWriter;
-	AbiWriterListUint64 writer(innerWriter);
+	AbiWriterListUint64 writer;
 
 	EXPECT_EQ(writer.IsDynamicType(), true);
 	EXPECT_EQ(writer.GetNumHeadChunks(), 1);
+	EXPECT_EQ(writer.GetTypeName(), "uint64[]");
 
 	{
 		std::vector<uint8_t> expOutput = {
@@ -840,17 +846,13 @@ GTEST_TEST(TestEthAbiWriter, WriteDynListDynLen)
 		SimpleObjects::ObjCategory::Bytes,
 		std::true_type
 	>;
-	using AbiWriterListUint64 = AbiWriter<
-		SimpleObjects::ObjCategory::List,
-		AbiWriterBytes,
-		std::true_type
-	>;
+	using AbiWriterListUint64 = AbiWriterListDynLen<AbiWriterBytes>;
 
-	AbiWriterBytes innerWriter;
-	AbiWriterListUint64 writer(innerWriter);
+	AbiWriterListUint64 writer;
 
 	EXPECT_EQ(writer.IsDynamicType(), true);
 	EXPECT_EQ(writer.GetNumHeadChunks(), 1);
+	EXPECT_EQ(writer.GetTypeName(), "bytes[]");
 
 	{
 		std::vector<uint8_t> expOutput = {
@@ -985,6 +987,7 @@ GTEST_TEST(TestEthAbiWriter, WriteStaticTuple)
 
 		EXPECT_EQ(writer.IsDynamicType(), false);
 		EXPECT_EQ(writer.GetNumHeadChunks(), 2);
+		EXPECT_EQ(writer.GetTypeName(), "(uint64,bytes5)");
 
 		{
 			std::vector<uint8_t> expOutput = {
@@ -1045,6 +1048,7 @@ GTEST_TEST(TestEthAbiWriter, WriteDynamicTuple)
 
 		EXPECT_EQ(writer.IsDynamicType(), true);
 		EXPECT_EQ(writer.GetNumHeadChunks(), 1);
+		EXPECT_EQ(writer.GetTypeName(), "(bytes,bytes)");
 
 		{
 			std::vector<uint8_t> expOutput = {
@@ -1132,6 +1136,7 @@ GTEST_TEST(TestEthAbiWriter, WriteMixedTuple)
 
 		EXPECT_EQ(writer.IsDynamicType(), true);
 		EXPECT_EQ(writer.GetNumHeadChunks(), 1);
+		EXPECT_EQ(writer.GetTypeName(), "(uint64,uint64[],bytes5)");
 
 		std::vector<uint8_t> expOutput = {
 			// item 1 - value
@@ -1199,6 +1204,7 @@ GTEST_TEST(TestEthAbiWriter, WriteMixedTuple)
 
 		EXPECT_EQ(writer.IsDynamicType(), false);
 		EXPECT_EQ(writer.GetNumHeadChunks(), 4);
+		EXPECT_EQ(writer.GetTypeName(), "(uint64,(uint64,uint64),bytes5)");
 
 		std::vector<uint8_t> expOutput = {
 			// item 1 - value
@@ -1263,6 +1269,7 @@ GTEST_TEST(TestEthAbiWriter, WriteMixedTuple)
 
 		EXPECT_EQ(writer.IsDynamicType(), true);
 		EXPECT_EQ(writer.GetNumHeadChunks(), 1);
+		EXPECT_EQ(writer.GetTypeName(), "(uint64,(uint64,bytes),bytes5)");
 
 		std::vector<uint8_t> expOutput = {
 			// item 1 - value
@@ -1342,6 +1349,7 @@ GTEST_TEST(TestEthAbiWriter, WriteMixedTuple)
 
 		EXPECT_EQ(writer.IsDynamicType(), true);
 		EXPECT_EQ(writer.GetNumHeadChunks(), 1);
+		EXPECT_EQ(writer.GetTypeName(), "(uint64,(uint64,(uint64,bytes)),bytes5)");
 
 		std::vector<uint8_t> expOutput = {
 			// item 1 - value

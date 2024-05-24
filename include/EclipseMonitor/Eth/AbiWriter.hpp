@@ -227,6 +227,12 @@ struct AbiWriterUIntImpl :
 		return destIt;
 	}
 
+	const std::string& GetTypeName() const
+	{
+		static const std::string sk_nameStr = Codec::GetTypeName();
+		return sk_nameStr;
+	}
+
 }; // struct AbiWriterUIntImpl
 
 
@@ -353,6 +359,12 @@ struct AbiWriterImpl<
 		return Self::Write(destIt, val.AsRealNum());
 	}
 
+	const std::string& GetTypeName() const
+	{
+		static const std::string sk_nameStr = Codec::GetTypeName();
+		return sk_nameStr;
+	}
+
 private:
 
 	// IntWriterImpl m_intWriter;
@@ -389,7 +401,8 @@ struct AbiWriterImpl<
 	 */
 	AbiWriterImpl(size_t size) :
 		m_size(size),
-		m_padSize(AbiCodecConst::sk_chunkSize() - m_size)
+		m_padSize(AbiCodecConst::sk_chunkSize() - m_size),
+		m_nameStr(Codec::GetTypeName(m_size))
 	{}
 
 	~AbiWriterImpl() = default;
@@ -478,10 +491,16 @@ struct AbiWriterImpl<
 		return m_padSize;
 	}
 
+	const std::string& GetTypeName() const
+	{
+		return m_nameStr;
+	}
+
 private:
 
 	size_t m_size;
 	size_t m_padSize;
+	std::string m_nameStr;
 
 }; // struct AbiWriterImpl<Internal::Obj::ObjCategory::Bytes, false>
 
@@ -643,6 +662,12 @@ struct AbiWriterImpl<
 		return Write(destIt, val.AsBytes());
 	}
 
+	const std::string& GetTypeName() const
+	{
+		static const std::string sk_nameStr = Codec::GetTypeName();
+		return sk_nameStr;
+	}
+
 private:
 
 	// DynLenWriterImpl m_dynLenWriter;
@@ -666,7 +691,8 @@ struct AbiNestedWriterMgrListDynLen
 	using ItemWriter = _ItemWriter;
 
 	AbiNestedWriterMgrListDynLen(ItemWriter itemWriter) :
-		m_itemWriter(std::move(itemWriter))
+		m_itemWriter(std::move(itemWriter)),
+		m_nameStr(m_itemWriter.GetTypeName() + std::string("[]"))
 	{}
 
 	~AbiNestedWriterMgrListDynLen() = default;
@@ -693,7 +719,13 @@ struct AbiNestedWriterMgrListDynLen
 		}
 	}
 
+	const std::string& GetTypeName() const
+	{
+		return m_nameStr;
+	}
+
 	ItemWriter m_itemWriter;
+	std::string m_nameStr;
 
 }; // struct AbiNestedWriterMgrListDynLen
 
@@ -720,7 +752,10 @@ struct AbiNestedWriterMgrListConstLen :
 	AbiNestedWriterMgrListConstLen(ItemWriter itemWriter, size_t size) :
 		Base(std::move(itemWriter)),
 		m_size(size)
-	{}
+	{
+		(Base::m_nameStr) = (Base::m_itemWriter).GetTypeName() +
+			std::string("[") + std::to_string(m_size) + std::string("]");
+	}
 
 	AbiNestedWriterMgrListConstLen(std::pair<ItemWriter, size_t> pair) :
 		AbiNestedWriterMgrListConstLen(std::move(pair.first), pair.second)
@@ -792,7 +827,8 @@ struct AbiNestedWriterMgrTuple<>
 	AbiNestedWriterMgrTuple() :
 		m_size(0),
 		m_isDynamic(false), // tuple with no nested types is static type
-		m_totalNumHeadChunks(0)
+		m_totalNumHeadChunks(0),
+		m_nameCommaList()
 	{}
 
 	~AbiNestedWriterMgrTuple() = default;
@@ -822,9 +858,21 @@ struct AbiNestedWriterMgrTuple<>
 	void ApplyVals(_Func&&) const
 	{}
 
+	bool IsTupleEmpty() const
+	{
+		return true;
+	}
+
+	const std::string& GetTypeName() const
+	{
+		static const std::string sk_nameStr = "()";
+		return sk_nameStr;
+	}
+
 	size_t m_size;
 	bool m_isDynamic;
 	size_t m_totalNumHeadChunks;
+	std::string m_nameCommaList;
 
 }; // struct AbiNestedWriterMgrTuple<>
 
@@ -841,6 +889,16 @@ struct AbiNestedWriterMgrTuple<_ItemWriter, _ItemWriters...>
 		m_isDynamic(m_itemWriter.IsDynamicType() || m_next.IsDynamicType()),
 		m_totalNumHeadChunks(
 			m_itemWriter.GetNumHeadChunks() + m_next.GetTotalNumHeadChunks()
+		),
+		m_nameCommaList(
+			m_itemWriter.GetTypeName() + (
+				m_next.IsTupleEmpty() ?
+					std::string("") :
+					(std::string(",") + m_next.m_nameCommaList)
+			)
+		),
+		m_nameStr(
+			std::string("(") + m_nameCommaList + std::string(")")
 		)
 	{}
 
@@ -889,11 +947,23 @@ struct AbiNestedWriterMgrTuple<_ItemWriter, _ItemWriters...>
 		);
 	}
 
+	bool IsTupleEmpty() const
+	{
+		return false;
+	}
+
+	const std::string& GetTypeName() const
+	{
+		return m_nameStr;
+	}
+
 	size_t m_size;
 	ItemWriter m_itemWriter;
 	AbiNestedWriterMgrTuple<_ItemWriters...> m_next;
 	bool m_isDynamic;
 	size_t m_totalNumHeadChunks;
+	std::string m_nameCommaList;
+	std::string m_nameStr;
 
 }; // struct AbiNestedWriterMgrTuple<_ItemWriter, _ItemWriters...>
 
@@ -1068,6 +1138,11 @@ struct AbiWriterNestedTypeDynLenImpl
 				AbiCodecConst::sk_chunkSize();
 
 		return WriteHeadsAndTails(destIt, dataOffset, begin, end);
+	}
+
+	const std::string& GetTypeName() const
+	{
+		return m_nestedWriterMgr.GetTypeName();
 	}
 
 	DynLenWriterImpl m_dynLenWriter;
@@ -1409,6 +1484,8 @@ public:
 	// 	const Internal::Obj::BaseObj& data
 	// ) const = 0;
 
+	virtual const std::string& GetTypeName() const = 0;
+
 }; // class AbiWriterBase
 
 
@@ -1428,7 +1505,8 @@ public:
 
 	AbiWriterHeadOnlyBase(WriterImpl impl) :
 		Base(),
-		m_impl(std::move(impl))
+		m_impl(std::move(impl)),
+		m_typeName(m_impl.GetTypeName())
 	{}
 
 	virtual ~AbiWriterHeadOnlyBase() = default;
@@ -1475,9 +1553,15 @@ public:
 		return destIt;
 	}
 
+	virtual const std::string& GetTypeName() const
+	{
+		return m_typeName;
+	}
+
 private:
 
 	WriterImpl m_impl;
+	std::string m_typeName;
 
 }; // class AbiWriterHeadOnlyBase
 
@@ -1512,7 +1596,8 @@ public:
 	AbiWriterHeadTailBase(WriterImpl impl) :
 		Base(),
 		m_headWriter(HeadWriterImpl()),
-		m_impl(std::move(impl))
+		m_impl(std::move(impl)),
+		m_typeName(m_impl.GetTypeName())
 	{}
 
 	virtual ~AbiWriterHeadTailBase() = default;
@@ -1586,10 +1671,16 @@ public:
 		}
 	}
 
+	virtual const std::string& GetTypeName() const
+	{
+		return m_typeName;
+	}
+
 protected:
 
 	HeadWriterImpl m_headWriter;
 	WriterImpl m_impl;
+	std::string m_typeName;
 
 }; // class AbiWriterHeadTailBase
 
@@ -1871,6 +1962,27 @@ struct AbiWriter<
 	// LCOV_EXCL_STOP
 
 }; // struct AbiWriter<Internal::Obj::ObjCategory::List, _Item, size_t>
+
+
+template<typename _ItemWriter, size_t _Size>
+struct AbiWriterListConstLen :
+	public AbiWriter<
+		Internal::Obj::ObjCategory::List,
+		_ItemWriter,
+		std::integral_constant<size_t, _Size>
+	>
+{
+	using Base = AbiWriter<
+		Internal::Obj::ObjCategory::List,
+		_ItemWriter,
+		std::integral_constant<size_t, _Size>
+	>;
+	using Self = AbiWriterListConstLen<_ItemWriter, _Size>;
+
+	AbiWriterListConstLen() :
+		Base(_ItemWriter())
+	{}
+}; // struct AbiWriterListConstLen
 
 
 // ==========

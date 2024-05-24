@@ -8,6 +8,7 @@
 
 #include <cstdint>
 
+#include <string>
 #include <tuple>
 #include <type_traits>
 
@@ -110,6 +111,8 @@ struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt8> :
 	{
 		return val.AsCppUInt8();
 	}
+
+	static const char* GetTypeName() { return "uint8"; }
 }; // struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt8>
 
 
@@ -119,7 +122,9 @@ struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt16> :
 		Internal::Obj::RealNumType::UInt16,
 		uint16_t
 	>
-{}; // struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt16>
+{
+	static const char* GetTypeName() { return "uint16"; }
+}; // struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt16>
 
 
 template<>
@@ -133,6 +138,7 @@ struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt32> :
 	{
 		return val.AsCppUInt32();
 	}
+	static const char* GetTypeName() { return "uint32"; }
 }; // struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt32>
 
 
@@ -147,6 +153,7 @@ struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt64> :
 	{
 		return val.AsCppUInt64();
 	}
+	static const char* GetTypeName() { return "uint64"; }
 }; // struct RealNumTypeTraits<Internal::Obj::RealNumType::UInt64>
 
 
@@ -198,6 +205,8 @@ struct AbiCodecImpl<
 	static constexpr bool sk_isDynamic = IsDynamic::value;
 	bool IsDynamicType() const noexcept { return sk_isDynamic; }
 
+	static const char* GetTypeName() { return RealNumTraits::GetTypeName(); }
+
 }; // struct AbiCodecImpl<Internal::Obj::ObjCategory::Integer, RealNumType>
 
 
@@ -231,6 +240,8 @@ struct AbiCodecImpl<
 	static constexpr bool sk_isDynamic = IsDynamic::value;
 	bool IsDynamicType() const noexcept { return sk_isDynamic; }
 
+	static const char* GetTypeName() { return "bool"; }
+
 }; // struct AbiCodecImpl<Internal::Obj::ObjCategory::Bool>
 
 
@@ -252,6 +263,11 @@ struct AbiCodecImpl<
 	static constexpr bool sk_isDynamic = IsDynamic::value;
 	bool IsDynamicType() const noexcept { return sk_isDynamic; }
 
+	static std::string GetTypeName(size_t size)
+	{
+		return std::string("bytes") + std::to_string(size);
+	}
+
 }; // struct AbiCodecImpl<Internal::Obj::ObjCategory::Bytes, false>
 
 
@@ -272,6 +288,8 @@ struct AbiCodecImpl<
 	using IsDynamic = std::true_type;
 	static constexpr bool sk_isDynamic = IsDynamic::value;
 	bool IsDynamicType() const noexcept { return sk_isDynamic; }
+
+	static const char* GetTypeName() { return "bytes"; }
 
 }; // struct AbiCodecImpl<Internal::Obj::ObjCategory::Bytes, true>
 
