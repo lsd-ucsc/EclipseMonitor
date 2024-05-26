@@ -13,6 +13,7 @@
 #include <type_traits>
 
 #include "../Internal/SimpleObj.hpp"
+#include "../Exceptions.hpp"
 
 #include "AbiCommon.hpp"
 
