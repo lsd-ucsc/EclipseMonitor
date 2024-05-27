@@ -149,20 +149,22 @@ public:
 	{
 		std::vector<uint8_t> data = GetFuncSelector();
 
-		std::tuple<_Args&&...> argsTuple(std::forward<_Args>(args)...);
-
 		if (m_abiWriter.IsDynamicType())
 		{
 			// the parameter tuple is dynamic, so the data is in the tail
 
-			size_t sizeNeeded = m_abiWriter.GetNumTailChunks(argsTuple) *
-				AbiCodecConst::sk_chunkSize();
+			size_t sizeNeeded = m_abiWriter.GetNumTailChunks(
+				std::forward_as_tuple(std::forward<_Args>(args)...)
+			) * AbiCodecConst::sk_chunkSize();
 			data.reserve(data.size() + sizeNeeded);
 			// the data might be relocated, so we MUST get the iterator here
 			auto destIt =
 				Internal::Obj::ToOutIt<uint8_t>(std::back_inserter(data));
 
-			m_abiWriter.WriteTail(destIt, argsTuple);
+			m_abiWriter.WriteTail(
+				destIt,
+				std::forward_as_tuple(std::forward<_Args>(args)...)
+			);
 		}
 		else
 		{
@@ -175,7 +177,11 @@ public:
 			auto destIt =
 				Internal::Obj::ToOutIt<uint8_t>(std::back_inserter(data));
 
-			m_abiWriter.WriteHead(destIt, argsTuple, 0);
+			m_abiWriter.WriteHead(
+				destIt,
+				std::forward_as_tuple(std::forward<_Args>(args)...),
+				0
+			);
 		}
 		return Base::BuildTxn(data);
 	}
