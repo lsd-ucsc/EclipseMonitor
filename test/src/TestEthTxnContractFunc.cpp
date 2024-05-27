@@ -125,7 +125,11 @@ GTEST_TEST(TestEthTxnContractFunc, ContractFuncStaticDef_CallByTxn)
 		const SimpleObjects::BaseObj& valRef3 = val3;
 		const SimpleObjects::BaseObj& valRef4 = val4;
 
-		auto txn = func.CallByTxn(valRef1, std::tie(valRef2, valRef3), valRef4);
+		auto txn = func.CallByTxn(
+			valRef1,
+			std::forward_as_tuple(valRef2, valRef3),
+			valRef4
+		);
 
 		txn.SetChainID(1900);
 		txn.SetNonce(34);
@@ -192,7 +196,12 @@ GTEST_TEST(TestEthTxnContractFunc, ContractFuncStaticDef_CallByTxn)
 		const SimpleObjects::BaseObj& valRef4 = val4;
 
 		auto txn = func.CallByTxn(
-			valRef1, std::forward_as_tuple(valRef2, std::forward_as_tuple(valRef3, valRef4)), valRef4
+			valRef1,
+			std::forward_as_tuple(
+				valRef2,
+				std::forward_as_tuple(valRef3, valRef4)
+			),
+			valRef4
 		);
 
 		txn.SetChainID(1900);

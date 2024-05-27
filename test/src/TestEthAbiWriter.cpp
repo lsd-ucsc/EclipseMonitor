@@ -1017,7 +1017,7 @@ GTEST_TEST(TestEthAbiWriter, WriteStaticTuple)
 
 			const SimpleObjects::BaseObj& inVal1Ref = std::get<0>(inVal);
 			const SimpleObjects::BaseObj& inVal2Ref = std::get<1>(inVal);
-			auto inValRef = std::tie(inVal1Ref, inVal2Ref);
+			auto inValRef = std::forward_as_tuple(inVal1Ref, inVal2Ref);
 
 			EXPECT_EQ(writer.GetNumTailChunks(inValRef), 0);
 			TestObjWriter(
@@ -1112,7 +1112,8 @@ GTEST_TEST(TestEthAbiWriter, WriteDynamicTuple)
 
 			const SimpleObjects::BaseObj& inVal1Ref = std::get<0>(inVal);
 			const SimpleObjects::BaseObj& inVal2Ref = std::get<1>(inVal);
-			auto inValRef = std::tie(inVal1Ref, inVal2Ref);
+
+			auto inValRef = std::forward_as_tuple(inVal1Ref, inVal2Ref);
 
 			EXPECT_EQ(writer.GetNumTailChunks(inValRef), 6);
 			TestObjWriter(
@@ -1202,7 +1203,8 @@ GTEST_TEST(TestEthAbiWriter, WriteMixedTuple)
 		const SimpleObjects::BaseObj& inVal1Ref = std::get<0>(inVal);
 		const SimpleObjects::BaseObj& inVal2Ref = std::get<1>(inVal);
 		const SimpleObjects::BaseObj& inVal3Ref = std::get<2>(inVal);
-		auto inValRef = std::tie(inVal1Ref, inVal2Ref, inVal3Ref);
+
+		auto inValRef = std::forward_as_tuple(inVal1Ref, inVal2Ref, inVal3Ref);
 
 		EXPECT_EQ(writer.GetNumTailChunks(inValRef), 6);
 		TestObjWriter(
@@ -1277,14 +1279,17 @@ GTEST_TEST(TestEthAbiWriter, WriteMixedTuple)
 		const SimpleObjects::BaseObj& inVal21Ref = std::get<0>(std::get<1>(inVal));
 		const SimpleObjects::BaseObj& inVal22Ref = std::get<1>(std::get<1>(inVal));
 		const SimpleObjects::BaseObj& inVal3Ref = std::get<2>(inVal);
-		auto inVal2Ref = std::tie(inVal21Ref, inVal22Ref);
-		auto inValRef = std::tie(
+
+		const auto inValRef = std::forward_as_tuple(
 			inVal1Ref,
-			inVal2Ref,
+			std::forward_as_tuple(inVal21Ref, inVal22Ref),
 			inVal3Ref
 		);
 
+		const void* test = nullptr;
+		test = &(std::get<0>(std::get<1>(inValRef))); std::cout << test << std::endl; ASSERT_NE(test, nullptr);
 		EXPECT_EQ(writer.GetNumTailChunks(inValRef), 0);
+		test = &(std::get<0>(std::get<1>(inValRef))); std::cout << test << std::endl; ASSERT_NE(test, nullptr);
 		TestObjWriter(
 			writer,
 			inValRef,
@@ -1366,14 +1371,17 @@ GTEST_TEST(TestEthAbiWriter, WriteMixedTuple)
 		const SimpleObjects::BaseObj& inVal21Ref = std::get<0>(std::get<1>(inVal));
 		const SimpleObjects::BaseObj& inVal22Ref = std::get<1>(std::get<1>(inVal));
 		const SimpleObjects::BaseObj& inVal3Ref = std::get<2>(inVal);
-		auto inVal2Ref = std::tie(inVal21Ref, inVal22Ref);
-		auto inValRef = std::tie(
+
+		const auto inValRef = std::forward_as_tuple(
 			inVal1Ref,
-			inVal2Ref,
+			std::forward_as_tuple(inVal21Ref, inVal22Ref),
 			inVal3Ref
 		);
 
+		const void* test = nullptr;
+		test = &(std::get<0>(std::get<1>(inValRef))); std::cout << test << std::endl; ASSERT_NE(test, nullptr);
 		EXPECT_EQ(writer.GetNumTailChunks(inValRef), 7);
+		test = &(std::get<0>(std::get<1>(inValRef))); std::cout << test << std::endl; ASSERT_NE(test, nullptr);
 		TestObjWriter(
 			writer,
 			inValRef,
@@ -1471,15 +1479,20 @@ GTEST_TEST(TestEthAbiWriter, WriteMixedTuple)
 		const SimpleObjects::BaseObj& inVal221Ref = std::get<0>(std::get<1>(std::get<1>(inVal)));
 		const SimpleObjects::BaseObj& inVal222Ref = std::get<1>(std::get<1>(std::get<1>(inVal)));
 		const SimpleObjects::BaseObj& inVal3Ref = std::get<2>(inVal);
-		auto inVal22Ref = std::tie(inVal221Ref, inVal222Ref);
-		auto inVal2Ref = std::tie(inVal21Ref, inVal22Ref);
-		auto inValRef = std::tie(
+
+		const auto inValRef = std::forward_as_tuple(
 			inVal1Ref,
-			inVal2Ref,
+			std::forward_as_tuple(
+				inVal21Ref,
+				std::forward_as_tuple(inVal221Ref, inVal222Ref)
+			),
 			inVal3Ref
 		);
 
+		const void* test = nullptr;
+		test = &(std::get<0>(std::get<1>(inValRef))); std::cout << test << std::endl; ASSERT_NE(test, nullptr);
 		EXPECT_EQ(writer.GetNumTailChunks(inValRef), 9);
+		test = &(std::get<0>(std::get<1>(inValRef))); std::cout << test << std::endl; ASSERT_NE(test, nullptr);
 		TestObjWriter(
 			writer,
 			inValRef,
