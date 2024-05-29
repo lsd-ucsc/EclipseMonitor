@@ -12,7 +12,7 @@ namespace EclipseMonitor_Test
 
 int main(int argc, char** argv)
 {
-	constexpr size_t EXPECTED_NUM_OF_TEST_FILE = 25;
+	constexpr size_t EXPECTED_NUM_OF_TEST_FILE = 26;
 
 	std::cout << "===== EclipseMonitor test program =====" << std::endl;
 	std::cout << std::endl;
