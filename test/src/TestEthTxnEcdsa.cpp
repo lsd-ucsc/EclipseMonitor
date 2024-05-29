@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <EclipseMonitor/Eth/Transaction/Ecdsa.hpp>
+#include <mbedTLScpp/EcKey.hpp>
 
 #include "Common.hpp"
 
@@ -28,25 +29,7 @@ GTEST_TEST(TestEthTxnEcdsa, CountTestFile)
 }
 
 
-/**
- * @brief These constants are taken from
- *        https://github.com/ethereum/eth-keys/blob/main/eth_keys/constants.py
- *
- */
-static const mbedTLScpp::BigNum sk_a  = mbedTLScpp::BigNum(0);
-static const mbedTLScpp::BigNum sk_gx = mbedTLScpp::BigNum(
-	"55066263022277343669578718895168534326250603453777594175500187360389116729240"
-);
-static const mbedTLScpp::BigNum sk_gy = mbedTLScpp::BigNum(
-	"32670510020758816978083085130507043184471273380659243275938904335757337482424"
-);
-static const mbedTLScpp::BigNum sk_n  = mbedTLScpp::BigNum(
-	"115792089237316195423570985008687907852837564279074904382605163141518161494337"
-);
-static const mbedTLScpp::BigNum sk_p  = mbedTLScpp::BigNum(
-	// 2**256 - 2**32 - 977
-	"115792089237316195423570985008687907853269984665640564039457584007908834671663"
-);
+static const mbedTLScpp::EcGroup<> sk_secp256k1(mbedTLScpp::EcType::SECP256K1);
 
 
 GTEST_TEST(TestEthTxnEcdsa, JacobianInv)
@@ -102,7 +85,11 @@ GTEST_TEST(TestEthTxnEcdsa, JacobianDouble)
 			mbedTLScpp::BigNum,
 			mbedTLScpp::BigNum,
 			mbedTLScpp::BigNum
-		> out = Transaction::JacobianDouble(p, sk_a, sk_p);
+		> out = Transaction::JacobianDouble(
+			p,
+			sk_secp256k1.BorrowA(),
+			sk_secp256k1.BorrowP()
+		);
 
 		EXPECT_EQ(std::get<0>(out), std::get<0>(expOut));
 		EXPECT_EQ(std::get<1>(out), std::get<1>(expOut));
@@ -134,11 +121,11 @@ GTEST_TEST(TestEthTxnEcdsa, JacobianDouble)
 			mbedTLScpp::BigNum,
 			mbedTLScpp::BigNum,
 			mbedTLScpp::BigNum
-		> out = Transaction::JacobianDouble(p, sk_a, sk_p);
-
-		std::cout << std::get<0>(out).Dec() << std::endl;
-		std::cout << std::get<1>(out).Dec() << std::endl;
-		std::cout << std::get<2>(out).Dec() << std::endl;
+		> out = Transaction::JacobianDouble(
+			p,
+			sk_secp256k1.BorrowA(),
+			sk_secp256k1.BorrowP()
+		);
 
 		EXPECT_EQ(std::get<0>(out), std::get<0>(expOut));
 		EXPECT_EQ(std::get<1>(out), std::get<1>(expOut));
@@ -183,7 +170,12 @@ GTEST_TEST(TestEthTxnEcdsa, JacobianAdd)
 			mbedTLScpp::BigNum,
 			mbedTLScpp::BigNum,
 			mbedTLScpp::BigNum
-		> out = Transaction::JacobianAdd(p, q, sk_a, sk_p);
+		> out = Transaction::JacobianAdd(
+			p,
+			q,
+			sk_secp256k1.BorrowA(),
+			sk_secp256k1.BorrowP()
+		);
 
 		EXPECT_EQ(std::get<0>(out), std::get<0>(expOut));
 		EXPECT_EQ(std::get<1>(out), std::get<1>(expOut));
@@ -226,9 +218,9 @@ GTEST_TEST(TestEthTxnEcdsa, JacobianMultiply)
 			std::get<1>(a),
 			std::get<2>(a),
 			num,
-			sk_a,
-			sk_n,
-			sk_p
+			sk_secp256k1.BorrowA(),
+			sk_secp256k1.BorrowN(),
+			sk_secp256k1.BorrowP()
 		);
 
 		EXPECT_EQ(std::get<0>(out), std::get<0>(expOut));
@@ -266,9 +258,9 @@ GTEST_TEST(TestEthTxnEcdsa, JacobianFastMultiply)
 			std::get<0>(a),
 			std::get<1>(a),
 			num,
-			sk_a,
-			sk_n,
-			sk_p
+			sk_secp256k1.BorrowA(),
+			sk_secp256k1.BorrowN(),
+			sk_secp256k1.BorrowP()
 		);
 
 		EXPECT_EQ(std::get<0>(out), std::get<0>(expOut));
@@ -325,11 +317,11 @@ GTEST_TEST(TestEthTxnEcdsa, EcdsaRawSign)
 		> out = Transaction::EcdsaRawSign(
 			mbedTLScpp::CtnFullR(hash),
 			key,
-			sk_a,
-			sk_gx,
-			sk_gy,
-			sk_n,
-			sk_p
+			sk_secp256k1.BorrowA(),
+			sk_secp256k1.BorrowGx(),
+			sk_secp256k1.BorrowGy(),
+			sk_secp256k1.BorrowN(),
+			sk_secp256k1.BorrowP()
 		);
 
 		EXPECT_EQ(std::get<0>(out), std::get<0>(expOut));

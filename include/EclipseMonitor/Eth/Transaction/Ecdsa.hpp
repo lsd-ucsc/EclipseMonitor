@@ -68,9 +68,13 @@ inline const Internal::Tls::BigNum& GetBigNum8()
  * https://github.com/ethereum/eth-keys/blob/main/eth_keys/backends/native/jacobian.py
  *
  */
+template<
+	typename _ABigNumT,
+	typename _NBigNumT
+>
 inline Internal::Tls::BigNum JacobianInv(
-	const Internal::Tls::BigNum& a,
-	const Internal::Tls::BigNum& n
+	_ABigNumT&& a,
+	_NBigNumT&& n
 )
 {
 	const auto& sk_0 = Internal::Tls::BigNum::Zero();
@@ -89,7 +93,7 @@ inline Internal::Tls::BigNum JacobianInv(
 
 	// low, high = a % n, n
 	auto low = Internal::Tls::Mod(a, n);
-	auto high = n;
+	auto high = Internal::Tls::BigNum(n);
 
 	// while low > 1:
 	while (low > 1)
@@ -125,6 +129,13 @@ inline Internal::Tls::BigNum JacobianInv(
  * https://github.com/ethereum/eth-keys/blob/main/eth_keys/backends/native/jacobian.py
  *
  */
+template<
+	typename _XBigNumT,
+	typename _YBigNumT,
+	typename _ZBigNumT,
+	typename _CurveABigNumT,
+	typename _CurvePBigNumT
+>
 inline
 std::tuple<
 	Internal::Tls::BigNum,
@@ -132,11 +143,11 @@ std::tuple<
 	Internal::Tls::BigNum
 >
 JacobianDouble(
-	const Internal::Tls::BigNum& x,
-	const Internal::Tls::BigNum& y,
-	const Internal::Tls::BigNum& z,
-	const Internal::Tls::BigNum& curveA,
-	const Internal::Tls::BigNum& curveP
+	_XBigNumT&& x,
+	_YBigNumT&& y,
+	_ZBigNumT&& z,
+	_CurveABigNumT&& curveA,
+	_CurvePBigNumT&& curveP
 )
 {
 	const auto& sk_0 = Internal::Tls::BigNum::Zero();
@@ -193,6 +204,10 @@ JacobianDouble(
 }
 
 
+template<
+	typename _CurveABigNumT,
+	typename _CurvePBigNumT
+>
 inline
 std::tuple<
 	Internal::Tls::BigNum,
@@ -205,16 +220,16 @@ JacobianDouble(
 		Internal::Tls::BigNum,
 		Internal::Tls::BigNum
 	>& p,
-	const Internal::Tls::BigNum& curveA,
-	const Internal::Tls::BigNum& curveP
+	_CurveABigNumT&& curveA,
+	_CurvePBigNumT&& curveP
 )
 {
 	return JacobianDouble(
 		std::get<0>(p),
 		std::get<1>(p),
 		std::get<2>(p),
-		curveA,
-		curveP
+		std::forward<_CurveABigNumT>(curveA),
+		std::forward<_CurvePBigNumT>(curveP)
 	);
 }
 
@@ -224,6 +239,16 @@ JacobianDouble(
  * https://github.com/ethereum/eth-keys/blob/main/eth_keys/backends/native/jacobian.py
  *
  */
+template<
+	typename _PxBigNumT,
+	typename _PyBigNumT,
+	typename _PzBigNumT,
+	typename _QxBigNumT,
+	typename _QyBigNumT,
+	typename _QzBigNumT,
+	typename _CurveABigNumT,
+	typename _CurvePBigNumT
+>
 inline
 std::tuple<
 	Internal::Tls::BigNum,
@@ -231,14 +256,14 @@ std::tuple<
 	Internal::Tls::BigNum
 >
 JacobianAdd(
-	const Internal::Tls::BigNum& pX,
-	const Internal::Tls::BigNum& pY,
-	const Internal::Tls::BigNum& pZ,
-	const Internal::Tls::BigNum& qX,
-	const Internal::Tls::BigNum& qY,
-	const Internal::Tls::BigNum& qZ,
-	const Internal::Tls::BigNum& curveA,
-	const Internal::Tls::BigNum& curveP
+	_PxBigNumT&& pX,
+	_PyBigNumT&& pY,
+	_PzBigNumT&& pZ,
+	_QxBigNumT&& qX,
+	_QyBigNumT&& qY,
+	_QzBigNumT&& qZ,
+	_CurveABigNumT&& curveA,
+	_CurvePBigNumT&& curveP
 )
 {
 	const auto& sk_0 = Internal::Tls::BigNum::Zero();
@@ -248,14 +273,22 @@ JacobianAdd(
 	if (pY == 0)
 	{
 		// return q
-		return std::make_tuple(qX, qY, qZ);
+		return std::make_tuple(
+			Internal::Tls::BigNum(qX),
+			Internal::Tls::BigNum(qY),
+			Internal::Tls::BigNum(qZ)
+		);
 	}
 
 	// if not q[1]:
 	if (qY == 0)
 	{
 		// return p
-		return std::make_tuple(pX, pY, pZ);
+		return std::make_tuple(
+			Internal::Tls::BigNum(pX),
+			Internal::Tls::BigNum(pY),
+			Internal::Tls::BigNum(pZ)
+		);
 	}
 
 	// U1 = (p[0] * q[2] ** 2) % P
@@ -292,7 +325,13 @@ JacobianAdd(
 		else
 		{
 			// return jacobian_double(p)
-			return JacobianDouble(pX, pY, pZ, curveA, curveP);
+			return JacobianDouble(
+				std::forward<_PxBigNumT>(pX),
+				std::forward<_PyBigNumT>(pY),
+				std::forward<_PzBigNumT>(pZ),
+				std::forward<_CurveABigNumT>(curveA),
+				std::forward<_CurvePBigNumT>(curveP)
+			);
 		}
 	}
 
@@ -336,6 +375,10 @@ JacobianAdd(
 }
 
 
+template<
+	typename _CurveABigNumT,
+	typename _CurvePBigNumT
+>
 inline
 std::tuple<
 	Internal::Tls::BigNum,
@@ -353,8 +396,8 @@ JacobianAdd(
 		Internal::Tls::BigNum,
 		Internal::Tls::BigNum
 	>& q,
-	const Internal::Tls::BigNum& curveA,
-	const Internal::Tls::BigNum& curveP
+	_CurveABigNumT&& curveA,
+	_CurvePBigNumT&& curveP
 )
 {
 	return JacobianAdd(
@@ -364,8 +407,8 @@ JacobianAdd(
 		std::get<0>(q),
 		std::get<1>(q),
 		std::get<2>(q),
-		curveA,
-		curveP
+		std::forward<_CurveABigNumT>(curveA),
+		std::forward<_CurvePBigNumT>(curveP)
 	);
 }
 
@@ -375,6 +418,15 @@ JacobianAdd(
  * https://github.com/ethereum/eth-keys/blob/main/eth_keys/backends/native/jacobian.py
  *
  */
+template<
+	typename _AxBigNumT,
+	typename _AyBigNumT,
+	typename _AzBigNumT,
+	typename _NumBigNumT,
+	typename _CurveABigNumT,
+	typename _CurveNBigNumT,
+	typename _CurvePBigNumT
+>
 inline
 std::tuple<
 	Internal::Tls::BigNum,
@@ -382,13 +434,13 @@ std::tuple<
 	Internal::Tls::BigNum
 >
 JacobianMultiply(
-	const Internal::Tls::BigNum& aX,
-	const Internal::Tls::BigNum& aY,
-	const Internal::Tls::BigNum& aZ,
-	const Internal::Tls::BigNum& num,
-	const Internal::Tls::BigNum& curveA,
-	const Internal::Tls::BigNum& curveN,
-	const Internal::Tls::BigNum& curveP
+	_AxBigNumT&& aX,
+	_AyBigNumT&& aY,
+	_AzBigNumT&& aZ,
+	_NumBigNumT&& num,
+	_CurveABigNumT&& curveA,
+	_CurveNBigNumT&& curveN,
+	_CurvePBigNumT&& curveP
 )
 {
 	const auto& sk_0 = Internal::Tls::BigNum::Zero();
@@ -405,7 +457,11 @@ JacobianMultiply(
 	if (num == 1)
 	{
 		// return a
-		return std::make_tuple(aX, aY, aZ);
+		return std::make_tuple(
+			Internal::Tls::BigNum(aX),
+			Internal::Tls::BigNum(aY),
+			Internal::Tls::BigNum(aZ)
+		);
 	}
 
 	// if n < 0 or n >= N:
@@ -413,9 +469,13 @@ JacobianMultiply(
 	{
 		// return jacobian_multiply(a, n % N)
 		return JacobianMultiply(
-			aX, aY, aZ,
+			std::forward<_AxBigNumT>(aX),
+			std::forward<_AyBigNumT>(aY),
+			std::forward<_AzBigNumT>(aZ),
 			Internal::Tls::Mod(num, curveN),
-			curveA, curveN, curveP
+			std::forward<_CurveABigNumT>(curveA),
+			std::forward<_CurveNBigNumT>(curveN),
+			std::forward<_CurvePBigNumT>(curveP)
 		);
 	}
 
@@ -424,27 +484,49 @@ JacobianMultiply(
 	if (numMod2 == 0)
 	{
 		// return jacobian_double(jacobian_multiply(a, n // 2))
-		auto tmp = JacobianMultiply(aX, aY, aZ, (num / 2), curveA, curveN, curveP);
-		return JacobianDouble(std::get<0>(tmp), std::get<1>(tmp), std::get<2>(tmp), curveA, curveP);
+		auto tmp = JacobianMultiply(
+			std::forward<_AxBigNumT>(aX),
+			std::forward<_AyBigNumT>(aY),
+			std::forward<_AzBigNumT>(aZ),
+			(num / 2),
+			std::forward<_CurveABigNumT>(curveA),
+			std::forward<_CurveNBigNumT>(curveN),
+			std::forward<_CurvePBigNumT>(curveP)
+		);
+		return JacobianDouble(
+			std::get<0>(tmp),
+			std::get<1>(tmp),
+			std::get<2>(tmp),
+			std::forward<_CurveABigNumT>(curveA),
+			std::forward<_CurvePBigNumT>(curveP)
+		);
 	}
 	// elif (n % 2) == 1:
 	else if (numMod2 == 1)
 	{
 		// return jacobian_add(jacobian_double(jacobian_multiply(a, n // 2)), a)
 		auto tmp = JacobianDouble(
-			JacobianMultiply(aX, aY, aZ, (num / 2), curveA, curveN, curveP),
-			curveA,
-			curveP
+			JacobianMultiply(
+				std::forward<_AxBigNumT>(aX),
+				std::forward<_AyBigNumT>(aY),
+				std::forward<_AzBigNumT>(aZ),
+				(num / 2),
+				std::forward<_CurveABigNumT>(curveA),
+				std::forward<_CurveNBigNumT>(curveN),
+				std::forward<_CurvePBigNumT>(curveP)
+			),
+			std::forward<_CurveABigNumT>(curveA),
+			std::forward<_CurvePBigNumT>(curveP)
 		);
 		return JacobianAdd(
 			std::get<0>(tmp),
 			std::get<1>(tmp),
 			std::get<2>(tmp),
-			aX,
-			aY,
-			aZ,
-			curveA,
-			curveP
+			std::forward<_AxBigNumT>(aX),
+			std::forward<_AyBigNumT>(aY),
+			std::forward<_AzBigNumT>(aZ),
+			std::forward<_CurveABigNumT>(curveA),
+			std::forward<_CurvePBigNumT>(curveP)
 		);
 	}
 	// else:
@@ -460,20 +542,29 @@ JacobianMultiply(
  * https://github.com/ethereum/eth-keys/blob/main/eth_keys/backends/native/jacobian.py
  *
  */
+template<
+	typename _PxBigNumT,
+	typename _PyBigNumT,
+	typename _PzBigNumT,
+	typename _CurvePBigNumT
+>
 inline
 std::tuple<
 	Internal::Tls::BigNum,
 	Internal::Tls::BigNum
 >
 FromJacobian(
-	const Internal::Tls::BigNum& pX,
-	const Internal::Tls::BigNum& pY,
-	const Internal::Tls::BigNum& pZ,
-	const Internal::Tls::BigNum& curveP
+	_PxBigNumT&& pX,
+	_PyBigNumT&& pY,
+	_PzBigNumT&& pZ,
+	_CurvePBigNumT&& curveP
 )
 {
 	// z = inv(p[2], P)
-	auto z = JacobianInv(pZ, curveP);
+	auto z = JacobianInv(
+		std::forward<_PzBigNumT>(pZ),
+		std::forward<_CurvePBigNumT>(curveP)
+	);
 
 	// return ((p[0] * z**2) % P, (p[1] * z**3) % P)
 	// (p[0] * z**2) % P
@@ -489,6 +580,7 @@ FromJacobian(
 }
 
 
+template<typename _CurvePBigNumT>
 inline
 std::tuple<
 	Internal::Tls::BigNum,
@@ -500,14 +592,14 @@ FromJacobian(
 		Internal::Tls::BigNum,
 		Internal::Tls::BigNum
 	>& p,
-	const Internal::Tls::BigNum& curveP
+	_CurvePBigNumT&& curveP
 )
 {
 	return FromJacobian(
 		std::get<0>(p),
 		std::get<1>(p),
 		std::get<2>(p),
-		curveP
+		std::forward<_CurvePBigNumT>(curveP)
 	);
 }
 
@@ -517,18 +609,26 @@ FromJacobian(
  * https://github.com/ethereum/eth-keys/blob/main/eth_keys/backends/native/jacobian.py
  *
  */
+template<
+	typename _AxBigNumT,
+	typename _AyBigNumT,
+	typename _NumBigNumT,
+	typename _CurveABigNumT,
+	typename _CurveNBigNumT,
+	typename _CurvePBigNumT
+>
 inline
 std::tuple<
 	Internal::Tls::BigNum,
 	Internal::Tls::BigNum
 >
 JacobianFastMultiply(
-	const Internal::Tls::BigNum& aX,
-	const Internal::Tls::BigNum& aY,
-	const Internal::Tls::BigNum& num,
-	const Internal::Tls::BigNum& curveA,
-	const Internal::Tls::BigNum& curveN,
-	const Internal::Tls::BigNum& curveP
+	_AxBigNumT&& aX,
+	_AyBigNumT&& aY,
+	_NumBigNumT&& num,
+	_CurveABigNumT&& curveA,
+	_CurveNBigNumT&& curveN,
+	_CurvePBigNumT&& curveP
 )
 {
 	const auto& sk_1 = GetBigNum1();
@@ -540,8 +640,16 @@ JacobianFastMultiply(
 	> ret;
 
 	return FromJacobian(
-		JacobianMultiply(aX, aY, sk_1, num, curveA, curveN, curveP),
-		curveP
+		JacobianMultiply(
+			std::forward<_AxBigNumT>(aX),
+			std::forward<_AyBigNumT>(aY),
+			sk_1,
+			std::forward<_NumBigNumT>(num),
+			std::forward<_CurveABigNumT>(curveA),
+			std::forward<_CurveNBigNumT>(curveN),
+			std::forward<_CurvePBigNumT>(curveP)
+		),
+		std::forward<_CurvePBigNumT>(curveP)
 	);
 }
 
@@ -646,7 +754,13 @@ inline Internal::Tls::BigNum DeterministicGenerateK(
  */
 template<
 	typename _HashCtnT, bool _HashCtnSec,
-	typename _PKeyCtnT, bool _PKeyCtnSec
+	typename _PKeyCtnT, bool _PKeyCtnSec,
+	typename _PkeyBigNumTraits,
+	typename _CurveABigNumTraits,
+	typename _CurveGxBigNumTraits,
+	typename _CurveGyBigNumTraits,
+	typename _CurveNBigNumTraits,
+	typename _CurvePBigNumTraits
 >
 inline
 std::tuple<
@@ -657,12 +771,12 @@ std::tuple<
 EcdsaRawSign(
 	const Internal::Tls::ContCtnReadOnlyRef<_HashCtnT, _HashCtnSec>& hashCtnRef,
 	const Internal::Tls::ContCtnReadOnlyRef<_PKeyCtnT, _PKeyCtnSec>& pKeyCtnRef,
-	const Internal::Tls::BigNum& privKeyNum,
-	const Internal::Tls::BigNum& curveA,
-	const Internal::Tls::BigNum& curveGx,
-	const Internal::Tls::BigNum& curveGy,
-	const Internal::Tls::BigNum& curveN,
-	const Internal::Tls::BigNum& curveP
+	const Internal::Tls::BigNumber<_PkeyBigNumTraits>& privKeyNum,
+	const Internal::Tls::BigNumber<_CurveABigNumTraits>& curveA,
+	const Internal::Tls::BigNumber<_CurveGxBigNumTraits>& curveGx,
+	const Internal::Tls::BigNumber<_CurveGyBigNumTraits>& curveGy,
+	const Internal::Tls::BigNumber<_CurveNBigNumTraits>& curveN,
+	const Internal::Tls::BigNumber<_CurvePBigNumTraits>& curveP
 )
 {
 	// z = big_endian_to_int(msg_hash)
@@ -702,7 +816,13 @@ EcdsaRawSign(
 
 
 template<
-	typename _HashCtnT, bool _HashCtnSec
+	typename _HashCtnT, bool _HashCtnSec,
+	typename _PkeyBigNumTraits,
+	typename _CurveABigNumTraits,
+	typename _CurveGxBigNumTraits,
+	typename _CurveGyBigNumTraits,
+	typename _CurveNBigNumTraits,
+	typename _CurvePBigNumTraits
 >
 inline
 std::tuple<
@@ -712,15 +832,16 @@ std::tuple<
 >
 EcdsaRawSign(
 	const Internal::Tls::ContCtnReadOnlyRef<_HashCtnT, _HashCtnSec>& hashCtnRef,
-	const Internal::Tls::BigNum& privKeyNum,
-	const Internal::Tls::BigNum& curveA,
-	const Internal::Tls::BigNum& curveGx,
-	const Internal::Tls::BigNum& curveGy,
-	const Internal::Tls::BigNum& curveN,
-	const Internal::Tls::BigNum& curveP
+	const Internal::Tls::BigNumber<_PkeyBigNumTraits>& privKeyNum,
+	const Internal::Tls::BigNumber<_CurveABigNumTraits>& curveA,
+	const Internal::Tls::BigNumber<_CurveGxBigNumTraits>& curveGx,
+	const Internal::Tls::BigNumber<_CurveGyBigNumTraits>& curveGy,
+	const Internal::Tls::BigNumber<_CurveNBigNumTraits>& curveN,
+	const Internal::Tls::BigNumber<_CurvePBigNumTraits>& curveP
 )
 {
-	auto privKeyBytes = privKeyNum.SecretBytes</*little endian=*/false>();
+	auto privKeyBytes =
+		privKeyNum.template SecretBytes</*little endian=*/false>();
 
 	return EcdsaRawSign(
 		hashCtnRef,
