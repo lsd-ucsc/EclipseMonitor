@@ -503,11 +503,7 @@ GTEST_TEST(TestEthTxnEcdsa, EcdsaRawSign)
 		> out = Transaction::EcdsaRawSign(
 			mbedTLScpp::CtnFullR(hash),
 			key,
-			sk_secp256k1.BorrowA(),
-			sk_secp256k1.BorrowGx(),
-			sk_secp256k1.BorrowGy(),
-			sk_secp256k1.BorrowN(),
-			sk_secp256k1.BorrowP()
+			sk_secp256k1
 		);
 
 		EXPECT_EQ(std::get<0>(out), std::get<0>(expOut));
@@ -535,11 +531,7 @@ GTEST_TEST(TestEthTxnEcdsa, EcdsaRawSign)
 		> out = Transaction::EcdsaRawSign(
 			mbedTLScpp::CtnFullR(hash),
 			key,
-			sk_secp256k1.BorrowA(),
-			sk_secp256k1.BorrowGx(),
-			sk_secp256k1.BorrowGy(),
-			sk_secp256k1.BorrowN(),
-			sk_secp256k1.BorrowP()
+			sk_secp256k1
 		);
 
 		EXPECT_EQ(std::get<0>(out), std::get<0>(expOut));

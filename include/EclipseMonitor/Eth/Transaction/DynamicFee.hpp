@@ -145,6 +145,20 @@ public:
 		);
 	}
 
+	Internal::Rlp::OutputContainerType RlpSerializeSigned() const
+	{
+		Validate();
+		if (get_r().size() == 0 || get_s().size() == 0)
+		{
+			throw Exception("The given transaction is not signed");
+		}
+		auto rlp =
+			Internal::Rlp::WriterGeneric::StaticDictWriter::Write(*this);
+		rlp.insert(rlp.begin(), GetTypeFlag());
+
+		return rlp;
+	}
+
 	/**
 	 * @brief Get the type flag, which is 0x02 for dynamic fee transaction
 	 *

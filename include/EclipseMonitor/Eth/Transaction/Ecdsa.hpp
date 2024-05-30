@@ -13,6 +13,7 @@
 #include <vector>
 
 #include <mbedTLScpp/BigNumber.hpp>
+#include <mbedTLScpp/EcKey.hpp>
 #include <mbedTLScpp/Hmac.hpp>
 #include <mbedTLScpp/SecretVector.hpp>
 
@@ -852,6 +853,80 @@ EcdsaRawSign(
 		curveGy,
 		curveN,
 		curveP
+	);
+}
+
+
+template<
+	typename _HashCtnT, bool _HashCtnSec,
+	typename _PkeyBigNumTraits,
+	typename _EcGroupTraits
+>
+inline
+std::tuple<
+	uint8_t,
+	Internal::Tls::BigNum,
+	Internal::Tls::BigNum
+>
+EcdsaRawSign(
+	const Internal::Tls::ContCtnReadOnlyRef<_HashCtnT, _HashCtnSec>& hashCtnRef,
+	const Internal::Tls::BigNumber<_PkeyBigNumTraits>& privKeyNum,
+	const Internal::Tls::EcGroup<_EcGroupTraits>& curveGroup
+)
+{
+	auto privKeyBytes =
+		privKeyNum.template SecretBytes</*little endian=*/false>();
+
+	return EcdsaRawSign(
+		hashCtnRef,
+		Internal::Tls::CtnFullR(privKeyBytes),
+		privKeyNum,
+		curveGroup.BorrowA(),
+		curveGroup.BorrowGx(),
+		curveGroup.BorrowGy(),
+		curveGroup.BorrowN(),
+		curveGroup.BorrowP()
+	);
+}
+
+
+template<
+	typename _PkeyTraits
+>
+inline void SignTransaction(
+	DynFee& txn,
+	const Internal::Tls::EcKeyPair<
+		Internal::Tls::EcType::SECP256K1,
+		_PkeyTraits
+	>& keyPair
+)
+{
+	auto hash = txn.Hash();
+
+	auto signBigNum = EcdsaRawSign(
+		Internal::Tls::CtnFullR(hash),
+		keyPair.BorrowSecretNum(),
+		keyPair.BorrowGroup()
+	);
+
+	uint8_t v = std::get<0>(signBigNum);
+	if (v == 0)
+	{
+		txn.get_v().resize(0);
+	}
+	else
+	{
+		txn.get_v().resize(1);
+		txn.get_v()[0] = v;
+	}
+
+
+	txn.get_r() = Internal::Obj::Bytes(
+		std::get<1>(signBigNum).template Bytes</*_LitEndian=*/false>()
+	);
+
+	txn.get_s() = Internal::Obj::Bytes(
+		std::get<2>(signBigNum).template Bytes</*_LitEndian=*/false>()
 	);
 }
 
