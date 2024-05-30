@@ -225,7 +225,7 @@ GTEST_TEST(TestEthTxnDynFee, DeEncoding)
 		std::cout << "Expected RLP:  " <<
 			SimpleObjects::Codec::Hex::Encode<std::string>(expRlp) << std::endl;
 
-		auto rlp = dynFeeTxn.RlpSerialize();
+		auto rlp = dynFeeTxn.RlpSerializeUnsigned();
 		std::cout << "Generated RLP: " <<
 			SimpleObjects::Codec::Hex::Encode<std::string>(rlp) << std::endl;
 
@@ -315,7 +315,7 @@ GTEST_TEST(TestEthTxnDynFee, DeEncoding)
 		std::cout << "Expected RLP:  " <<
 			SimpleObjects::Codec::Hex::Encode<std::string>(expRlp) << std::endl;
 
-		auto rlp = dynFeeTxn.RlpSerialize();
+		auto rlp = dynFeeTxn.RlpSerializeUnsigned();
 		std::cout << "Generated RLP: " <<
 			SimpleObjects::Codec::Hex::Encode<std::string>(rlp) << std::endl;
 
@@ -399,7 +399,7 @@ GTEST_TEST(TestEthTxnDynFee, DeEncoding)
 		std::cout << "Expected RLP:  " <<
 			SimpleObjects::Codec::Hex::Encode<std::string>(expRlp) << std::endl;
 
-		auto rlp = dynFeeTxn.RlpSerialize();
+		auto rlp = dynFeeTxn.RlpSerializeUnsigned();
 		std::cout << "Generated RLP: " <<
 			SimpleObjects::Codec::Hex::Encode<std::string>(rlp) << std::endl;
 

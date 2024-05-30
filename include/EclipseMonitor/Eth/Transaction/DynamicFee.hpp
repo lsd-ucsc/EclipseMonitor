@@ -60,7 +60,16 @@ using DynFeeTupleCore = std::tuple<
 		Internal::Obj::Bytes>,
 	// 09.
 	std::pair<Internal::Obj::StrKey<SIMOBJ_KSTR("AccessList")>,
-		AccessListObj>
+		AccessListObj>,
+	// 10.
+	std::pair<Internal::Obj::StrKey<SIMOBJ_KSTR("v")>,
+		Internal::Obj::Bytes>,
+	// 11.
+	std::pair<Internal::Obj::StrKey<SIMOBJ_KSTR("r")>,
+		Internal::Obj::Bytes>,
+	// 12.
+	std::pair<Internal::Obj::StrKey<SIMOBJ_KSTR("s")>,
+		Internal::Obj::Bytes>
 	>;
 
 
@@ -91,7 +100,16 @@ using DynFeeParserTupleCore = std::tuple<
 		Internal::Rlp::BytesParser>,
 	// 09.
 	std::pair<Internal::Obj::StrKey<SIMOBJ_KSTR("AccessList")>,
-		AccessListObjParser>
+		AccessListObjParser>,
+	// 10.
+	std::pair<Internal::Obj::StrKey<SIMOBJ_KSTR("v")>,
+		Internal::Rlp::BytesParser>,
+	// 11.
+	std::pair<Internal::Obj::StrKey<SIMOBJ_KSTR("r")>,
+		Internal::Rlp::BytesParser>,
+	// 12.
+	std::pair<Internal::Obj::StrKey<SIMOBJ_KSTR("s")>,
+		Internal::Rlp::BytesParser>
 >;
 
 
@@ -118,10 +136,13 @@ public:
 		ValidateContractAddr(get_Destination());
 	}
 
-	Internal::Rlp::OutputContainerType RlpSerialize() const
+	Internal::Rlp::OutputContainerType RlpSerializeUnsigned() const
 	{
 		Validate();
-		return Internal::Rlp::WriterGeneric::Write(*this);
+		return Internal::Rlp::WriterGeneric::StaticDictWriter::Write(
+			*this,
+			/*skipLast=*/3 // skip the last 3 (i.e., v, r, s) fields
+		);
 	}
 
 	/**
@@ -136,7 +157,7 @@ public:
 
 	std::array<uint8_t, 32> Hash() const
 	{
-		auto rlp = RlpSerialize();
+		auto rlp = RlpSerializeUnsigned();
 
 		// prepend the type flag
 		rlp.insert(rlp.begin(), GetTypeFlag());
@@ -321,14 +342,53 @@ public:
 		return Base::template get<Internal::Obj::StrKey<SIMOBJ_KSTR("AccessList")> >();
 	}
 
+	// 10. v
+	typename Base::template GetRef<Internal::Obj::StrKey<SIMOBJ_KSTR("v")> >
+	get_v()
+	{
+		return Base::template get<Internal::Obj::StrKey<SIMOBJ_KSTR("v")> >();
+	}
+
+	typename Base::template GetConstRef<Internal::Obj::StrKey<SIMOBJ_KSTR("v")> >
+	get_v() const
+	{
+		return Base::template get<Internal::Obj::StrKey<SIMOBJ_KSTR("v")> >();
+	}
+
+	// 11. r
+	typename Base::template GetRef<Internal::Obj::StrKey<SIMOBJ_KSTR("r")> >
+	get_r()
+	{
+		return Base::template get<Internal::Obj::StrKey<SIMOBJ_KSTR("r")> >();
+	}
+
+	typename Base::template GetConstRef<Internal::Obj::StrKey<SIMOBJ_KSTR("r")> >
+	get_r() const
+	{
+		return Base::template get<Internal::Obj::StrKey<SIMOBJ_KSTR("r")> >();
+	}
+
+	// 12. s
+	typename Base::template GetRef<Internal::Obj::StrKey<SIMOBJ_KSTR("s")> >
+	get_s()
+	{
+		return Base::template get<Internal::Obj::StrKey<SIMOBJ_KSTR("s")> >();
+	}
+
+	typename Base::template GetConstRef<Internal::Obj::StrKey<SIMOBJ_KSTR("s")> >
+	get_s() const
+	{
+		return Base::template get<Internal::Obj::StrKey<SIMOBJ_KSTR("s")> >();
+	}
+
 }; // class DynFee
 
 
 
 using DynFeeParser = Internal::Rlp::StaticDictParserT<
 	DynFeeParserTupleCore,
-	false,
-	false,
+	/*_AllowMissingItem =*/true, // It's okay if the v, r, s fields are missing
+	/*_AllowExtraItem   =*/false,
 	DynFee
 >;
 

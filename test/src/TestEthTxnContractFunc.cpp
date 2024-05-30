@@ -153,7 +153,7 @@ GTEST_TEST(TestEthTxnContractFunc, ContractFuncStaticDef_CallByTxn)
 			0xc0U,
 		};
 
-		auto rlp = txn.RlpSerialize();
+		auto rlp = txn.RlpSerializeUnsigned();
 		EXPECT_EQ(rlp, expectedSerialized);
 
 		std::array<uint8_t, 32> expHash = {
@@ -236,7 +236,7 @@ GTEST_TEST(TestEthTxnContractFunc, ContractFuncStaticDef_CallByTxn)
 			0x00U, 0x00U, 0x00U, 0x00U, 0xc0U,
 		};
 
-		auto rlp = txn.RlpSerialize();
+		auto rlp = txn.RlpSerializeUnsigned();
 		EXPECT_EQ(rlp, expectedSerialized);
 
 		std::array<uint8_t, 32> expHash = {
