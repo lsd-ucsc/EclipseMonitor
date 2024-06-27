@@ -36,3 +36,6 @@ build*/
 
 # VS Code temporary folder
 .vscode/
+
+# python virtual environment
+venv/

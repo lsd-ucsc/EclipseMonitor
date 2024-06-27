@@ -67,6 +67,36 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(git_simplerlp)
 
+## mbedTLScpp
+FetchContent_Declare(
+	git_mbedtlscpp
+	GIT_REPOSITORY https://github.com/zhenghaven/mbedTLScpp.git
+	GIT_TAG        dev
+)
+FetchContent_MakeAvailable(git_mbedtlscpp)
+
+## MbedTLS
+set(ENABLE_TESTING OFF CACHE BOOL "Build mbed TLS tests." FORCE)
+set(ENABLE_PROGRAMS OFF CACHE BOOL "Build mbed TLS programs." FORCE)
+if (MSVC)
+	set(
+		MSVC_STATIC_RUNTIME
+		ON
+		CACHE BOOL
+		"Build the libraries with /MT compiler flag"
+		FORCE
+	)
+endif()
+FetchContent_Declare(
+	git_mbedtls
+	GIT_REPOSITORY https://github.com/zhenghaven/mbedtls.git
+	GIT_TAG        decent-enclave-v3.5.2
+)
+FetchContent_MakeAvailable(git_mbedtls)
+mbedTLScpp_Decentize_Normal(mbedcrypto)
+mbedTLScpp_Decentize_Normal(mbedx509)
+mbedTLScpp_Decentize_Normal(mbedtls)
+
 ################################################################################
 # Adding testing executable
 ################################################################################
@@ -87,6 +117,8 @@ target_link_libraries(EclipseMonitor_test
 	SimpleRlp
 	SimpleObjects
 	SimpleUtf
+	mbedtls
+	mbedTLScpp
 	gtest
 )
 target_include_directories(EclipseMonitor_test
