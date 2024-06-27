@@ -7,6 +7,8 @@
 #include <gtest/gtest.h>
 
 #include <EclipseMonitor/Eth/Transaction/Ecdsa.hpp>
+
+#include <mbedTLScpp/DefaultRbg.hpp>
 #include <mbedTLScpp/EcKey.hpp>
 
 #include "Common.hpp"
@@ -537,6 +539,71 @@ GTEST_TEST(TestEthTxnEcdsa, EcdsaRawSign)
 		EXPECT_EQ(std::get<0>(out), std::get<0>(expOut));
 		EXPECT_EQ(std::get<1>(out), std::get<1>(expOut));
 		EXPECT_EQ(std::get<2>(out), std::get<2>(expOut));
+	}
+}
+
+
+GTEST_TEST(TestEthTxnEcdsa, AddressFromPublicKey)
+{
+	std::unique_ptr<mbedTLScpp::RbgInterface> rand =
+		mbedTLScpp::Internal::make_unique<mbedTLScpp::DefaultRbg>();
+
+	{
+		auto keyPair = mbedTLScpp::EcKeyPair<mbedTLScpp::EcType::SECP256K1>::
+			FromSecretNum(
+				mbedTLScpp::BigNum(
+					"4c0883a69102937d6231471b5dbb6204fe5129617082792ae468d01a3f362318",
+					/*radix=*/16
+				),
+				*rand
+			);
+
+		Address addr = Transaction::AddressFromPublicKey(keyPair);
+		EXPECT_EQ(addr.ToString(), "0x2c7536E3605D9C16a7a3D7b1898e529396a65c23");
+	}
+
+	{
+		auto keyPair = mbedTLScpp::EcKeyPair<mbedTLScpp::EcType::SECP256R1>::
+			FromSecretNum(
+				mbedTLScpp::BigNum(
+					"4c0883a69102937d6231471b5dbb6204fe5129617082792ae468d01a3f362318",
+					/*radix=*/16
+				),
+				*rand
+			);
+		EXPECT_THROW_MSG(
+			Transaction::AddressFromPublicKey(keyPair),
+			EclipseMonitor::Exception,
+			"ETH key should be on curve secp256k1"
+		);
+	}
+
+	{
+		auto pubKeyDer = SimpleObjects::Codec::Hex::Decode<std::vector<uint8_t> >(
+			std::string(
+				"3056301006072a8648ce3d020106052b8104000a034200040630aac5785f14f4"
+				"cf4713a9ef9b4f32e3e7ae4793de26bdc28c4ea1dd80f8b01bfe05ebb211e441"
+				"0b2ed29e36c7d9b8ae75f4514d7dd435cb86fc3e5cdf267f"
+			)
+		);
+		auto pubKey = mbedTLScpp::EcPublicKey<mbedTLScpp::EcType::SECP256K1>::
+			FromDER(mbedTLScpp::CtnFullR(pubKeyDer));
+		Address addr = Transaction::AddressFromPublicKey(pubKey);
+		EXPECT_EQ(addr.ToString(), "0x010EEE07C4020148D96F80CEd0EE4D129a267D20");
+	}
+
+	{
+		auto pubKeyDer = SimpleObjects::Codec::Hex::Decode<std::vector<uint8_t> >(
+			std::string(
+				"3056301006072a8648ce3d020106052b8104000a034200049d3dea6bb79267e1"
+				"1135464ecbf99061b50c8ce852db578616a230d37ac3c0bcbe76bb3fa280b582"
+				"542a474d16e754e4f83b04cc9448c95c02b16945e4e16063"
+			)
+		);
+		auto pubKey = mbedTLScpp::EcPublicKey<mbedTLScpp::EcType::SECP256K1>::
+			FromDER(mbedTLScpp::CtnFullR(pubKeyDer));
+		Address addr = Transaction::AddressFromPublicKey(pubKey);
+		EXPECT_EQ(addr.ToString(), "0x453272C49Dd5b2343Fef13EAdb746E083fB36411");
 	}
 }
 

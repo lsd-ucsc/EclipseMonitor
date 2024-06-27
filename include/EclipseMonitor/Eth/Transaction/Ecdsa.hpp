@@ -20,6 +20,7 @@
 #include "../../Internal/SimpleObj.hpp"
 #include "../../Internal/Tls.hpp"
 #include "../../Exceptions.hpp"
+#include "../Address.hpp"
 #include "../DataTypes.hpp"
 #include "../Keccak256.hpp"
 #include "DynamicFee.hpp"
@@ -928,6 +929,43 @@ inline void SignTransaction(
 	txn.get_s() = Internal::Obj::Bytes(
 		std::get<2>(signBigNum).template Bytes</*_LitEndian=*/false>()
 	);
+}
+
+
+template<typename _PkeyTraits>
+inline Address AddressFromPublicKey(
+	const Internal::Tls::EcPublicKeyBase<_PkeyTraits>& pubKey
+)
+{
+	static constexpr Internal::Tls::EcType sk_ecType =
+		Internal::Tls::EcType::SECP256K1;
+	static constexpr size_t sk_curveByteSize =
+		Internal::Tls::GetCurveByteSize(sk_ecType);
+
+	if (pubKey.GetEcType() != sk_ecType)
+	{
+		throw Exception("ETH key should be on curve secp256k1");
+	}
+
+	std::vector<uint8_t> bytesXY;
+	bytesXY.reserve(sk_curveByteSize * 2);
+	auto appendBytesXY = [&bytesXY](std::vector<uint8_t>&& bytes)
+	{
+		bytesXY.insert(bytesXY.end(), bytes.begin(), bytes.end());
+	};
+	appendBytesXY(pubKey.BorrowPubPointX().template Bytes</*little endian=*/false>());
+	appendBytesXY(pubKey.BorrowPubPointY().template Bytes</*little endian=*/false>());
+
+	auto bytesHash = Keccak256(bytesXY);
+	size_t copyBegins = bytesHash.size() - 20;
+	ContractAddr bytesHash20;
+	std::copy_n(
+		bytesHash.begin() + copyBegins,
+		bytesHash20.size(),
+		bytesHash20.begin()
+	);
+
+	return Address(bytesHash20);
 }
 
 
