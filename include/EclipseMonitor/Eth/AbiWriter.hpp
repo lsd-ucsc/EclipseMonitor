@@ -749,6 +749,57 @@ struct AbiNestedWriterMgrListConstLen :
 	using Base = AbiNestedWriterMgrListDynLen<ItemWriter>;
 	using Self = AbiNestedWriterMgrListConstLen<ItemWriter>;
 
+	// struct Iterator
+	// {
+	// 	Iterator(size_t size, const ItemWriter* itemWriter) :
+	// 		m_size(size),
+	// 		m_itemWriter(itemWriter)
+	// 	{}
+
+	// 	~Iterator() = default;
+
+	// 	const ItemWriter& operator*() const
+	// 	{
+	// 		return *m_itemWriter;
+	// 	}
+
+	// 	Iterator& operator++()
+	// 	{
+	// 		if (m_size == 0)
+	// 		{
+	// 			throw Exception(
+	// 				"ABI writer - iterator out of range for nested type;"
+	// 				"are there more given data than declared?"
+	// 			);
+	// 		}
+	// 		--m_size;
+	// 		return *this;
+	// 	}
+
+	// 	Iterator operator++(int)
+	// 	{
+	// 		Iterator tmp(*this);
+	// 		++(*this);
+	// 		return tmp;
+	// 	}
+
+	// 	bool operator==(const Iterator& other) const
+	// 	{
+	// 		return (
+	// 			(m_size == other.m_size) &&
+	// 			(m_itemWriter == other.m_itemWriter)
+	// 		);
+	// 	}
+
+	// 	bool operator!=(const Iterator& other) const
+	// 	{
+	// 		return !(*this == other);
+	// 	}
+
+	// 	size_t m_size;
+	// 	const ItemWriter* m_itemWriter;
+	// }; // struct Iterator
+
 	AbiNestedWriterMgrListConstLen(ItemWriter itemWriter, size_t size) :
 		Base(std::move(itemWriter)),
 		m_size(size)
@@ -778,6 +829,16 @@ struct AbiNestedWriterMgrListConstLen :
 	{
 		return Base::GetTotalNumHeadChunks(m_size);
 	}
+
+	// Iterator begin() const
+	// {
+	// 	return Iterator(m_size, &m_itemWriter);
+	// }
+
+	// Iterator end() const
+	// {
+	// 	return Iterator(0, &m_itemWriter);
+	// }
 
 	template<typename _Func, typename _ValIt>
 	void IterateVals(_Func func, _ValIt begin, _ValIt end) const
@@ -1237,6 +1298,7 @@ struct AbiWriterNestedTypeTupleImpl :
 	template<typename ..._ValTs>
 	size_t GetNumTailChunksTuple(_ValTs&& ...vals) const
 	{
+		std::array<const void*, sizeof...(_ValTs)> test = {&vals...}; (void)test;
 		if (!Base::IsDynamicType())
 		{
 			// static type - no tail chunks
@@ -1262,6 +1324,7 @@ struct AbiWriterNestedTypeTupleImpl :
 	template<typename _DestIt, typename ..._ValTs>
 	_DestIt WriteTuple(_DestIt destIt, _ValTs&& ...vals) const
 	{
+		std::array<const void*, sizeof...(_ValTs)> test = {&vals...}; (void)test;
 		// calculate the offset of the data area
 		size_t dataOffset =
 			(Base::m_nestedWriterMgr).GetTotalNumHeadChunks() *
